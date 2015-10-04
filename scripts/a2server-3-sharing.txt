@@ -18,6 +18,12 @@
 
 # --- Installing netatalk
 
+# Ensure URL we'll use ends in a /
+case "$A2SERVER_SCRIPT_URL" in
+	*/) scriptURL="$A2SERVER_SCRIPT_URL" ;;
+	*) scriptURL="${A2SERVER_SCRIPT_URL:-http://appleii.ivanx.com/a2server}/" ;;
+esac
+
 isRpi=
 [[ -f /usr/bin/raspi-config ]] && isRpi=1
 
@@ -67,9 +73,9 @@ else
         
         # install Netatalk
         if [[ $isRpi ]]; then
-            { wget -qO- /tmp/netatalk.tgz ivanx.com/a2server/files/netatalk224-rpi.tgz | sudo tar Pzx; } 2> /dev/null
+            { wget -qO- /tmp/netatalk.tgz ${scriptURL}files/netatalk224-rpi.tgz | sudo tar Pzx; } 2> /dev/null
         elif [[ $isDebian ]]; then
-            { wget -qO- /tmp/netatalk.tgz ivanx.com/a2server/files/netatalk224-debian7_x86.tgz | sudo tar Pzx; } 2> /dev/null
+            { wget -qO- /tmp/netatalk.tgz ${scriptURL}files/netatalk224-debian7_x86.tgz | sudo tar Pzx; } 2> /dev/null
         fi
         sudo mandb &> /dev/null
         
@@ -132,7 +138,7 @@ echo "A2SERVER: Configuring Netatalk..."
 # if missing Netatalk startup file, download a fresh one
 if [ ! -f /etc/init.d/netatalk ]; then
     echo "A2SERVER: Downloading new Netatalk startup script..."
-    sudo wget -qO /etc/init.d/netatalk ivanx.com/a2server/files/netatalk-init.d-clean.txt
+    sudo wget -qO /etc/init.d/netatalk ${scriptURL}files/netatalk-init.d-clean.txt
 fi
 
 # make the Netatalk startup script work correctly
@@ -333,7 +339,7 @@ if [[ ( ! $(ps aux | grep [a]talkd) ) && ( $isRpi ) ]]; then
     # if no AppleTalk module, try to download it from a2server site
     if [[ ! -f /lib/modules/$kernelRelease/kernel/net/appletalk/appletalk.ko ]]; then # check for rpi kernel module
         echo "A2SERVER: Attempting to install AppleTalk kernel module for Raspbian..."
-        wget -qO /tmp/appletalk.ko.gz appleii.ivanx.com/a2server/files/appletalk-$kernelRelease.ko.gz
+        wget -qO /tmp/appletalk.ko.gz ${scriptURL}files/appletalk-$kernelRelease.ko.gz
         if [[ $? -eq 0 ]]; then
             # if we found a prebuilt one on a2server site, install it and load it
             gunzip -f /tmp/appletalk.ko.gz

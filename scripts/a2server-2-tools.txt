@@ -3,6 +3,12 @@
 # download and install a2server tools:
 # mkatinit, mkvolinfo, afptype, afpsync, aliases, nulib2
 
+# Ensure URL we'll use ends in a /
+case "$A2SERVER_SCRIPT_URL" in
+	*/) scriptURL="$A2SERVER_SCRIPT_URL" ;;
+	*) scriptURL="${A2SERVER_SCRIPT_URL:-http://appleii.ivanx.com/a2server}/" ;;
+esac
+
 isRpi=
 [[ -f /usr/bin/raspi-config ]] && isRpi=1
 
@@ -17,9 +23,9 @@ if [[ ! -f /usr/local/bin/nulib2 ]]; then
 
     cd /tmp
     if [[ $isRpi ]]; then
-        wget -qO- ivanx.com/a2server/files/nulib2-rpi.tgz | sudo tar Pzx
+        wget -qO- "${scriptURL}files/nulib2-rpi.tgz" | sudo tar Pzx
     elif [[ $isDebian ]]; then
-        wget -qO- ivanx.com/a2server/files/nulib2-debian7_x86.tgz | sudo tar Pzx
+        wget -qO- "${scriptURL}files/nulib2-debian7_x86.tgz" | sudo tar Pzx
     fi
 
     if [[ ! -f /usr/local/bin/nulib2 ]]; then
@@ -72,9 +78,9 @@ if [[ ! -f /usr/local/bin/unar ]]; then
         sudo apt-get -y install libgnustep-base1.22
         sudo apt-get clean
         if [[ $isRpi ]]; then
-            wget -qO- ivanx.com/a2server/files/unar-rpi.tgz | sudo tar Pzx
+            wget -qO- "${scriptURL}files/unar-rpi.tgz" | sudo tar Pzx
         elif [[ $isDebian ]]; then
-            wget -qO- ivanx.com/a2server/files/unar-debian7_x86.tgz | sudo tar Pzx
+            wget -qO- "${scriptURL}files/unar-debian7_x86.tgz" | sudo tar Pzx
         fi
     fi
     if [[ ! -f /usr/local/bin/unar ]]; then
@@ -100,18 +106,18 @@ else
     echo "A2SERVER: The Unarchiver has already been installed."
 fi
 
-sudo wget -q -O /usr/local/bin/afpsync appleii.ivanx.com/a2server/scripts/tools/afpsync.txt
+sudo wget -q -O /usr/local/bin/afpsync "${scriptURL}scripts/tools/afpsync.txt"
 sudo chmod ugo+x /usr/local/bin/afpsync
-sudo wget -q -O /usr/local/bin/afptype appleii.ivanx.com/a2server/scripts/tools/afptype.txt
+sudo wget -q -O /usr/local/bin/afptype "${scriptURL}scripts/tools/afptype.txt"
 sudo chmod ugo+x /usr/local/bin/afptype
-sudo wget -q -O /usr/local/bin/mkatinit appleii.ivanx.com/a2server/scripts/tools/mkatinit.txt
+sudo wget -q -O /usr/local/bin/mkatinit "${scriptURL}scripts/tools/mkatinit.txt"
 sudo chmod ugo+x /usr/local/bin/mkatinit
-sudo wget -q -O /usr/local/bin/mkvolinfo appleii.ivanx.com/a2server/scripts/tools/mkvolinfo.txt
+sudo wget -q -O /usr/local/bin/mkvolinfo "${scriptURL}scripts/tools/mkvolinfo.txt"
 sudo chmod ugo+x /usr/local/bin/mkvolinfo
-sudo wget -q -O /usr/local/bin/cppo appleii.ivanx.com/a2server/scripts/tools/cppo.txt
+sudo wget -q -O /usr/local/bin/cppo "${scriptURL}scripts/tools/cppo.txt"
 sudo chmod ugo+x /usr/local/bin/cppo
-sudo wget -q -O /usr/local/etc/a2server-help.txt appleii.ivanx.com/a2server/scripts/tools/a2server-help.txt
-sudo wget -q -O /usr/local/etc/a2server-aliases appleii.ivanx.com/a2server/scripts/tools/a2server-aliases.txt
+sudo wget -q -O /usr/local/etc/a2server-help.txt "${scriptURL}scripts/tools/a2server-help.txt"
+sudo wget -q -O /usr/local/etc/a2server-aliases "${scriptURL}scripts/tools/a2server-aliases.txt"
 
 grep a2server-aliases /etc/bash.bashrc > /dev/null || \
 echo "source /usr/local/etc/a2server-aliases" | sudo tee -a /etc/bash.bashrc > /dev/null
