@@ -1,12 +1,11 @@
 #! /bin/bash
 # A2SERVER aliases:
 
-
 alias a2server-help="more /usr/local/etc/a2server-help.txt"
-alias a2server-setup="wget -q -O /tmp/a2server-setup appleii.ivanx.com/a2server/setup/; source /tmp/a2server-setup"
+alias a2server-setup="wget -q -O /tmp/a2server-setup ${A2SERVER_SCRIPT_URL:-http://appleii.ivanx.com/a2server}$([[ "$A2SERVER_SCRIPT_URL" == */ ]] || echo -n "/")setup/; source /tmp/a2server-setup"
 
 alias a2server-version="cat /usr/local/etc/A2SERVER-version"
-alias a2server-update="wget -q -O /tmp/a2server-update appleii.ivanx.com/a2server/update/; source /tmp/a2server-update"
+alias a2server-update="wget -q -O /tmp/a2server-update ${A2SERVER_SCRIPT_URL:-http://appleii.ivanx.com/a2server}$([[ "$A2SERVER_SCRIPT_URL" == */ ]] || echo -n "/")update/; source /tmp/a2server-update"
 
 alias system-shutdown='sudo shutdown -h now'
 alias system-restart='sudo shutdown -r now'
