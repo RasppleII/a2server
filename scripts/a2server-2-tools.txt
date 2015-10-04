@@ -23,9 +23,9 @@ if [[ ! -f /usr/local/bin/nulib2 ]]; then
 
     cd /tmp
     if [[ $isRpi ]]; then
-        wget -qO- "${scriptURL}files/nulib2-rpi.tgz" | sudo tar Pzx
+        wget -qO- "http://appleii.ivanx.com/a2server/files/nulib2-rpi.tgz" | sudo tar Pzx
     elif [[ $isDebian ]]; then
-        wget -qO- "${scriptURL}files/nulib2-debian7_x86.tgz" | sudo tar Pzx
+        wget -qO- "http://appleii.ivanx.com/a2server/files/nulib2-debian7_x86.tgz" | sudo tar Pzx
     fi
 
     if [[ ! -f /usr/local/bin/nulib2 ]]; then
@@ -78,9 +78,9 @@ if [[ ! -f /usr/local/bin/unar ]]; then
         sudo apt-get -y install libgnustep-base1.22
         sudo apt-get clean
         if [[ $isRpi ]]; then
-            wget -qO- "${scriptURL}files/unar-rpi.tgz" | sudo tar Pzx
+            wget -qO- "http://appleii.ivanx.com/a2server/files/unar-rpi.tgz" | sudo tar Pzx
         elif [[ $isDebian ]]; then
-            wget -qO- "${scriptURL}files/unar-debian7_x86.tgz" | sudo tar Pzx
+            wget -qO- "http://appleii.ivanx.com/a2server/files/unar-debian7_x86.tgz" | sudo tar Pzx
         fi
     fi
     if [[ ! -f /usr/local/bin/unar ]]; then

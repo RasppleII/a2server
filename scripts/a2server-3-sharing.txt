@@ -73,9 +73,9 @@ else
         
         # install Netatalk
         if [[ $isRpi ]]; then
-            { wget -qO- /tmp/netatalk.tgz ${scriptURL}files/netatalk224-rpi.tgz | sudo tar Pzx; } 2> /dev/null
+            { wget -qO- /tmp/netatalk.tgz "http://appleii.ivanx.com/a2server/files/netatalk224-rpi.tgz" | sudo tar Pzx; } 2> /dev/null
         elif [[ $isDebian ]]; then
-            { wget -qO- /tmp/netatalk.tgz ${scriptURL}files/netatalk224-debian7_x86.tgz | sudo tar Pzx; } 2> /dev/null
+            { wget -qO- /tmp/netatalk.tgz "http://appleii.ivanx.com/a2server/files/netatalk224-debian7_x86.tgz" | sudo tar Pzx; } 2> /dev/null
         fi
         sudo mandb &> /dev/null
         
