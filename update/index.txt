@@ -1,6 +1,6 @@
 #! /bin/bash
 
-currentVersion=124
+currentVersion=125
 
 if [[ -f /usr/local/etc/A2SERVER-version ]]; then
 	installedVersion=$(cat /usr/local/etc/A2SERVER-version)
