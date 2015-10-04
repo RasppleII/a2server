@@ -1,3 +1,5 @@
+#! /bin/bash
+
 currentVersion=124
 
 if [[ -f /usr/local/etc/A2SERVER-version ]]; then

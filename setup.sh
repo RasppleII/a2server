@@ -1,3 +1,5 @@
+#! /bin/bash
+
 # A2SERVER master setup script, last update 15-Feb-2015
 # it downloads and executes several scripts related to the setup of
 # netatalk configured for Apple II use on Debian, Raspbian, or Ubuntu.
