@@ -29,35 +29,35 @@ adtproDir=$commDir/ADTPRO
 # bail out on automated netboot setup unless -b is also specified
 [[ -f /tmp/a2server-autoAnswerYes ]] && autoAnswerYes=1 || autoAnswerYes=
 if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
-    
+
     if [[ ! $autoAnswerYes ]]; then
         echo
         echo "Do you want to set up A2SERVER to be able to boot Apple II"
         echo -n "computers over the network? "
         read
     fi
-    
+
     if [[ $autoAnswerYes || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
-    
+
         nbmode=1
         echo
-        
+
         sudo true
         mkdir -p /tmp/netboot
         cd /tmp/netboot
-        
+
         # this will get "Disk 7" (Apple II Setup) as a raw (block dump) image
         if [[ ! -f /usr/local/etc/netatalk/a2boot/ProDOS16\ Boot\ Blocks ]] \
         || [[ ! -f /usr/local/etc/netatalk/a2boot/ProDOS16\ Image ]] \
         || [[ ! -f /usr/local/etc/netatalk/a2boot/Apple\ :2f:2fe\ Boot\ Blocks ]]; then
             echo "A2SERVER: Downloading Apple II Boot Blocks..."
             cd /tmp/netboot
-            
+
             wget -qO Disk_7_of_7-Apple_II_Setup.sea.bin http://archive.org/download/download.info.apple.com.2012.11/download.info.apple.com.2012.11.zip/download.info.apple.com%2FApple_Support_Area%2FApple_Software_Updates%2FEnglish-North_American%2FApple_II%2FApple_IIGS_System_6.0.1%2FDisk_7_of_7-Apple_II_Setup.sea.bin
             unar -k skip Disk_7_of_7-Apple_II_Setup.sea.bin &> /dev/null
             truncate -s 819284 'Disk 7 of 7-Apple II Setup.sea'
             dd if='Disk 7 of 7-Apple II Setup.sea' of=APPLE2SETUP.HDV bs=84 skip=1 2> /dev/null
-                
+
             # copy the Boot Blocks into the right place
             mkdir -p a2setup
             sudo mount -t hfs -o ro,loop APPLE2SETUP.HDV a2setup
@@ -65,8 +65,8 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
             sudo cp -p a2setup/System\ Folder/* /usr/local/etc/netatalk/a2boot
             sudo umount a2setup
             sudo mv /usr/local/etc/netatalk/a2boot/Apple* /usr/local/etc/netatalk/a2boot/'Apple :2f:2fe Boot Blocks'
-            
-            cd /usr/local/etc/netatalk/a2boot        
+
+            cd /usr/local/etc/netatalk/a2boot
             # thanks to Geoff Body for these Boot Blocks patches
             # fix cleartext password login bug
             echo -n -e "\xA8\xA2\x01\xBD\x80\x38\x99\xA0\x38\xC8\xE8\xE0\x09\x90\xF4" | \
@@ -80,7 +80,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
               sudo dd of='ProDOS16 Image' bs=1661 seek=1 conv=notrunc 2> /dev/null
         fi
         echo "A2SERVER: Boot Blocks have been installed."
-        
+
         # get a2server-tools if necessary
         if [[ ! -f /usr/local/bin/mkatinit ]] \
         || [[ ! -f /usr/local/bin/afptype ]] \
@@ -92,12 +92,12 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
             /tmp/2.tools
             rm /tmp/2.tools
         fi
-    
+
         # put BASIC.SYSTEM at root for ProDOS 8 startup
-        cp -p /usr/local/etc/netatalk/a2boot/Basic.System $gsosDir/BASIC.SYSTEM        
+        cp -p /usr/local/etc/netatalk/a2boot/Basic.System $gsosDir/BASIC.SYSTEM
         afpsync -v $gsosDir > /dev/null
         afptype -p SYS -q $gsosDir/BASIC.SYSTEM
-        
+
         # create tools for setting GS/OS or ProDOS 8 boot in battery RAM and rebooting. Props yet again to Geoff Body.
         if [[ ! -f $p8Dir/NETBOOT.P8 ]]; then
             echo
@@ -118,10 +118,10 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
             afpsync -v $gsosDir > /dev/null
             afptype -p SYS -q $gsosDir/NETBOOT.GSOS
         fi
-    
+
         mkatinit -gs -d -f     # GS/OS registered user and Guest starts up with SYSTEM/FINDER
         mkatinit -d -f guest   # ProDOS 8 Guest starts up with BASIC.SYSTEM (no registered user)
-    
+
         if [[ -f "/media/A2SHARED/A2FILES/SYSTEM/START.GS.OS" ]]; then
             echo "A2SERVER: GS/OS has already been downloaded and installed."
             gsosInstall=1
@@ -133,7 +133,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
             fi
             if [[ $autoAnswerYes || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
                 gsosInstall=1
-    
+
                 # get GS/OS disks from Internet Archive and put them in IMAGES
                 # also dump contents into NET.INSTALL and modify scripts to work from there
                 # echo
@@ -158,9 +158,9 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                 done
                 rm *.sea* &> /dev/null
                 sed -i "s/\([^\\]\r:\)/\1A2FILES:GSOS.INSTALLER:NET.INSTALL:/g" $netInstallDir/INSTALL/SCRIPTS/*
-    
+
                 afpsync -v $gsosDir > /dev/null
-                
+
                 # install GS/OS
                 # spec for GS/OS installer scripts: GS/OS Tech Note #64
                 # http://www.1000bit.it/support/manuali/apple/technotes/iigs/tn.iigs.064.html
@@ -186,7 +186,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                         targetFile=${targetPath##*/}
                         sourceParent=${sourcePath%/*}
                         sourceFile=${sourcePath##*/}
-                
+
                         if [[ $action == 1 || $action == 2 ]]; then
                             mkdir -p $targetParent
                             echo "copying: $sourcePathMixed"
@@ -207,22 +207,22 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                     done
                     unset IFS
                 }
-                
+
                 mkdir -p /tmp/netboot
                 cd /tmp/netboot
-    
-                echo "A2SERVER: Preparing GS/OS installer scripts..."    
+
+                echo "A2SERVER: Preparing GS/OS installer scripts..."
                 # work through installer scripts
                 processScript $netInstallDir/INSTALL/SCRIPTS/INSTAL.SYS.FILE
                 processScript $netInstallDir/INSTALL/SCRIPTS/APPLESHARE
                 processScript $netInstallDir/INSTALL/SCRIPTS/SERVER.SYS.FILE
-    
+
                 # sync netatalk database
                 afpsync -v $gsosDir > /dev/null
-            
+
             fi
         fi
-        
+
         if [[ ! $autoAnswerYes ]]; then
             echo
             echo "Do you want to download and install utilities for working with"
@@ -230,11 +230,11 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
             read
         fi
         if [[ $autoAnswerYes || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
-    
+
             # download image tools and put them in IMAGE.TOOLS
             echo "A2SERVER: Downloading GS/OS disk image utilities..."
             mkdir -p $imageToolsDir
-    
+
             # get Asimov2 (for GS/OS)
             echo -n "Asimov 2.0"
             if [[ -f $imageToolsDir/ASIMOV ]]; then
@@ -249,7 +249,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                 cat Asimov/Asimov_rsrc_ >> $imageToolsDir/.AppleDouble/ASIMOV
                 afptype -p S16 -q $imageToolsDir/ASIMOV
             fi
-        
+
             echo -n "GS-ShrinkIt 1.1"
             # get GS-ShrinkIt
             if [[ -f $imageToolsDir/GSHK ]]; then
@@ -265,8 +265,8 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                 cat GSHK_rsrc_ >> $imageToolsDir/.AppleDouble/GSHK
                 afptype -p S16 -a DB07 -q $imageToolsDir/GSHK
             fi
-    
-            echo -n "MountIt 1.4"    
+
+            echo -n "MountIt 1.4"
             # get MountIt (for GS/OS)
             if [[ -f $imageToolsDir/MOUNTIT.SHK ]]; then
                 echo " is already installed."
@@ -287,11 +287,11 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
             read
         fi
         if [[ $autoAnswerYes || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
-    
+
             echo "A2SERVER: Downloading ProDOS 8 disk image utilities..."
 
             mkdir -p $diskToolsP8Dir
-    
+
             echo -n "ShrinkIt 3.4"
             # get ShrinkIt 3.4 (for ProDOS 8)
             if [[ -f $diskToolsP8Dir/SHRINKIT ]]; then
@@ -305,7 +305,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                 cppo -s -ad SHRINKIT /SHRINKIT/SHRINKIT $diskToolsP8Dir 2> /dev/null
                 afpsync -v $sharepath > /dev/null
             fi
-        
+
             echo -n "DSK2FILE 5.8"
             # get DSK2FILE (for ProDOS 8)
             if [[ -f $diskToolsP8Dir/DSK2FILE ]]; then
@@ -319,7 +319,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                 afpsync -v $sharepath > /dev/null
                 afptype -p SYS -q $diskToolsP8Dir/DSK2FILE
             fi
-    
+
             echo -n "Apple System Utilities 3.1"
             if [[ -f $diskToolsP8Dir/SYSUTIL ]]; then
                 echo " is already installed."
@@ -336,7 +336,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                 cppo -s -ad A2SYSDISK32.HDV /UTILITIES/UTIL.2 $diskToolsP8Dir 2> /dev/null
                 afpsync -v $sharepath > /dev/null
             fi
-    
+
         fi
 
         if [[ ! $autoAnswerYes ]]; then
@@ -346,11 +346,11 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
             read
         fi
         if [[ $autoAnswerYes || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
-    
+
             echo "A2SERVER: Downloading communications software..."
 
             mkdir -p $commDir
-    
+
             echo -n "Spectrum"
             # get Spectrum
             if [[ -f $commDir/SPECTRUM/SPECTRUM.HDV ]]; then
@@ -386,7 +386,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                 mv *PT3* *PROTERM* $protermDir/.AppleDouble
                 mv Z.LINK $zlinkDir/.AppleDouble
                 afpsync -v $gsosDir > /dev/null
-            fi            
+            fi
 
             echo -n "ADTPro and VSDRIVE"
             if [[ -f $commDir/ADTPRO/ADTPRO ]]; then
@@ -400,25 +400,25 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                 cd .AppleDouble
                 mv *ADTPRO* *VEDRIVE* *VSDRIVE* $adtproDir/.AppleDouble
                 afpsync -v $gsosDir > /dev/null
-            fi            
+            fi
 
         fi
-            
+
         # clean up
         cd
         [[ -d /tmp/netboot ]] && rm -rf /tmp/netboot
         [[ -d ~/GNUstep ]] && rm -rf ~/GNUstep
-    
+
         # rock and roll!
         echo
-        
+
         echo
         if (( $gsosInstall )); then
             echo "GS/OS network boot (for registered user and Guest) and"
         fi
         echo "ProDOS 8 network boot (for Guest only) is now configured."
-        echo "See http://appleii.ivanx.com/a2server for info using it." 
-    
+        echo "See http://appleii.ivanx.com/a2server for info using it."
+
     fi
 
     if [[ ! $autoAnswerYes ]]; then

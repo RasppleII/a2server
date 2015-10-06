@@ -108,7 +108,7 @@ if (( unsupportedOS )); then
     echo "operating system version. Continuing is probably fine, but might not be."
     echo "Worst case could make your operating system no longer work properly,"
     echo "or cause data to be lost."
-    echo "More information is at http://appleii.ivanx.com/a2server."      
+    echo "More information is at http://appleii.ivanx.com/a2server."
 fi
 
 doSetup=1
@@ -135,7 +135,7 @@ if (( $doSetup )); then
         read
         [[ ${REPLY:0:1} == "y" || ${REPLY:0:1} == "Y" ]]; doSetup=$(( 1 - $? ))
     fi
-    
+
     if (( $doSetup )); then
 
         userPw=$(sudo grep "^$USER" /etc/shadow | cut -f 2 -d ':')
@@ -145,7 +145,7 @@ if (( $doSetup )); then
         password="your password"
         [[ $isApple2Pw ]] && password="'apple2'"
         [[ $isRaspberryPw ]] && password="'raspberry'"
-                
+
 
         [[ $isRpi ]] && a2server="your Raspberry Pi" || a2server="A2SERVER"
         if [[ ! $isApple2Pw && ! -f /usr/local/etc/A2SERVER-version ]]; then
@@ -169,30 +169,30 @@ if (( $doSetup )); then
         echo
 
         sudo true
-    
+
         echo
         echo "A2SERVER: Downloading scripts..."
-                
+
         wget -q -O /tmp/1.storage "${scriptURL}scripts/a2server-1-storage.txt"
         chmod ugo+x /tmp/1.storage
-        
+
         wget -q -O /tmp/2.tools "${scriptURL}scripts/a2server-2-tools.txt"
         chmod ugo+x /tmp/2.tools
 
         wget -q -O /tmp/3.sharing "${scriptURL}scripts/a2server-3-sharing.txt"
         chmod ugo+x /tmp/3.sharing
-                
+
         wget -q -O /tmp/5.netboot "${scriptURL}scripts/a2server-5-netboot.txt"
         chmod ugo+x /tmp/5.netboot
-        
+
         wget -q -O /tmp/6.samba "${scriptURL}scripts/a2server-6-samba.txt"
         chmod ugo+x /tmp/6.samba
-  
+
         wget -q -O /tmp/7.console "${scriptURL}scripts/a2server-7-console.txt"
         chmod ugo+x /tmp/7.console
 
         echo "A2SERVER: Scripts have been downloaded. Installing..."
-        
+
         /tmp/1.storage
         rm /tmp/1.storage
         /tmp/2.tools
@@ -206,7 +206,7 @@ if (( $doSetup )); then
         /tmp/7.console
         rm /tmp/7.console
         rm /tmp/a2server-packageReposUpdated &> /dev/null
-        
+
         if [[ ! -f /usr/local/etc/A2SERVER-version ]] \
         || (( $(cat /usr/local/etc/A2SERVER-version) < "$a2serverVersion" )); then
             echo "$a2serverVersion" | sudo tee /usr/local/etc/A2SERVER-version &> /dev/null
@@ -261,7 +261,7 @@ if (( $doSetup )); then
             echo "by typing 'appletalk-on'."
             echo
         fi
-        
+
         if [[ -f /tmp/singleUser ]]; then
             if [[ ! $autoAnswerYes ]]; then
                 echo "Your Raspberry Pi was started in single-user mode in order to"
@@ -276,7 +276,7 @@ if (( $doSetup )); then
             fi
             echo
         fi
-        
+
         echo
     	echo "Type 'system-shutdown' to turn off A2SERVER."
     	echo "Type 'a2server-setup' to configure network boot."

@@ -96,7 +96,7 @@ while [ -n "$1" ] && [ "${1:0:1}" = '-' ]; do
 		continue
 	else
 		badflag=1
-		break	
+		break
 	fi
 done
 
@@ -156,10 +156,10 @@ while : ; do
 			prefix="$gsprefix"
 		fi
 	fi
-	
+
 	# make username all caps
 	username=`echo $username | tr '[:lower:]' '[:upper:]'`
-	
+
 	# prompt for folders
 	if [ ! $doalsoguest ] && [ ! $noprompt ]; then
 		while : ; do
@@ -174,7 +174,7 @@ while : ; do
 			fi
 			break
 		done
-		
+
 		while : ; do
 			echo "Enter the initial ProDOS prefix:"
 			echo "default (CR to accept): $prefix"
@@ -188,10 +188,10 @@ while : ; do
 			break
 		done
 	fi
-		
+
 	# create folders if needed
 	filepath="$PWD/$filename"
-	
+
 	while [ $usersfolder -eq 1 ]; do
 		# create folders for ATINIT
 		while [ ! -d "$sharepath" ]; do
@@ -199,7 +199,7 @@ while : ; do
 			echo "Enter the local path to the netatalk shared volume used for netboot:"
 			read sharepath
 		done
-	
+
 		if [ ! -d "$sharepath/USERS" ]; then
 			mkdir "$sharepath/USERS"
 			if [ $? -ne 0 ]; then
@@ -222,12 +222,12 @@ while : ; do
 				break
 			fi
 		fi
-		
+
 		# we have a valid USERS folder target for ATINIT
 		filepath="$sharepath/USERS/$username/SETUP/$filename"
 		usersfolder=2
 	done
-	
+
 	if [ $usersfolder -eq 1 ]; then
 		echo "Could not write to shared volume. Creating ATINIT in current directory."
 		if [ -n "$alsoguest" ]; then
@@ -242,7 +242,7 @@ while : ; do
 		echo "netboot start prefix : $prefix"
 		echo
 	fi
-	
+
 	#remove ATINIT if present
 	if [ ! $overwrite ] && [ -f "$filepath" ]; then
 		echo -n "$filepath already exists. Overwrite? "
@@ -259,7 +259,7 @@ while : ; do
 			fi
 		done
 	fi
-	
+
 	#write the file. start with zeroes
 	dd if=/dev/zero of="$filepath" bs=1 count=276 2> /dev/null
 	#put in startprog, prefix, username (first byte of each field is length)
@@ -269,7 +269,7 @@ while : ; do
 	( decToChar "${#startprog}"; echo -n "$startprog"; ) | writechars "$filepath" 7
 	( decToChar "${#prefix}"; echo -n "$prefix"; ) | writechars "$filepath" 78
 	( decToChar "${#username}"; echo -n "$username"; ) | writechars "$filepath" 143
-	
+
 	echo "Created $filepath"
 	if [ ! $alsoguest ]; then
 		break
@@ -283,4 +283,3 @@ while : ; do
 done
 
 echo
-

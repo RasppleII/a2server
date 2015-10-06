@@ -21,7 +21,7 @@ showip: show the current ethernet IP address of the server
 showmac: show the MAC (Ethernet hardware) address of the server
 showip-wifi: show the current wifi IP address of the server
 showmac-wifi: show the MAC (wifi hardware) address of the server
-ifreset: reset all network interfaces (requires restart) 
+ifreset: reset all network interfaces (requires restart)
 
 netatalk-stop: stop the netatalk service until reboot
 netatalk-start: start the netatalk service
@@ -57,7 +57,7 @@ netboot-p8-guest: set guests to netboot into ProDOS 8 (default)
   note: when a IIgs is set to network boot into GS/OS, using the Network
   control panel or the NETBOOT.GSOS utility, guests will behave like
   registered users, and ignore the netboot setting of the guest user
-  
+
 guest-off: disallow guest access to A2SERVER
 guest-on: allow guest access to A2SERVER (default)
   note: by default, Guest access is the only way to network boot into
@@ -83,4 +83,3 @@ afpsync: register files introduced outside of AFP with netatalk
 mkatinit: set up network boot configuration files
 cppo: catalog and copy files from ProDOS image file (slow, but works)
   (add -h to show help for the above four commands, e.g. "afptype -h")
-

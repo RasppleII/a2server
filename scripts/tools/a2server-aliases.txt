@@ -75,12 +75,3 @@ alias a2files-share="sudo sed -i 's/^\/media\/A2SHARED\/A2FILES\ A2FILES options
 alias a2files-unshare="sudo sed -i 's/^#share2/\/media\/A2SHARED\/A2FILES\ A2FILES options:prodos\ casefold:toupper/' /usr/local/etc/netatalk/AppleVolumes.default; [[ -d /media/A2SHARED/A2FILES ]] || mkdir /media/A2SHARED/A2FILES"
 
 alias showalias="alias | cut -d= -f 1 | cut -d' ' -f2 | more"
-
-
-
-
-
-
-
-
-

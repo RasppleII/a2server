@@ -295,7 +295,7 @@ exit_usage () {
     echo "  two hex digits for untypeables (note: use '\xZZ' for 00)."
     echo "ProDOS type should be two hex digits, and auxtype should be four;"
     echo "  type can alternatively be BAS, BIN, INT, P16, S16, SHK, SYS, TXT."
-    echo "-q skips recheck of file (show types) after setting" 
+    echo "-q skips recheck of file (show types) after setting"
     echo
     exit 1
 }
@@ -359,7 +359,7 @@ while [[ $1 && ( "${1:0:1}" == '-' ) ]]; do
         continue
     else
         exit_usage
-        break   
+        break
     fi
 done
 
@@ -393,7 +393,7 @@ for filename in $@; do
     fi
 
     entrycount=`readcharDec "$filename" 25`
-    
+
     entry=1
     offset=29
 
@@ -406,7 +406,7 @@ for filename in $@; do
         (( offset = (entry * 12 + 29) - 12 ))
     done
     (( entry > entrycount )) && continue
-    
+
     (( offset = offset + 3 ))
     (( tposHi = $(readcharDec "$filename" $offset) * 256 ))
     (( offset = offset + 1 ))
@@ -414,7 +414,7 @@ for filename in $@; do
     (( cpos = tpos + 4 ))
     (( ppos = tpos + 1 ))
     (( apos = tpos + 2 ))
-    
+
     if [[ $p || $a || $t || $c ]]; then # set
         if [[ $p || $a ]]; then
             if [[ $p ]]; then
@@ -447,9 +447,9 @@ for filename in $@; do
 
         type="$(readchars "$filename" $tpos 4)"
         creator="$(readchars "$filename" $cpos 4)"
-        
+
         echo -n "$linestart"
-    
+
         if [[ $creator != "pdos" || ( ( $type != "TEXT" ) \
         && ( $type != "PSYS" ) && ( ${type:0:1} != "p" ) ) ]]; then
             if [[ $creator || $type ]]; then
@@ -459,7 +459,7 @@ for filename in $@; do
             fi
             continue
         fi
-        
+
         if [[ $type == "TEXT" ]]; then
             pdosType="\$04 [TXT]"
             pdosAuxType='$0000'
@@ -475,14 +475,14 @@ for filename in $@; do
                     break
                 fi
             done
-        
+
             (( tpos=tpos+1 ))
             auxTypeHi=$(readcharHex "$filename" $tpos)
             (( tpos=tpos+1 ))
             auxTypeLo=$(readcharHex "$filename" $tpos)
             pdosAuxType=$auxTypeHi$auxTypeLo
         fi
-        
+
         echo "ProDOS file.  Type:\$$pdosType   AuxType:\$$pdosAuxType"
     fi
 

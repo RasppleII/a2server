@@ -73,7 +73,7 @@ if [[ ! -f /usr/local/bin/unar ]]; then
         sudo apt-get -y update
         touch /tmp/a2server-packageReposUpdated
     fi
-    
+
     if [[ $isRpi || $isDebian ]]; then
         sudo apt-get -y install libgnustep-base1.22
         sudo apt-get clean

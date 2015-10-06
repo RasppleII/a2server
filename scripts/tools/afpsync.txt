@@ -76,7 +76,7 @@ while [[ $1 == "-r" || $1 == "-e" || $1 = "-v" ]]; do
         force=1
         shift
     fi
-    
+
     if [[ $1 == "-e" ]]; then
         showerrors=1
         shift
@@ -103,7 +103,7 @@ else
     if [[ $1 ]]; then
         sharepath=$(readlink -m $1)
         processPath
-    else    
+    else
         grep ^/media /usr/local/etc/netatalk/AppleVolumes.default | \
         while read line; do
             [[ $(echo $line | grep toupper) ]]; nocasefold=$?

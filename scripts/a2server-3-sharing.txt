@@ -34,14 +34,14 @@ isDebian=
 if [[ -f /usr/local/etc/A2SERVER-version ]] && (( $(cat /usr/local/etc/A2SERVER-version) >= 101 )); then
 
     echo "A2SERVER: Netatalk is already installed."
-    
+
 else
 
     echo "A2SERVER: Installing Netatalk (this will take a while)..."
-    
+
     # stop Netatalk if running (during upgrade)
     [[ $(ps --no-headers -C afpd) ]] && sudo /etc/init.d/netatalk stop
-    
+
     if [[ ! -f /tmp/a2server-packageReposUpdated ]]; then
         # prepare for installing packages
         sudo apt-get -y update
@@ -70,7 +70,7 @@ else
         else
             break
         fi
-        
+
         # install Netatalk
         if [[ $isRpi ]]; then
             { wget -qO- /tmp/netatalk.tgz "http://appleii.ivanx.com/a2server/files/netatalk224-rpi.tgz" | sudo tar Pzx; } 2> /dev/null
@@ -78,7 +78,7 @@ else
             { wget -qO- /tmp/netatalk.tgz "http://appleii.ivanx.com/a2server/files/netatalk224-debian7_x86.tgz" | sudo tar Pzx; } 2> /dev/null
         fi
         sudo mandb &> /dev/null
-        
+
         [[ -f /usr/local/sbin/atalkd ]] && compileFromSource=
 
         break
@@ -98,39 +98,39 @@ else
         sudo apt-get -y install libssl-dev
         sudo apt-get -y install libgcrypt11-dev
         sudo apt-get clean
-        
+
         # get Netatalk
         rm -rf /tmp/netatalk &> /dev/null
         mkdir /tmp/netatalk
         cd /tmp/netatalk
-        
+
         wget -q "http://downloads.sourceforge.net/project/netatalk/netatalk/2.2.4/netatalk-2.2.4.tar.gz"
         tar zxf netatalk-2.2.4.tar.gz
         cd netatalk-2.2.4
-        
+
         # Patch the source so file dates are preserved during a GS/OS folder copy,
         #   and the AsanteTalk bridge consistently starts up in AppleTalk Phase 2
         #   and the Dayna bridge doesn't crash GS/OS
         # props to Steven Hirsch for these
         sed -i ':a;N;$!ba;s/case FILPBIT_ATTR :\n *change_mdate = 1;\n/case FILPBIT_ATTR :\n/g' etc/afpd/file.c
         sed -i 's/rtmp->rt_iface == iface/rtmp->rt_iface != iface/g' etc/atalkd/main.c
-    
+
         # prepare to build Netatalk
         ./configure --enable-debian --enable-ddp --enable-a2boot
-    
+
         # uninstall Netatalk if already installed
         [[ -f /usr/local/sbin/afpd ]] && sudo make uninstall
-        
+
         # compile and install Netatalk
         make
         sudo make install
-        
+
         # to remove the Netatalk source code (optional), type:
         cd
         rm -rf /tmp/netatalk
-    fi    
+    fi
 fi
-    
+
 # --- Configuring Netatalk
 
 echo "A2SERVER: Configuring Netatalk..."
@@ -213,7 +213,7 @@ if [[ $isRpi ]]; then
     #    echo -e "\n\n#for USB-to-serial adapter with Prolific PL2303 chipset\nT1:23:respawn:/sbin/getty -L ttyUSB0 19200 vt100" | sudo tee -a /etc/inittab > /dev/null
     #fi
 fi
-   
+
 # set up GSFILES share (for GS data files, not GSOS system)
 # classic Mac OS file names are allowed (31 chars, mixed case, everything but colons)
 sudo sed -i \
@@ -235,7 +235,7 @@ if [[ ! -d /media/A2SHARED/A2FILES/.AppleDesktop ]]; then
     ln -s .AppleDesktop .APPLEDESKTOP
 fi
 
-# set up ADTDISKS share (ADTPro disk image folder, if A2CLOUD is installed)    
+# set up ADTDISKS share (ADTPro disk image folder, if A2CLOUD is installed)
 # classic Mac OS file names are allowed (31 chars, mixed case, everything but colons)
 if [[ -d /usr/local/adtpro/disks ]]; then # A2CLOUD/ADTPro installed
     if [[ ! -d /media/A2SHARED/ADTDISKS ]]; then
@@ -264,7 +264,7 @@ else
     echo
     echo "A2SERVER: Setting up AFP password 'apple2' for Apple II and Mac clients."
     # echo "A2SERVER: Enter 'apple2' or another password of up to eight characters."
-    echo    
+    echo
     # set registered user login using RandNum authentication
     sudo afppasswd -c
     sudo sed -i 's/^pi.*$/pi:6170706C65320000:****************:********/' /usr/local/etc/netatalk/afppasswd
@@ -321,8 +321,8 @@ echo "A2SERVER: Netatalk is installed, configured, and running."
 echo
 
 # if atalkd isn't running (no AppleTalk), and this is a Rasbperry Pi:
-if [[ ( ! $(ps aux | grep [a]talkd) ) && ( $isRpi ) ]]; then    
-    
+if [[ ( ! $(ps aux | grep [a]talkd) ) && ( $isRpi ) ]]; then
+
     # if AppleTalk module exists, try to load it
     if [[ -f /lib/modules/$kernelRelease/kernel/net/appletalk/appletalk.ko ]]; then # module present, but not loaded?
         sudo depmod
