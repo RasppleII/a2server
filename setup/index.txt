@@ -10,6 +10,34 @@
 
 a2serverVersion="125"
 
+function askYesNo()
+{
+	local default
+
+	case "$3" in
+		0) default="y" ;;
+		1) default="n" ;;
+		*) default="" ;;
+	esac
+
+	if [ -n "$autoAnswerDefault" -a -n "$default" ]; then
+		return $3
+	fi
+
+	printf "\n$1\n\n"
+	while :; do
+		echo -n "$2 "
+		[ -n "$default" ] && echo -n "[$default] "
+		read
+		case "$REPLY" in
+			[Yy]*) return 0 ;;
+			[Nn]*) return 1 ;;
+			"") [ -n "$default" ] && return $3 ;;
+			*) echo "Please answer yes or no." ;;
+		esac
+	done
+}
+
 # Ensure URL we'll use ends in a /
 case "$A2SERVER_SCRIPT_URL" in
 	*/) scriptURL="$A2SERVER_SCRIPT_URL" ;;
@@ -113,28 +141,14 @@ fi
 
 doSetup=1
 if [[ ! -f /usr/local/etc/a2server-help.txt ]] || (( $a2server_update )); then
-	echo
-	echo "Setting up A2SERVER will take up to 60 minutes, during which"
-	echo "you'll see a bunch of stuff spit out across the screen."
-	echo
-	if [[ ! $autoAnswerDefault ]]; then
-    	echo -n "Ready to set up A2SERVER? "
-	    read
-    	[[ ${REPLY:0:1} == "y" || ${REPLY:0:1} == "Y" ]]; doSetup=$(( 1 - $? ))
-    fi
+	askYesNo "Setting up A2SERVER will take up to 60 minutes, during which\nyou'll see a bunch of stuff spit out across the screen." "Ready to set up A2SERVER?" 0
+	doSetup=$(( 1 - $? ))
 fi
 
 if (( $doSetup )); then
 
-    echo
-    echo "a2server-setup modifies files and performs actions as the root user."
-    echo "For details, visit http://appleii.ivanx.com/a2server."
-    echo
-	if [[ ! $autoAnswerDefault ]]; then
-        echo -n "Continue? "
-        read
-        [[ ${REPLY:0:1} == "y" || ${REPLY:0:1} == "Y" ]]; doSetup=$(( 1 - $? ))
-    fi
+	askYesNo "a2server-setup modifies files and performs actions as the root user.\nFor details, visit http://appleii.ivanx.com/a2server." "Continue?" 0
+	doSetup=$(( 1 - $? ))
 
     if (( $doSetup )); then
 
@@ -149,16 +163,8 @@ if (( $doSetup )); then
 
         [[ $isRpi ]] && a2server="your Raspberry Pi" || a2server="A2SERVER"
         if [[ ! $isApple2Pw && ! -f /usr/local/etc/A2SERVER-version ]]; then
-            if [[ ! $autoAnswerDefault ]]; then
-                echo
-                echo "To ensure that all client computers are able to connect to"
-                echo "${a2server} using the same password, you are recommended"
-                echo "to change your user password to 'apple2'."
-                echo
-                echo -n "Do you want to change the password for user '$USER' to 'apple2' now? "
-                read
-            fi
-            if [[ $autoAnswerDefault || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
+		askYesNo "To ensure that all client computers are able to connect to\n${a2server} using the same password, you are recommended\nto change your user password to \"apple2\"." "Do you want to change the password for user \"$USER\" to \"apple2\" now?" 0
+            if [ $? -eq 0 ]; then
                 echo "A2SERVER: changing password for user '$USER' to 'apple2'..."
                 echo "$USER:apple2" | sudo chpasswd
             fi
@@ -230,14 +236,8 @@ if (( $doSetup )); then
             echo "A2SERVER setup is complete! Go connect from your Apple II!"
             echo
         elif [[ -f /tmp/rpiUpdate ]]; then
-            echo "A2SERVER is now configured, but Apple II clients will not be able"
-            echo "to connect until you restart your Raspberry Pi."
-            echo
-            if [[ ! $autoAnswerDefault ]]; then
-                echo -n "Restart now? "
-                read
-            fi
-            if [[ $autoAnswerDefault || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
+		askYesNo "A2SERVER is now configured, but Apple II clients will not be able\nto connect until you restart your Raspberry Pi." "Restart now?" 0
+            if [ $? -eq 0 ]; then
                 sudo shutdown -r now
                 echo
                 echo "A2SERVER: Preparing to restart..."
@@ -263,12 +263,8 @@ if (( $doSetup )); then
         fi
 
         if [[ -f /tmp/singleUser ]]; then
-            if [[ ! $autoAnswerDefault ]]; then
-                echo "Your Raspberry Pi was started in single-user mode in order to"
-                echo -n "fix a problem. You should restart to operate normally. Restart now? "
-                read
-            fi
-            if [[ $autoAnswerDefault || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
+		askYesNo "Your Raspberry Pi was started in single-user mode in order to\nfix a problem. You should restart to operate normally." "Restart now?" 0
+            if [ $? -eq 0 ]; then
                 sudo shutdown -r now
                 echo
                 echo "A2SERVER: Preparing to restart..."
