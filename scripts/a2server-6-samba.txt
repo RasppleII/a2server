@@ -3,16 +3,16 @@
 # Set up A2SERVER to support Samba (Windows File Sharing)
 # this script can also be used if new shares are introduced
 
-[[ -f /tmp/a2server-autoAnswerYes ]] && autoAnswerYes=1 || autoAnswerYes=
+[[ -f /tmp/a2server-autoAnswerDefault ]] && autoAnswerDefault=1 || autoAnswerDefault=
 
-if [[ ! $autoAnswerYes || -f /tmp/a2server-setupWindowsSharing ]]; then
+if [[ ! $autoAnswerDefault || -f /tmp/a2server-setupWindowsSharing ]]; then
 
-    if [[ ! $autoAnswerYes ]]; then
+    if [[ ! $autoAnswerDefault ]]; then
         echo
         echo -n "Should Windows computers be able to connect to A2SERVER? "
         read
     fi
-    if [[ $autoAnswerYes || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
+    if [[ $autoAnswerDefault || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
 
         echo "A2SERVER: Setting up Windows file sharing..."
         sudo true
@@ -47,7 +47,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupWindowsSharing ]]; then
 
         workgroup=$(grep -o "^   workgroup = .*$" /etc/samba/smb.conf 2> /dev/null | cut -c 16-)
         [[ $workgroup ]] || workgroup="WORKGROUP"
-        if [[ ! $autoAnswerYes ]]; then
+        if [[ ! $autoAnswerDefault ]]; then
             echo
             echo "Enter workgroup name (or press return for '${workgroup}'): "
             read

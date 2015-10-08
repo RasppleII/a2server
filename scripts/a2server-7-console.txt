@@ -49,11 +49,11 @@ if [[ $(lsb_release -d 2> /dev/null | grep Ubuntu) ]]; then
             echo "- eliminate a harmless but annoying startup error about piix_smbus"
             echo "- fix an Ubuntu 10.04 issue with slow scrolling"
             echo
-            if [[ ! $autoAnswerYes ]]; then
+            if [[ ! $autoAnswerDefault ]]; then
                 echo -n "Do you want to optimize the Ubuntu console? "
                 read
             fi
-            if [[ $autoAnswerYes || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
+            if [[ $autoAnswerDefault || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
 
                 echo "A2SERVER: Optimizing console..."
 

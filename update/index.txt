@@ -14,10 +14,10 @@ case "$A2SERVER_SCRIPT_URL" in
 	*) scriptURL="${A2SERVER_SCRIPT_URL:-http://appleii.ivanx.com/a2server}/" ;;
 esac
 
-autoAnswerYes=
+autoAnswerDefault=
 for arg in $@; do
     if [[ $arg == "-y" ]]; then
-        autoAnswerYes=1
+        autoAnswerDefault=1
         break
     fi
 done
@@ -29,7 +29,7 @@ echo
 echo "installed version: ${installedVersion:0:1}.${installedVersion:1:1}.${installedVersion:2:1}"
 echo "current version: ${currentVersion:0:1}.${currentVersion:1:1}.${currentVersion:2:1}"
 echo
-if [[ $autoAnswerYes ]]; then
+if [[ $autoAnswerDefault ]]; then
     REPLY="y"
 else
     echo -n "Do you want to update (or reinstall) A2SERVER? "
