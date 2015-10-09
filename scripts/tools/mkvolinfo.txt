@@ -1,4 +1,5 @@
-#!/bin/bash
+#! /bin/bash
+# vim: set tabstop=4 shiftwidth=4 expandtab filetype=sh:
 
 # mkvolinfo -- creates a (share)/.AppleDesktop/.volinfo file
 

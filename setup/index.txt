@@ -1,4 +1,5 @@
 #! /bin/bash
+# vim: set tabstop=4 shiftwidth=4 expandtab filetype=sh:
 
 # A2SERVER master setup script, last update 15-Feb-2015
 # it downloads and executes several scripts related to the setup of
@@ -12,36 +13,36 @@ a2serverVersion="125"
 
 function askYesNo()
 {
-	local default
+    local default
 
-	case "$3" in
-		0) default="y" ;;
-		1) default="n" ;;
-		*) default="" ;;
-	esac
+    case "$3" in
+        0) default="y" ;;
+        1) default="n" ;;
+        *) default="" ;;
+    esac
 
-	if [ -n "$autoAnswerDefault" -a -n "$default" ]; then
-		return $3
-	fi
+    if [ -n "$autoAnswerDefault" -a -n "$default" ]; then
+        return $3
+    fi
 
-	printf "\n$1\n\n"
-	while :; do
-		echo -n "$2 "
-		[ -n "$default" ] && echo -n "[$default] "
-		read
-		case "$REPLY" in
-			[Yy]*) return 0 ;;
-			[Nn]*) return 1 ;;
-			"") [ -n "$default" ] && return $3 ;;
-			*) echo "Please answer yes or no." ;;
-		esac
-	done
+    printf "\n$1\n\n"
+    while :; do
+        echo -n "$2 "
+        [ -n "$default" ] && echo -n "[$default] "
+        read
+        case "$REPLY" in
+            [Yy]*) return 0 ;;
+            [Nn]*) return 1 ;;
+            "") [ -n "$default" ] && return $3 ;;
+            *) echo "Please answer yes or no." ;;
+        esac
+    done
 }
 
 # Ensure URL we'll use ends in a /
 case "$A2SERVER_SCRIPT_URL" in
-	*/) scriptURL="$A2SERVER_SCRIPT_URL" ;;
-	*) scriptURL="${A2SERVER_SCRIPT_URL:-http://appleii.ivanx.com/a2server}/" ;;
+    */) scriptURL="$A2SERVER_SCRIPT_URL" ;;
+    *) scriptURL="${A2SERVER_SCRIPT_URL:-http://appleii.ivanx.com/a2server}/" ;;
 esac
 
 isRpi=
@@ -78,7 +79,7 @@ while [[ $1 ]]; do
         setupWindowsSharing="-w"
         touch /tmp/a2server-setupWindowsSharing
     elif [[ $1 == "-os" || $1 == "os" ]]; then
-    # elif [[ ${1,,} == "rasppleii" || ${1,,} == "raspple" || ${1,,} == "rasappleii" || ${1,,} == "rasapple" || ${1,,} == "raspple2" || ${1,,} == "rasapple2" ]]; then
+        # elif [[ ${1,,} == "rasppleii" || ${1,,} == "raspple" || ${1,,} == "rasappleii" || ${1,,} == "rasapple" || ${1,,} == "raspple2" || ${1,,} == "rasapple2" ]]; then
         shift
         updateRasppleII=1
     elif [[ $1 == "-v" ]]; then
@@ -125,9 +126,9 @@ if [[ $isRpi ]]; then #supported Raspbian? (16-Feb-15, 20-Jun-14, 09-Jan-14, etc
     fwhash=$(zcat /usr/share/doc/raspberrypi-bootloader/changelog.Debian.gz | grep -m 1 'as of' | awk '{print $NF}')
     [[ ($fwhash == "8aca5762") || ($fwhash == "462f3e3f476f7b6") || ($fwhash == "c32bc633039cd9") || ($fwhash == "9d34d0475f9") || ($fwhash == "d4f5315cfac4e") || ($fwhash == "6f4a90c8cb8817f") || ($fwhash == "5dd9b4962e") || ($fwhash == "17c8799375") ]] && unsupportedOS=0
 elif [[ "$(lsb_release -rs 2> /dev/null)" == "12.04" ]]; then #Ubuntu 12.04?
-        unsupportedOS=0
+    unsupportedOS=0
 elif [[ "$(lsb_release -rs 2> /dev/null)" == "7.3" || "$(lsb_release -rs 2> /dev/null)" == "7.6" || "$(lsb_release -rs 2> /dev/null)" == "7.8" ]]; then # tested Debian?
-        unsupportedOS=0
+    unsupportedOS=0
 fi
 
 if (( unsupportedOS )); then
@@ -141,14 +142,14 @@ fi
 
 doSetup=1
 if [[ ! -f /usr/local/etc/a2server-help.txt ]] || (( $a2server_update )); then
-	askYesNo "Setting up A2SERVER will take up to 60 minutes, during which\nyou'll see a bunch of stuff spit out across the screen." "Ready to set up A2SERVER?" 0
-	doSetup=$(( 1 - $? ))
+    askYesNo "Setting up A2SERVER will take up to 60 minutes, during which\nyou'll see a bunch of stuff spit out across the screen." "Ready to set up A2SERVER?" 0
+    doSetup=$(( 1 - $? ))
 fi
 
 if (( $doSetup )); then
 
-	askYesNo "a2server-setup modifies files and performs actions as the root user.\nFor details, visit http://appleii.ivanx.com/a2server." "Continue?" 0
-	doSetup=$(( 1 - $? ))
+    askYesNo "a2server-setup modifies files and performs actions as the root user.\nFor details, visit http://appleii.ivanx.com/a2server." "Continue?" 0
+    doSetup=$(( 1 - $? ))
 
     if (( $doSetup )); then
 
@@ -163,7 +164,7 @@ if (( $doSetup )); then
 
         [[ $isRpi ]] && a2server="your Raspberry Pi" || a2server="A2SERVER"
         if [[ ! $isApple2Pw && ! -f /usr/local/etc/A2SERVER-version ]]; then
-		askYesNo "To ensure that all client computers are able to connect to\n${a2server} using the same password, you are recommended\nto change your user password to \"apple2\"." "Do you want to change the password for user \"$USER\" to \"apple2\" now?" 0
+        askYesNo "To ensure that all client computers are able to connect to\n${a2server} using the same password, you are recommended\nto change your user password to \"apple2\"." "Do you want to change the password for user \"$USER\" to \"apple2\" now?" 0
             if [ $? -eq 0 ]; then
                 echo "A2SERVER: changing password for user '$USER' to 'apple2'..."
                 echo "$USER:apple2" | sudo chpasswd
@@ -214,7 +215,7 @@ if (( $doSetup )); then
         rm /tmp/a2server-packageReposUpdated &> /dev/null
 
         if [[ ! -f /usr/local/etc/A2SERVER-version ]] \
-        || (( $(cat /usr/local/etc/A2SERVER-version) < "$a2serverVersion" )); then
+            || (( $(cat /usr/local/etc/A2SERVER-version) < "$a2serverVersion" )); then
             echo "$a2serverVersion" | sudo tee /usr/local/etc/A2SERVER-version &> /dev/null
         fi
 
@@ -236,7 +237,7 @@ if (( $doSetup )); then
             echo "A2SERVER setup is complete! Go connect from your Apple II!"
             echo
         elif [[ -f /tmp/rpiUpdate ]]; then
-		askYesNo "A2SERVER is now configured, but Apple II clients will not be able\nto connect until you restart your Raspberry Pi." "Restart now?" 0
+        askYesNo "A2SERVER is now configured, but Apple II clients will not be able\nto connect until you restart your Raspberry Pi." "Restart now?" 0
             if [ $? -eq 0 ]; then
                 sudo shutdown -r now
                 echo
@@ -263,7 +264,7 @@ if (( $doSetup )); then
         fi
 
         if [[ -f /tmp/singleUser ]]; then
-		askYesNo "Your Raspberry Pi was started in single-user mode in order to\nfix a problem. You should restart to operate normally." "Restart now?" 0
+        askYesNo "Your Raspberry Pi was started in single-user mode in order to\nfix a problem. You should restart to operate normally." "Restart now?" 0
             if [ $? -eq 0 ]; then
                 sudo shutdown -r now
                 echo
@@ -274,9 +275,9 @@ if (( $doSetup )); then
         fi
 
         echo
-    	echo "Type 'system-shutdown' to turn off A2SERVER."
-    	echo "Type 'a2server-setup' to configure network boot."
-	    echo "Type 'a2server-help' for a list of other commands."
+        echo "Type 'system-shutdown' to turn off A2SERVER."
+        echo "Type 'a2server-setup' to configure network boot."
+        echo "Type 'a2server-help' for a list of other commands."
     fi
 fi
 

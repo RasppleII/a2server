@@ -1,4 +1,5 @@
-#!/bin/bash
+#! /bin/bash
+# vim: set tabstop=4 shiftwidth=4 expandtab filetype=sh:
 
 # --- Ubuntu Server console optimizaton (optional)
 
@@ -77,21 +78,21 @@ if [[ $(lsb_release -d 2> /dev/null | grep Ubuntu) ]]; then
                 # If you see a piix4_smbus error on startup, it is harmless, but if you
                 # want to eliminate it, type:
                 echo -e '\nblacklist i2c_piix4' \
-                | sudo tee -a /etc/modprobe.d/blacklist.conf > /dev/null
+                    | sudo tee -a /etc/modprobe.d/blacklist.conf > /dev/null
                 sudo update-initramfs -u -k all
 
                 # If you want to prevent the Ubuntu screen from going blank after ten
                 # minutes of inactivity (once you are logged in), type:
                 echo -e \
-                '\n[[ $SSH_CLIENT || $REMOTEHOST ]] || setterm -blank 0 -powersave off -powerdown 0' \
-                | sudo tee -a /etc/profile > /dev/null
+                    '\n[[ $SSH_CLIENT || $REMOTEHOST ]] || setterm -blank 0 -powersave off -powerdown 0' \
+                    | sudo tee -a /etc/profile > /dev/null
                 setterm -blank 0 -powersave off -powerdown 0
 
                 # (note: These next lines addresses an issue only for Ubuntu 10.04.)
                 # Type "ps aux" and press return. If you see slow text scrolling, type:
                 if [[ "$(lsb_release -rs 2> /dev/null)" == "10.04" ]]; then
                     echo -e '\nblacklist vga16fb' \
-                    | sudo tee -a /etc/modprobe.d/blacklist-framebuffer.conf > /dev/null
+                        | sudo tee -a /etc/modprobe.d/blacklist-framebuffer.conf > /dev/null
                     if [[ ! $SSH_CLIENT ]]; then
                         echo "Restarting now is recommended. To resume setup, log back"
                         echo -n "in, press up-arrow, and press return. Restart now? "
