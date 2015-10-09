@@ -1,3 +1,6 @@
+#! /bin/bash
+# vim: set tabstop=4 shiftwidth=4 expandtab filetype=sh:
+
 # A2SERVER master setup script, last update 15-Feb-2015
 # it downloads and executes several scripts related to the setup of
 # netatalk configured for Apple II use on Debian, Raspbian, or Ubuntu.
@@ -42,7 +45,7 @@ while [[ $1 ]]; do
         setupWindowsSharing="-w"
         touch /tmp/a2server-setupWindowsSharing
     elif [[ $1 == "-os" || $1 == "os" ]]; then
-    # elif [[ ${1,,} == "rasppleii" || ${1,,} == "raspple" || ${1,,} == "rasappleii" || ${1,,} == "rasapple" || ${1,,} == "raspple2" || ${1,,} == "rasapple2" ]]; then
+        # elif [[ ${1,,} == "rasppleii" || ${1,,} == "raspple" || ${1,,} == "rasappleii" || ${1,,} == "rasapple" || ${1,,} == "raspple2" || ${1,,} == "rasapple2" ]]; then
         shift
         updateRasppleII=1
     elif [[ $1 == "-v" ]]; then
@@ -89,9 +92,9 @@ if [[ $isRpi ]]; then #supported Raspbian? (16-Feb-15, 20-Jun-14, 09-Jan-14, etc
     fwhash=$(zcat /usr/share/doc/raspberrypi-bootloader/changelog.Debian.gz | grep -m 1 'as of' | awk '{print $NF}')
     [[ ($fwhash == "8aca5762") || ($fwhash == "462f3e3f476f7b6") || ($fwhash == "c32bc633039cd9") || ($fwhash == "9d34d0475f9") || ($fwhash == "d4f5315cfac4e") || ($fwhash == "6f4a90c8cb8817f") || ($fwhash == "5dd9b4962e") || ($fwhash == "17c8799375") ]] && unsupportedOS=0
 elif [[ "$(lsb_release -rs 2> /dev/null)" == "12.04" ]]; then #Ubuntu 12.04?
-        unsupportedOS=0
+    unsupportedOS=0
 elif [[ "$(lsb_release -rs 2> /dev/null)" == "7.3" || "$(lsb_release -rs 2> /dev/null)" == "7.6" || "$(lsb_release -rs 2> /dev/null)" == "7.8" ]]; then # tested Debian?
-        unsupportedOS=0
+    unsupportedOS=0
 fi
 
 if (( unsupportedOS )); then
@@ -100,19 +103,19 @@ if (( unsupportedOS )); then
     echo "operating system version. Continuing is probably fine, but might not be."
     echo "Worst case could make your operating system no longer work properly,"
     echo "or cause data to be lost."
-    echo "More information is at http://appleii.ivanx.com/a2server."      
+    echo "More information is at http://appleii.ivanx.com/a2server."
 fi
 
 doSetup=1
 if [[ ! -f /usr/local/etc/a2server-help.txt ]] || (( $a2server_update )); then
-	echo
-	echo "Setting up A2SERVER will take up to 60 minutes, during which"
-	echo "you'll see a bunch of stuff spit out across the screen."
-	echo
-	if [[ ! $autoAnswerYes ]]; then
-    	echo -n "Ready to set up A2SERVER? "
-	    read
-    	[[ ${REPLY:0:1} == "y" || ${REPLY:0:1} == "Y" ]]; doSetup=$(( 1 - $? ))
+    echo
+    echo "Setting up A2SERVER will take up to 60 minutes, during which"
+    echo "you'll see a bunch of stuff spit out across the screen."
+    echo
+    if [[ ! $autoAnswerYes ]]; then
+        echo -n "Ready to set up A2SERVER? "
+        read
+        [[ ${REPLY:0:1} == "y" || ${REPLY:0:1} == "Y" ]]; doSetup=$(( 1 - $? ))
     fi
 fi
 
@@ -122,12 +125,12 @@ if (( $doSetup )); then
     echo "a2server-setup modifies files and performs actions as the root user."
     echo "For details, visit http://appleii.ivanx.com/a2server."
     echo
-	if [[ ! $autoAnswerYes ]]; then
+    if [[ ! $autoAnswerYes ]]; then
         echo -n "Continue? "
         read
         [[ ${REPLY:0:1} == "y" || ${REPLY:0:1} == "Y" ]]; doSetup=$(( 1 - $? ))
     fi
-    
+
     if (( $doSetup )); then
 
         userPw=$(sudo grep "^$USER" /etc/shadow | cut -f 2 -d ':')
@@ -137,7 +140,7 @@ if (( $doSetup )); then
         password="your password"
         [[ $isApple2Pw ]] && password="'apple2'"
         [[ $isRaspberryPw ]] && password="'raspberry'"
-                
+
 
         [[ $isRpi ]] && a2server="your Raspberry Pi" || a2server="A2SERVER"
         if [[ ! $isApple2Pw && ! -f /usr/local/etc/A2SERVER-version ]]; then
@@ -161,30 +164,30 @@ if (( $doSetup )); then
         echo
 
         sudo true
-    
+
         echo
         echo "A2SERVER: Downloading scripts..."
-                
+
         wget -q -O /tmp/1.storage appleii.ivanx.com/a2server/scripts/a2server-1-storage.txt
         chmod ugo+x /tmp/1.storage
-        
+
         wget -q -O /tmp/2.tools appleii.ivanx.com/a2server/scripts/a2server-2-tools.txt
         chmod ugo+x /tmp/2.tools
 
         wget -q -O /tmp/3.sharing appleii.ivanx.com/a2server/scripts/a2server-3-sharing.txt
         chmod ugo+x /tmp/3.sharing
-                
+
         wget -q -O /tmp/5.netboot appleii.ivanx.com/a2server/scripts/a2server-5-netboot.txt
         chmod ugo+x /tmp/5.netboot
-        
+
         wget -q -O /tmp/6.samba appleii.ivanx.com/a2server/scripts/a2server-6-samba.txt
         chmod ugo+x /tmp/6.samba
-  
+
         wget -q -O /tmp/7.console appleii.ivanx.com/a2server/scripts/a2server-7-console.txt
         chmod ugo+x /tmp/7.console
 
         echo "A2SERVER: Scripts have been downloaded. Installing..."
-        
+
         /tmp/1.storage
         rm /tmp/1.storage
         /tmp/2.tools
@@ -198,9 +201,9 @@ if (( $doSetup )); then
         /tmp/7.console
         rm /tmp/7.console
         rm /tmp/a2server-packageReposUpdated &> /dev/null
-        
+
         if [[ ! -f /usr/local/etc/A2SERVER-version ]] \
-        || (( $(cat /usr/local/etc/A2SERVER-version) < "$a2serverVersion" )); then
+            || (( $(cat /usr/local/etc/A2SERVER-version) < "$a2serverVersion" )); then
             echo "$a2serverVersion" | sudo tee /usr/local/etc/A2SERVER-version &> /dev/null
         fi
 
@@ -253,7 +256,7 @@ if (( $doSetup )); then
             echo "by typing 'appletalk-on'."
             echo
         fi
-        
+
         if [[ -f /tmp/singleUser ]]; then
             if [[ ! $autoAnswerYes ]]; then
                 echo "Your Raspberry Pi was started in single-user mode in order to"
@@ -268,11 +271,11 @@ if (( $doSetup )); then
             fi
             echo
         fi
-        
+
         echo
-    	echo "Type 'system-shutdown' to turn off A2SERVER."
-    	echo "Type 'a2server-setup' to configure network boot."
-	    echo "Type 'a2server-help' for a list of other commands."
+        echo "Type 'system-shutdown' to turn off A2SERVER."
+        echo "Type 'a2server-setup' to configure network boot."
+        echo "Type 'a2server-help' for a list of other commands."
     fi
 fi
 

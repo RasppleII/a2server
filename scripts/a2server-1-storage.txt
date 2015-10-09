@@ -1,4 +1,5 @@
-#!/bin/bash
+#! /bin/bash
+# vim: set tabstop=4 shiftwidth=4 expandtab filetype=sh:
 
 # --- Setting up the share volume
 
@@ -7,13 +8,13 @@
 if [[ -d /media/A2SHARED ]]; then
 
     echo "A2SERVER: Shared disk is already prepared for use."
-    
+
 else
-    
+
     echo "A2SERVER: Preparing the shared files disk..."
-    
+
     sudo mkdir /media/A2SHARED
-    
+
     sudo chown $USER:$USER /media/A2SHARED
 
 fi

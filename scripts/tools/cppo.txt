@@ -132,7 +132,7 @@ def getFileName(arg1, arg2):
 def getFileType(arg1, arg2):
     start = getStartPos(arg1, arg2)
     return readcharHex(g.imageData, start+16)
-    
+
 def getKeyPointer(arg1, arg2):
     start = getStartPos(arg1, arg2)
     return (readcharDec(g.imageData, start+17) +
@@ -364,7 +364,7 @@ def processEntry(arg1, arg2):
             if g.PDOSPATH_SEGMENT:
                 syncExit()
             g.targetName = None
-    
+
     #else:
         #print(g.activeFileName + " doesn't match " + g.PDOSPATH_SEGMENT)
 
@@ -505,7 +505,7 @@ def binToDec(arg1):
 # arg: binary string up to 8 bits
 # out: decimal value
     return to_dec([arg1])
-    
+
 def binToHex(arg1):
 # converts single-byte binary string (8 bits) value to hex
 # warning: no error checking
@@ -699,10 +699,10 @@ def to_bytes(val):
     else:
         raise Exception(
           "to_bytes() requires hex-ustr, int/long, or [bin-ustr]")
-    
+
 def shift(items):
     """Shift list items to left, losing the first item.
-    
+
     in : list
     out: list
     """
@@ -710,7 +710,7 @@ def shift(items):
         items[i] = items[i+1]
     del items[-1]
     return items
-    
+
 def s(string):
     """Perform local variable substution, e.g. 'total: {num} items'"""
     # http://stackoverflow.com/questions/2960772/

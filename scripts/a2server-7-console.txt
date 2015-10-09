@@ -1,4 +1,5 @@
-#!/bin/bash
+#! /bin/bash
+# vim: set tabstop=4 shiftwidth=4 expandtab filetype=sh:
 
 # --- Ubuntu Server console optimizaton (optional)
 
@@ -35,10 +36,10 @@ if [[ $(lsb_release -d 2> /dev/null | grep Ubuntu) ]]; then
         echo "A2SERVER: Logged in via SSH,not performing console optimization."
         echo "Run setup from the console if you want to optimize the console."
     else
-        
+
         # if we've already done this stuff, don't do it again
         if [[ ! -x /etc/update-motd.d/10-help-text ]]; then
-        
+
             echo "A2SERVER: Ubuntu console has already been optimized."
         else
             echo "Ubuntu console optimization for use in a virtual machine will:"
@@ -54,44 +55,44 @@ if [[ $(lsb_release -d 2> /dev/null | grep Ubuntu) ]]; then
                 read
             fi
             if [[ $autoAnswerYes || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
-        
+
                 echo "A2SERVER: Optimizing console..."
-                
+
                 # remind the user how to log in (we're going for functionality here, not security)
                 if [[ ! $(grep $USER\/$password /etc/issue) ]]; then
                     sudo sed -i '/^Log in with.*$/d' /etc/issue
                     echo "Log in with '$USER' / '$password'." | sudo tee -a /etc/issue > /dev/null
                     echo | sudo tee -a /etc/issue > /dev/null
                 fi
-                
+
                 # If after logging in, you don't like the documentation URL and
                 # system info (or an error about it) being displayed, type:
                 sudo chmod -x /etc/update-motd.d/10-help-text
                 sudo chmod -x /etc/update-motd.d/50-landscape-sysinfo
-        
+
                 # If the screen doesn't clear for login after the boot messages, and
                 # you'd like it to, type:
                 sudo sed -i 's/X_DEFAULT=""/X_DEFAULT="quiet"/g' /etc/default/grub
                 sudo update-grub
-                
+
                 # If you see a piix4_smbus error on startup, it is harmless, but if you
                 # want to eliminate it, type:
                 echo -e '\nblacklist i2c_piix4' \
-                | sudo tee -a /etc/modprobe.d/blacklist.conf > /dev/null
+                    | sudo tee -a /etc/modprobe.d/blacklist.conf > /dev/null
                 sudo update-initramfs -u -k all
-                
+
                 # If you want to prevent the Ubuntu screen from going blank after ten
                 # minutes of inactivity (once you are logged in), type:
                 echo -e \
-                '\n[[ $SSH_CLIENT || $REMOTEHOST ]] || setterm -blank 0 -powersave off -powerdown 0' \
-                | sudo tee -a /etc/profile > /dev/null
+                    '\n[[ $SSH_CLIENT || $REMOTEHOST ]] || setterm -blank 0 -powersave off -powerdown 0' \
+                    | sudo tee -a /etc/profile > /dev/null
                 setterm -blank 0 -powersave off -powerdown 0
-                
+
                 # (note: These next lines addresses an issue only for Ubuntu 10.04.)
                 # Type "ps aux" and press return. If you see slow text scrolling, type:
                 if [[ "$(lsb_release -rs 2> /dev/null)" == "10.04" ]]; then
                     echo -e '\nblacklist vga16fb' \
-                    | sudo tee -a /etc/modprobe.d/blacklist-framebuffer.conf > /dev/null
+                        | sudo tee -a /etc/modprobe.d/blacklist-framebuffer.conf > /dev/null
                     if [[ ! $SSH_CLIENT ]]; then
                         echo "Restarting now is recommended. To resume setup, log back"
                         echo -n "in, press up-arrow, and press return. Restart now? "
