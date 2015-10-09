@@ -1,4 +1,5 @@
 #! /bin/bash
+# vim: set tabstop=4 shiftwidth=4 expandtab filetype=sh:
 
 # A2SERVER master setup script, last update 15-Feb-2015
 # it downloads and executes several scripts related to the setup of
@@ -50,7 +51,7 @@ while [[ $1 ]]; do
         setupWindowsSharing="-w"
         touch /tmp/a2server-setupWindowsSharing
     elif [[ $1 == "-os" || $1 == "os" ]]; then
-    # elif [[ ${1,,} == "rasppleii" || ${1,,} == "raspple" || ${1,,} == "rasappleii" || ${1,,} == "rasapple" || ${1,,} == "raspple2" || ${1,,} == "rasapple2" ]]; then
+        # elif [[ ${1,,} == "rasppleii" || ${1,,} == "raspple" || ${1,,} == "rasappleii" || ${1,,} == "rasapple" || ${1,,} == "raspple2" || ${1,,} == "rasapple2" ]]; then
         shift
         updateRasppleII=1
     elif [[ $1 == "-v" ]]; then
@@ -97,9 +98,9 @@ if [[ $isRpi ]]; then #supported Raspbian? (16-Feb-15, 20-Jun-14, 09-Jan-14, etc
     fwhash=$(zcat /usr/share/doc/raspberrypi-bootloader/changelog.Debian.gz | grep -m 1 'as of' | awk '{print $NF}')
     [[ ($fwhash == "8aca5762") || ($fwhash == "462f3e3f476f7b6") || ($fwhash == "c32bc633039cd9") || ($fwhash == "9d34d0475f9") || ($fwhash == "d4f5315cfac4e") || ($fwhash == "6f4a90c8cb8817f") || ($fwhash == "5dd9b4962e") || ($fwhash == "17c8799375") ]] && unsupportedOS=0
 elif [[ "$(lsb_release -rs 2> /dev/null)" == "12.04" ]]; then #Ubuntu 12.04?
-        unsupportedOS=0
+    unsupportedOS=0
 elif [[ "$(lsb_release -rs 2> /dev/null)" == "7.3" || "$(lsb_release -rs 2> /dev/null)" == "7.6" || "$(lsb_release -rs 2> /dev/null)" == "7.8" ]]; then # tested Debian?
-        unsupportedOS=0
+    unsupportedOS=0
 fi
 
 if (( unsupportedOS )); then
@@ -113,14 +114,14 @@ fi
 
 doSetup=1
 if [[ ! -f /usr/local/etc/a2server-help.txt ]] || (( $a2server_update )); then
-	echo
-	echo "Setting up A2SERVER will take up to 60 minutes, during which"
-	echo "you'll see a bunch of stuff spit out across the screen."
-	echo
-	if [[ ! $autoAnswerYes ]]; then
-    	echo -n "Ready to set up A2SERVER? "
-	    read
-    	[[ ${REPLY:0:1} == "y" || ${REPLY:0:1} == "Y" ]]; doSetup=$(( 1 - $? ))
+    echo
+    echo "Setting up A2SERVER will take up to 60 minutes, during which"
+    echo "you'll see a bunch of stuff spit out across the screen."
+    echo
+    if [[ ! $autoAnswerYes ]]; then
+        echo -n "Ready to set up A2SERVER? "
+        read
+        [[ ${REPLY:0:1} == "y" || ${REPLY:0:1} == "Y" ]]; doSetup=$(( 1 - $? ))
     fi
 fi
 
@@ -130,7 +131,7 @@ if (( $doSetup )); then
     echo "a2server-setup modifies files and performs actions as the root user."
     echo "For details, visit http://appleii.ivanx.com/a2server."
     echo
-	if [[ ! $autoAnswerYes ]]; then
+    if [[ ! $autoAnswerYes ]]; then
         echo -n "Continue? "
         read
         [[ ${REPLY:0:1} == "y" || ${REPLY:0:1} == "Y" ]]; doSetup=$(( 1 - $? ))
@@ -208,7 +209,7 @@ if (( $doSetup )); then
         rm /tmp/a2server-packageReposUpdated &> /dev/null
 
         if [[ ! -f /usr/local/etc/A2SERVER-version ]] \
-        || (( $(cat /usr/local/etc/A2SERVER-version) < "$a2serverVersion" )); then
+            || (( $(cat /usr/local/etc/A2SERVER-version) < "$a2serverVersion" )); then
             echo "$a2serverVersion" | sudo tee /usr/local/etc/A2SERVER-version &> /dev/null
         fi
 
@@ -278,9 +279,9 @@ if (( $doSetup )); then
         fi
 
         echo
-    	echo "Type 'system-shutdown' to turn off A2SERVER."
-    	echo "Type 'a2server-setup' to configure network boot."
-	    echo "Type 'a2server-help' for a list of other commands."
+        echo "Type 'system-shutdown' to turn off A2SERVER."
+        echo "Type 'a2server-setup' to configure network boot."
+        echo "Type 'a2server-help' for a list of other commands."
     fi
 fi
 

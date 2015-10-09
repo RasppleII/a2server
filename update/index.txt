@@ -1,11 +1,12 @@
 #! /bin/bash
+# vim: set tabstop=4 shiftwidth=4 expandtab filetype=sh:
 
 currentVersion=125
 
 if [[ -f /usr/local/etc/A2SERVER-version ]]; then
-	installedVersion=$(cat /usr/local/etc/A2SERVER-version)
+    installedVersion=$(cat /usr/local/etc/A2SERVER-version)
 else
-	installedVersion=100
+    installedVersion=100
 fi
 
 # Ensure URL we'll use ends in a /

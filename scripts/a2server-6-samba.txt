@@ -1,4 +1,5 @@
-#!/bin/bash
+#! /bin/bash
+# vim: set tabstop=4 shiftwidth=4 expandtab filetype=sh:
 
 # Set up A2SERVER to support Samba (Windows File Sharing)
 # this script can also be used if new shares are introduced
@@ -57,7 +58,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupWindowsSharing ]]; then
         sudo sed -i 's/^#   security = user/   security = user/' /etc/samba/smb.conf 2> /dev/null
 
         grep ^/media /usr/local/etc/netatalk/AppleVolumes.default | cut -d" " -f2 \
-        | while read sharename; do
+            | while read sharename; do
             if [[ $(grep $sharename /etc/samba/smb.conf) ]]; then
                 echo "A2SERVER: $sharename is already set up for Windows file sharing."
             else
