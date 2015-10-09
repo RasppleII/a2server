@@ -879,4 +879,3 @@ else:
     processDir(2)
     if not g.DIR:
         syncExit()
-

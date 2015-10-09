@@ -7,6 +7,12 @@
 # program (for Apple IIe users, and IIgs users in ProDOS network mode).
 # It also can download and install GS/OS for a network boot configuration.
 
+# Ensure URL we'll use ends in a /
+case "$A2SERVER_SCRIPT_URL" in
+	*/) scriptURL="$A2SERVER_SCRIPT_URL" ;;
+	*) scriptURL="${A2SERVER_SCRIPT_URL:-http://ivanx.com/a2server}/" ;;
+esac
+
 gsosDir="/media/A2SHARED/A2FILES"
 imagesDir=$gsosDir/GSOS.INSTALLER/IMAGES
 imageToolsDir=$gsosDir/GSOS.INSTALLER/IMAGE.TOOLS
@@ -82,7 +88,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
             || [[ ! -f /usr/local/bin/mkvolinfo ]] \
             || [[ ! -f /usr/local/bin/afpsync ]]; then
             rm /tmp/2.tools &> /dev/null
-            wget -q -O /tmp/2.tools appleii.ivanx.com/a2server/scripts/a2server-2-tools.txt
+            wget -q -O /tmp/2.tools "${scriptURL}scripts/a2server-2-tools.txt"
             chmod ugo+x /tmp/2.tools
             /tmp/2.tools
             rm /tmp/2.tools
@@ -295,7 +301,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                 echo
                 cd /tmp/netboot
                 wget -qO shrinkit.sdk http://web.archive.org/web/20131031160750/http://www.nulib.com/library/shrinkit.sdk
-                [[ ! -f shrinkit.sdk ]] && wget -qO shrinkit.sdk appleii.ivanx.com/a2server/files/shrinkit.sdk
+                [[ ! -f shrinkit.sdk ]] && wget -qO shrinkit.sdk "${scriptURL}files/shrinkit.sdk"
                 nulib2 -xs shrinkit.sdk > /dev/null
                 cppo -s -ad SHRINKIT /SHRINKIT/SHRINKIT $diskToolsP8Dir 2> /dev/null
                 afpsync -v $sharepath > /dev/null
@@ -372,7 +378,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                 mkdir -p $zlinkDir/.AppleDouble
                 echo
                 cd /tmp/netboot
-                wget -qO A2CLOUD.HDV http://ivanx.com/a2cloud/files/A2CLOUD.HDV
+                wget -qO A2CLOUD.HDV "${scriptURL}files/A2CLOUD.HDV"
                 cppo -ad A2CLOUD.HDV . > /dev/null
                 cd A2CLOUD
                 mv *PT3* *PROTERM* $protermDir
@@ -424,7 +430,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
     fi
     if [[ $autoAnswerYes || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
         echo "A2SERVER: Downloading Farallon bridge patch..."
-        wget -O /tmp/FARALLON.PO appleii.ivanx.com/a2server/files/FARALLON.B1.PO &> /dev/null
+        wget -O /tmp/FARALLON.PO "${scriptURL}files/FARALLON.B1.PO" &> /dev/null
         if [[ -d $gsosDir/SYSTEM/SYSTEM.SETUP ]]; then
             cppo -s -ad /tmp/FARALLON.PO /ATALKPATCH/ATALKIRQ $gsosDir/SYSTEM/SYSTEM.SETUP &> /dev/null
             echo

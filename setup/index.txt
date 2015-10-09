@@ -9,7 +9,13 @@
 # to download and execute, type:
 # wget appleii.ivanx.com/a2server/setup; source setup
 
-a2serverVersion="124"
+a2serverVersion="125"
+
+# Ensure URL we'll use ends in a /
+case "$A2SERVER_SCRIPT_URL" in
+	*/) scriptURL="$A2SERVER_SCRIPT_URL" ;;
+	*) scriptURL="${A2SERVER_SCRIPT_URL:-http://appleii.ivanx.com/a2server}/" ;;
+esac
 
 isRpi=
 [[ -f /usr/bin/raspi-config ]] && isRpi=1
@@ -71,7 +77,7 @@ done
 
 if [[ $updateRasppleII ]]; then
     echo "A2SERVER: Updating Raspple II (takes up to an hour)..."
-    wget -qO /tmp/raspbian-update ivanx.com/a2server/files/raspbian-update.txt
+    wget -qO /tmp/raspbian-update "${scriptURL}files/raspbian-update.txt"
     source /tmp/raspbian-update a2cloud a2server $autoAnswerYes $skipRepoUpdate
     [[ $0 == "-bash" ]] && return 0 || exit 0
 fi
@@ -168,22 +174,22 @@ if (( $doSetup )); then
         echo
         echo "A2SERVER: Downloading scripts..."
 
-        wget -q -O /tmp/1.storage appleii.ivanx.com/a2server/scripts/a2server-1-storage.txt
+        wget -q -O /tmp/1.storage "${scriptURL}scripts/a2server-1-storage.txt"
         chmod ugo+x /tmp/1.storage
 
-        wget -q -O /tmp/2.tools appleii.ivanx.com/a2server/scripts/a2server-2-tools.txt
+        wget -q -O /tmp/2.tools "${scriptURL}scripts/a2server-2-tools.txt"
         chmod ugo+x /tmp/2.tools
 
-        wget -q -O /tmp/3.sharing appleii.ivanx.com/a2server/scripts/a2server-3-sharing.txt
+        wget -q -O /tmp/3.sharing "${scriptURL}scripts/a2server-3-sharing.txt"
         chmod ugo+x /tmp/3.sharing
 
-        wget -q -O /tmp/5.netboot appleii.ivanx.com/a2server/scripts/a2server-5-netboot.txt
+        wget -q -O /tmp/5.netboot "${scriptURL}scripts/a2server-5-netboot.txt"
         chmod ugo+x /tmp/5.netboot
 
-        wget -q -O /tmp/6.samba appleii.ivanx.com/a2server/scripts/a2server-6-samba.txt
+        wget -q -O /tmp/6.samba "${scriptURL}scripts/a2server-6-samba.txt"
         chmod ugo+x /tmp/6.samba
 
-        wget -q -O /tmp/7.console appleii.ivanx.com/a2server/scripts/a2server-7-console.txt
+        wget -q -O /tmp/7.console "${scriptURL}scripts/a2server-7-console.txt"
         chmod ugo+x /tmp/7.console
 
         echo "A2SERVER: Scripts have been downloaded. Installing..."

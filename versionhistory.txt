@@ -49,3 +49,6 @@
 1.2.3: May 2015: changed Apple software links to Internet Archive
 
 1.2.4: Jul 2015: offer to download A2CLOUD disk contents onto A2FILES volume
+
+1.2.5: Oct 2015: support for using A2SERVER scripts from a location other than
+                 appleii.ivanx.com/a2server for development purposes
