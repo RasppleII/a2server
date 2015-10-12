@@ -27,18 +27,51 @@ protermDir=$commDir/PROTERM
 zlinkDir=$commDir/Z.LINK
 adtproDir=$commDir/ADTPRO
 
+function askYesNo()
+# Ask a yes/no question of the user, with potential default
+# stdin: Info text for the user
+# arg1: Prompt text
+# arg2: Default; 0 for yes, 1 for no, anything else for no default
+# returns: 0 for yes, 1 for no
+{
+    local default
+
+    case "$2" in
+        0) default="y" ;;
+        1) default="n" ;;
+        *) default="" ;;
+    esac
+
+    if [ -n "$autoAnswerDefault" -a -n "$default" ]; then
+        return $2
+    fi
+
+    echo
+    cat -
+    echo
+    while :; do
+        echo -n "$1 "
+        [ -n "$default" ] && echo -n "[$default] "
+        read
+        case "$REPLY" in
+            [Yy]*) return 0 ;;
+            [Nn]*) return 1 ;;
+            "") [ -n "$default" ] && return $2 ;;
+            *) echo "Please answer yes or no." ;;
+        esac
+    done
+}
+
 # bail out on automated netboot setup unless -b is also specified
 [[ -f /tmp/a2server-autoAnswerDefault ]] && autoAnswerDefault=1 || autoAnswerDefault=
 if [[ ! $autoAnswerDefault || -f /tmp/a2server-setupNetBoot ]]; then
 
-    if [[ ! $autoAnswerDefault ]]; then
-        echo
-        echo "Do you want to set up A2SERVER to be able to boot Apple II"
-        echo -n "computers over the network? "
-        read
-    fi
+    askYesNo "Configure Apple II network boot?" 0 <<EOT
+Your Apple II computers can boot directly via the network
+if ProDOS and/or GS/OS are installed onto A2SERVER.
+EOT
 
-    if [[ $autoAnswerDefault || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
+    if [ $? -eq 0 ]; then
 
         nbmode=1
         echo
@@ -127,12 +160,13 @@ if [[ ! $autoAnswerDefault || -f /tmp/a2server-setupNetBoot ]]; then
             echo "A2SERVER: GS/OS has already been downloaded and installed."
             gsosInstall=1
         else
-            if [[ ! $autoAnswerDefault ]]; then
-                echo "You can set up GS/OS 6.0.1 on your network drive, for network boot."
-                echo -n "This may take a while. Download and install it now? "
-                read
-            fi
-            if [[ $autoAnswerDefault || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
+            askYesNo "Download and install GS/OS now?" 0 <<EOT
+You can opt to download and install GS/OS 6.0.1 now to you
+network drive in order to boot GS/OS on Apple IIgs systems.
+This may take some time, particularly if you have a slower
+network connection.
+EOT
+            if [ $? -eq 0 ]; then
                 gsosInstall=1
 
                 # get GS/OS disks from Internet Archive and put them in IMAGES
@@ -224,13 +258,16 @@ if [[ ! $autoAnswerDefault || -f /tmp/a2server-setupNetBoot ]]; then
             fi
         fi
 
-        if [[ ! $autoAnswerDefault ]]; then
-            echo
-            echo "Do you want to download and install utilities for working with"
-            echo -n "disk images and archive files in GS/OS? "
-            read
-        fi
-        if [[ $autoAnswerDefault || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
+        askYesNo "Install GS/OS image/archive tools?" 0 <<EOT
+GS/OS tools may be installed for working with disk images
+and Apple II archives.  At the moment, these include:
+
+ - Asimov 2.0
+ - GS-ShrinkIt 1.1
+ - MountIt 1.4
+EOT
+
+        if [ $? -eq 0 ]; then
 
             # download image tools and put them in IMAGE.TOOLS
             echo "A2SERVER: Downloading GS/OS disk image utilities..."
@@ -281,13 +318,16 @@ if [[ ! $autoAnswerDefault || -f /tmp/a2server-setupNetBoot ]]; then
             fi
         fi
 
-        if [[ ! $autoAnswerDefault ]]; then
-            echo
-            echo "Do you want to download and install utilities for working with"
-            echo -n "disk images and archive files in ProDOS 8? "
-            read
-        fi
-        if [[ $autoAnswerDefault || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
+        askYesNo "Install ProDOS image/archive tools?" 0 <<EOT
+ProDOS tools may be installed for working with disk images
+and Apple II archives.  At the moment, these include:
+
+ - ShrinkIt 3.4
+ - DSK2FILE 5.8
+ - Apple System Utilities 3.1
+EOT
+
+        if [ $? -eq 0 ]; then
 
             echo "A2SERVER: Downloading ProDOS 8 disk image utilities..."
 
@@ -340,13 +380,19 @@ if [[ ! $autoAnswerDefault || -f /tmp/a2server-setupNetBoot ]]; then
 
         fi
 
-        if [[ ! $autoAnswerDefault ]]; then
-            echo
-            echo "Do you want to download serial communications software for"
-            echo -n "GS/OS and ProDOS 8? "
-            read
-        fi
-        if [[ $autoAnswerDefault || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
+        askYesNo "Install communications software?" 0 <<EOT
+Serial communications software (a terminal program) allows
+you to connect to A2CLOUD, use analog modems for dialup BBS
+access, and otherwise interactively use a serial port on
+your Apple II.  In addition, Spectrum for the IIgs can also
+communicate over TCP/IP using Marianetti.  Answer yes to
+install:
+
+ - Spectrum 2.53
+ - ProTERM 3.1
+ - Z-Link 
+EOT
+        if [ $? -eq 0 ]; then
 
             echo "A2SERVER: Downloading communications software..."
 
@@ -422,12 +468,14 @@ if [[ ! $autoAnswerDefault || -f /tmp/a2server-setupNetBoot ]]; then
 
     fi
 
-    if [[ ! $autoAnswerDefault ]]; then
-        echo
-        echo "Do you want to download the patch required for using"
-        echo -n "a Farallon LocalTalk-to-Ethernet bridge with GS/OS? "
-        read
-    fi
+    askYesNo "Download and patch GS/OS for the Farallon bridge?" 0 <<EOT
+There is a bug between the Farallon LocalTalk-to-Ethernet bridge
+and the Apple IIgs which causes the system to freeze.  GS/OS can
+be patched to work around the issue, but the bug will persist if
+you boot directly into ProDOS 8 on a IIgs.  Apple IIe users are
+not affected by this bug at all.
+EOT
+    if [ $? -eq 0 ]; then
     if [[ $autoAnswerDefault || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
         echo "A2SERVER: Downloading Farallon bridge patch..."
         wget -O /tmp/FARALLON.PO "${scriptURL}files/FARALLON.B1.PO" &> /dev/null
@@ -442,10 +490,6 @@ if [[ ! $autoAnswerDefault || -f /tmp/a2server-setupNetBoot ]]; then
             echo "SYSTEM.SETUP folder of the SYSTEM folder of your GSOS startup disk,"
             echo "or, if you can't, download the patch from the A2SERVER web site."
         fi
-        echo
-        echo "Note: Farallon bridges can only be used in GS/OS (with this patch)"
-        echo "and Apple IIe computers. Apple IIgs computers which network boot"
-        echo "directly into ProDOS 8 will freeze after a few minutes."
     fi
 
 fi
