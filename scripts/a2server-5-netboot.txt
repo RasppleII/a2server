@@ -29,9 +29,9 @@ adtproDir=$commDir/ADTPRO
 
 function askYesNo()
 # Ask a yes/no question of the user, with potential default
-# stdin: Info text for the user
 # arg1: Prompt text
 # arg2: Default; 0 for yes, 1 for no, anything else for no default
+# arg3: Info text for the user
 # returns: 0 for yes, 1 for no
 {
     local default
@@ -46,9 +46,11 @@ function askYesNo()
         return $2
     fi
 
-    echo
-    cat -
-    echo
+    if [ -n "$3" ]; then
+        echo
+        echo "$3"
+        echo
+    fi
     while :; do
         echo -n "$1 "
         [ -n "$default" ] && echo -n "[$default] "
@@ -66,10 +68,9 @@ function askYesNo()
 [[ -f /tmp/a2server-autoAnswerDefault ]] && autoAnswerDefault=1 || autoAnswerDefault=
 if [[ ! $autoAnswerDefault || -f /tmp/a2server-setupNetBoot ]]; then
 
-    askYesNo "Configure Apple II network boot?" 0 <<EOT
-Your Apple II computers can boot directly via the network
-if ProDOS and/or GS/OS are installed onto A2SERVER.
-EOT
+    askYesNo "Configure Apple II network boot?" 0 \
+"Your Apple II computers can boot directly via the network
+if ProDOS and/or GS/OS are installed onto A2SERVER."
 
     if [ $? -eq 0 ]; then
 
@@ -160,12 +161,11 @@ EOT
             echo "A2SERVER: GS/OS has already been downloaded and installed."
             gsosInstall=1
         else
-            askYesNo "Download and install GS/OS now?" 0 <<EOT
-You can opt to download and install GS/OS 6.0.1 now to you
+            askYesNo "Download and install GS/OS now?" 0 \
+"You can opt to download and install GS/OS 6.0.1 now to you
 network drive in order to boot GS/OS on Apple IIgs systems.
 This may take some time, particularly if you have a slower
-network connection.
-EOT
+network connection."
             if [ $? -eq 0 ]; then
                 gsosInstall=1
 
@@ -258,14 +258,13 @@ EOT
             fi
         fi
 
-        askYesNo "Install GS/OS image/archive tools?" 0 <<EOT
-GS/OS tools may be installed for working with disk images
+        askYesNo "Install GS/OS image/archive tools?" 0 \
+"GS/OS tools may be installed for working with disk images
 and Apple II archives.  At the moment, these include:
 
  - Asimov 2.0
  - GS-ShrinkIt 1.1
- - MountIt 1.4
-EOT
+ - MountIt 1.4"
 
         if [ $? -eq 0 ]; then
 
@@ -318,14 +317,13 @@ EOT
             fi
         fi
 
-        askYesNo "Install ProDOS image/archive tools?" 0 <<EOT
-ProDOS tools may be installed for working with disk images
+        askYesNo "Install ProDOS image/archive tools?" 0 \
+"ProDOS tools may be installed for working with disk images
 and Apple II archives.  At the moment, these include:
 
  - ShrinkIt 3.4
  - DSK2FILE 5.8
- - Apple System Utilities 3.1
-EOT
+ - Apple System Utilities 3.1"
 
         if [ $? -eq 0 ]; then
 
@@ -380,8 +378,8 @@ EOT
 
         fi
 
-        askYesNo "Install communications software?" 0 <<EOT
-Serial communications software (a terminal program) allows
+        askYesNo "Install communications software?" 0 \
+"Serial communications software (a terminal program) allows
 you to connect to A2CLOUD, use analog modems for dialup BBS
 access, and otherwise interactively use a serial port on
 your Apple II.  In addition, Spectrum for the IIgs can also
@@ -390,8 +388,8 @@ install:
 
  - Spectrum 2.53
  - ProTERM 3.1
- - Z-Link 
-EOT
+ - Z-Link"
+
         if [ $? -eq 0 ]; then
 
             echo "A2SERVER: Downloading communications software..."
@@ -468,15 +466,13 @@ EOT
 
     fi
 
-    askYesNo "Download and patch GS/OS for the Farallon bridge?" 0 <<EOT
-There is a bug between the Farallon LocalTalk-to-Ethernet bridge
+    askYesNo "Download and patch GS/OS for the Farallon bridge?" 0 \
+"There is a bug between the Farallon LocalTalk-to-Ethernet bridge
 and the Apple IIgs which causes the system to freeze.  GS/OS can
 be patched to work around the issue, but the bug will persist if
 you boot directly into ProDOS 8 on a IIgs.  Apple IIe users are
-not affected by this bug at all.
-EOT
+not affected by this bug at all."
     if [ $? -eq 0 ]; then
-    if [[ $autoAnswerDefault || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
         echo "A2SERVER: Downloading Farallon bridge patch..."
         wget -O /tmp/FARALLON.PO "http://appleii.ivanx.com/a2server/files/FARALLON.B1.PO" &> /dev/null
         if [[ -d $gsosDir/SYSTEM/SYSTEM.SETUP ]]; then
