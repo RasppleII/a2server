@@ -12,28 +12,35 @@
 a2serverVersion="125"
 
 function askYesNo()
+# Ask a yes/no question of the user, with potential default
+# stdin: Info text for the user
+# arg1: Prompt text
+# arg2: Default; 0 for yes, 1 for no, anything else for no default
+# returns: 0 for yes, 1 for no
 {
     local default
 
-    case "$3" in
+    case "$2" in
         0) default="y" ;;
         1) default="n" ;;
         *) default="" ;;
     esac
 
     if [ -n "$autoAnswerDefault" -a -n "$default" ]; then
-        return $3
+        return $2
     fi
 
-    printf "\n$1\n\n"
+    echo
+    cat -
+    echo
     while :; do
-        echo -n "$2 "
+        echo -n "$1 "
         [ -n "$default" ] && echo -n "[$default] "
         read
         case "$REPLY" in
             [Yy]*) return 0 ;;
             [Nn]*) return 1 ;;
-            "") [ -n "$default" ] && return $3 ;;
+            "") [ -n "$default" ] && return $2 ;;
             *) echo "Please answer yes or no." ;;
         esac
     done
@@ -142,13 +149,19 @@ fi
 
 doSetup=1
 if [[ ! -f /usr/local/etc/a2server-help.txt ]] || (( $a2server_update )); then
-    askYesNo "Setting up A2SERVER will take up to 60 minutes, during which\nyou'll see a bunch of stuff spit out across the screen." "Ready to set up A2SERVER?" 0
+    askYesNo "Ready to set up A2SERVER?" 0 <<EOT
+Setting up A2SERVER will take up to 60 minutes, during which
+you'll see a bunch of stuff spit out across the screen.
+EOT
     doSetup=$(( 1 - $? ))
 fi
 
 if (( $doSetup )); then
 
-    askYesNo "a2server-setup modifies files and performs actions as the root user.\nFor details, visit http://appleii.ivanx.com/a2server." "Continue?" 0
+    askYesNo "Continue?" 0 <<EOT
+a2server-setup modifies files and performs actions as the root user.
+For details, visit http://appleii.ivanx.com/a2server.
+EOT
     doSetup=$(( 1 - $? ))
 
     if (( $doSetup )); then
@@ -164,7 +177,11 @@ if (( $doSetup )); then
 
         [[ $isRpi ]] && a2server="your Raspberry Pi" || a2server="A2SERVER"
         if [[ ! $isApple2Pw && ! -f /usr/local/etc/A2SERVER-version ]]; then
-        askYesNo "To ensure that all client computers are able to connect to\n${a2server} using the same password, you are recommended\nto change your user password to \"apple2\"." "Do you want to change the password for user \"$USER\" to \"apple2\" now?" 0
+        askYesNo "Do you want to change the password for user \"$USER\" to \"apple2\" now?" 0 <<EOT
+To ensure that all client computers are able to connect to
+${a2server} using the same password, you are recommended
+to change your user password to "apple2".
+EOT
             if [ $? -eq 0 ]; then
                 echo "A2SERVER: changing password for user '$USER' to 'apple2'..."
                 echo "$USER:apple2" | sudo chpasswd
@@ -237,7 +254,10 @@ if (( $doSetup )); then
             echo "A2SERVER setup is complete! Go connect from your Apple II!"
             echo
         elif [[ -f /tmp/rpiUpdate ]]; then
-        askYesNo "A2SERVER is now configured, but Apple II clients will not be able\nto connect until you restart your Raspberry Pi." "Restart now?" 0
+        askYesNo "Restart now?" 0 <<EOT
+A2SERVER is now configured, but Apple II clients will not be able
+to connect until you restart your Raspberry Pi.
+EOT
             if [ $? -eq 0 ]; then
                 sudo shutdown -r now
                 echo
@@ -264,7 +284,9 @@ if (( $doSetup )); then
         fi
 
         if [[ -f /tmp/singleUser ]]; then
-        askYesNo "Your Raspberry Pi was started in single-user mode in order to\nfix a problem. You should restart to operate normally." "Restart now?" 0
+        askYesNo "Restart now?" 0 <<EOT
+Your Raspberry Pi was started in single-user mode in order tofix a problem. You should restart to operate normally.
+EOT
             if [ $? -eq 0 ]; then
                 sudo shutdown -r now
                 echo
