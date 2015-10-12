@@ -378,7 +378,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                 mkdir -p $zlinkDir/.AppleDouble
                 echo
                 cd /tmp/netboot
-                wget -qO A2CLOUD.HDV "${scriptURL}files/A2CLOUD.HDV"
+                wget -qO A2CLOUD.HDV "http://ivanx.com/a2server/files/A2CLOUD.HDV"
                 cppo -ad A2CLOUD.HDV . > /dev/null
                 cd A2CLOUD
                 mv *PT3* *PROTERM* $protermDir
