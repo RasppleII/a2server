@@ -85,9 +85,9 @@ if [[ ! -f /usr/local/bin/unar ]]; then
         fi
     fi
     if [[ ! -f /usr/local/bin/unar ]]; then
-        sudo apt-get -y install build-essential
-        sudo apt-get -y install libgnustep-base-dev libz-dev libbz2-dev
-        sudo apt-get -y install libssl-dev libicu-dev unzip
+        sudo apt-get -y install build-essential \
+            libgnustep-base-dev libz-dev libbz2-dev \
+            libssl-dev libicu-dev unzip
         sudo apt-get clean
         rm -rf /tmp/unar &> /dev/null
         mkdir /tmp/unar
@@ -121,7 +121,7 @@ sudo wget -q -O /usr/local/etc/a2server-help.txt "${scriptURL}scripts/tools/a2se
 sudo wget -q -O /usr/local/etc/a2server-aliases "${scriptURL}scripts/tools/a2server-aliases.txt"
 
 grep a2server-aliases /etc/bash.bashrc > /dev/null || \
-echo "source /usr/local/etc/a2server-aliases" | sudo tee -a /etc/bash.bashrc > /dev/null
+    echo "source /usr/local/etc/a2server-aliases" | sudo tee -a /etc/bash.bashrc > /dev/null
 
 [[ $(lsb_release -d 2> /dev/null | grep Ubuntu) ]] && motd="/etc/issue" || motd="/etc/motd"
 if [[ ! $(grep A2SERVER $motd) ]]; then
