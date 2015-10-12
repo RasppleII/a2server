@@ -86,7 +86,7 @@ if [[ ! -f /usr/local/bin/unar ]]; then
         fi
     fi
 COMMENT
-    if [[ ! -f /usr/local/bin/unar | "`/usr/local/bin/unar -v`" != "v1.9.1" ]]; then
+    if [[ ! -f /usr/local/bin/unar || "`/usr/local/bin/unar -v`" != "v1.9.1" ]]; then
         sudo apt-get -y install build-essential \
             libgnustep-base-dev libz-dev libbz2-dev \
             libssl-dev libicu-dev unzip
