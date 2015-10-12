@@ -341,7 +341,7 @@ EOT
                 echo
                 cd /tmp/netboot
                 wget -qO shrinkit.sdk http://web.archive.org/web/20131031160750/http://www.nulib.com/library/shrinkit.sdk
-                [[ ! -f shrinkit.sdk ]] && wget -qO shrinkit.sdk "${scriptURL}files/shrinkit.sdk"
+                [[ ! -f shrinkit.sdk ]] && wget -qO shrinkit.sdk "http://appleii.ivanx.com/a2server/files/shrinkit.sdk"
                 nulib2 -xs shrinkit.sdk > /dev/null
                 cppo -s -ad SHRINKIT /SHRINKIT/SHRINKIT $diskToolsP8Dir 2> /dev/null
                 afpsync -v $sharepath > /dev/null
@@ -424,7 +424,7 @@ EOT
                 mkdir -p $zlinkDir/.AppleDouble
                 echo
                 cd /tmp/netboot
-                wget -qO A2CLOUD.HDV "${scriptURL}files/A2CLOUD.HDV"
+                wget -qO A2CLOUD.HDV "http://ivanx.com/a2server/files/A2CLOUD.HDV"
                 cppo -ad A2CLOUD.HDV . > /dev/null
                 cd A2CLOUD
                 mv *PT3* *PROTERM* $protermDir
@@ -478,7 +478,7 @@ EOT
     if [ $? -eq 0 ]; then
     if [[ $autoAnswerDefault || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
         echo "A2SERVER: Downloading Farallon bridge patch..."
-        wget -O /tmp/FARALLON.PO "${scriptURL}files/FARALLON.B1.PO" &> /dev/null
+        wget -O /tmp/FARALLON.PO "http://appleii.ivanx.com/a2server/files/FARALLON.B1.PO" &> /dev/null
         if [[ -d $gsosDir/SYSTEM/SYSTEM.SETUP ]]; then
             cppo -s -ad /tmp/FARALLON.PO /ATALKPATCH/ATALKIRQ $gsosDir/SYSTEM/SYSTEM.SETUP &> /dev/null
             echo

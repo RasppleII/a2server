@@ -112,8 +112,8 @@ done
 
 if [[ $updateRasppleII ]]; then
     echo "A2SERVER: Updating Raspple II (takes up to an hour)..."
-    wget -qO /tmp/raspbian-update "${scriptURL}files/raspbian-update.txt"
-    source /tmp/raspbian-update a2cloud a2server $autoAnswerDefault $skipRepoUpdate
+    wget -qO /tmp/raspbian-update "http://appleii.ivanx.com/a2server/files/raspbian-update.txt"
+    source /tmp/raspbian-update a2cloud a2server $autoAnswerYes $skipRepoUpdate
     [[ $0 == "-bash" ]] && return 0 || exit 0
 fi
 
