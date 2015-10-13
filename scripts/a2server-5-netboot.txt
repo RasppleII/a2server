@@ -379,16 +379,23 @@ and Apple II archives.  At the moment, these include:
         fi
 
         askYesNo "Install communications software?" 0 \
-"Serial communications software (a terminal program) allows
-you to connect to A2CLOUD, use analog modems for dialup BBS
-access, and otherwise interactively use a serial port on
-your Apple II.  In addition, Spectrum for the IIgs can also
-communicate over TCP/IP using Marianetti.  Answer yes to
-install:
+"Communications software (a terminal program) allows you
+to connect to A2CLOUD, use analog modems for dialup BBS
+access, and connect to other computers.
+
+For the Apple IIgs, Spectrum provides a terminal and
+Internet access options.
+
+Finally, ADTPro allows you to transfer disk images to
+and from remote computers, as well as to mount remote
+disk images over serial port via the VSDRIVE program.
+
+Answer yes to install:
 
  - Spectrum 2.53
  - ProTERM 3.1
- - Z-Link"
+ - Z-Link 91.12.15
+ - ADTPro and VSDRIVE"
 
         if [ $? -eq 0 ]; then
 
