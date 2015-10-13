@@ -3,6 +3,43 @@
 
 currentVersion=125
 
+function askYesNo()
+# Ask a yes/no question of the user, with potential default
+# arg1: Prompt text
+# arg2: Default; 0 for yes, 1 for no, anything else for no default
+# arg3: Info text for the user
+# returns: 0 for yes, 1 for no
+{
+    local default
+
+    case "$2" in
+        0) default="y" ;;
+        1) default="n" ;;
+        *) default="" ;;
+    esac
+
+    if [ -n "$autoAnswerDefault" -a -n "$default" ]; then
+        return $2
+    fi
+
+    if [ -n "$3" ]; then
+        echo
+        echo "$3"
+        echo
+    fi
+    while :; do
+        echo -n "$1 "
+        [ -n "$default" ] && echo -n "[$default] "
+        read
+        case "$REPLY" in
+            [Yy]*) return 0 ;;
+            [Nn]*) return 1 ;;
+            "") [ -n "$default" ] && return $2 ;;
+            *) echo "Please answer yes or no." ;;
+        esac
+    done
+}
+
 if [[ -f /usr/local/etc/A2SERVER-version ]]; then
     installedVersion=$(cat /usr/local/etc/A2SERVER-version)
 else
@@ -26,17 +63,12 @@ done
 echo
 echo "Update history:"
 wget -qO- "${scriptURL}update/versionhistory.txt"
-echo
-echo "installed version: ${installedVersion:0:1}.${installedVersion:1:1}.${installedVersion:2:1}"
-echo "current version: ${currentVersion:0:1}.${currentVersion:1:1}.${currentVersion:2:1}"
-echo
-if [[ $autoAnswerDefault ]]; then
-    REPLY="y"
-else
-    echo -n "Do you want to update (or reinstall) A2SERVER? "
-    read
-fi
-if [[ ${REPLY:0:1} == "y" || ${REPLY:0:1} == "Y" ]]; then
+
+askYesNo "Do you want to update (or reinstall) A2SERVER?" 0 \
+"installed version: ${installedVersion:0:1}.${installedVersion:1:1}.${installedVersion:2:1}
+current version: ${currentVersion:0:1}.${currentVersion:1:1}.${currentVersion:2:1}"
+
+if [ $? = 0 ]; then
     sudo rm /usr/local/etc/A2SERVER-version &> /dev/null
     # sudo rm /usr/local/etc/netatalk/a2boot/* &> /dev/null
     wget -q -O /tmp/setup "${scriptURL}setup"; source /tmp/setup "$@"
