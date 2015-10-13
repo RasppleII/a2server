@@ -4,16 +4,52 @@
 # Set up A2SERVER to support Samba (Windows File Sharing)
 # this script can also be used if new shares are introduced
 
+function askYesNo()
+# Ask a yes/no question of the user, with potential default
+# arg1: Prompt text
+# arg2: Default; 0 for yes, 1 for no, anything else for no default
+# arg3: Info text for the user
+# returns: 0 for yes, 1 for no
+{
+    local default
+
+    case "$2" in
+        0) default="y" ;;
+        1) default="n" ;;
+        *) default="" ;;
+    esac
+
+    if [ -n "$autoAnswerDefault" -a -n "$default" ]; then
+        return $2
+    fi
+
+    if [ -n "$3" ]; then
+        echo
+        echo "$3"
+        echo
+    fi
+    while :; do
+        echo -n "$1 "
+        [ -n "$default" ] && echo -n "[$default] "
+        read
+        case "$REPLY" in
+            [Yy]*) return 0 ;;
+            [Nn]*) return 1 ;;
+            "") [ -n "$default" ] && return $2 ;;
+            *) echo "Please answer yes or no." ;;
+        esac
+    done
+}
+
 [[ -f /tmp/a2server-autoAnswerDefault ]] && autoAnswerDefault=1 || autoAnswerDefault=
 
 if [[ ! $autoAnswerDefault || -f /tmp/a2server-setupWindowsSharing ]]; then
 
     if [[ ! $autoAnswerDefault ]]; then
         echo
-        echo -n "Should Windows computers be able to connect to A2SERVER? "
-        read
+        askYesNo "Should Windows computers be able to connect to A2SERVER?" 0
     fi
-    if [[ $autoAnswerDefault || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
+    if [ $? -eq 0 ]; then
 
         echo "A2SERVER: Setting up Windows file sharing..."
         sudo true
