@@ -60,16 +60,12 @@ isRpi=
 isDebian=
 [[ ( -f /etc/debian_version ) && ( $(cut -c 1-2 < /etc/debian_version) == "7." ) && ( $(uname -m) == "i686" ) ]] && isDebian=1
 
-if [[ -f /usr/local/etc/A2SERVER-version ]]; then
-    echo "A2SERVER version available: $a2serverVersion"
-    echo "A2SERVER version installed: $(cat /usr/local/etc/A2SERVER-version)"
-fi
-
 skipRepoUpdate=
 autoAnswerDefault=
 setupNetBoot=
 setupWindowsSharing=
 updateRasppleII=
+justShowVersion=
 while [[ $1 ]]; do
     if [[ $1 == "-r" ]]; then
         shift
@@ -92,12 +88,8 @@ while [[ $1 ]]; do
         shift
         updateRasppleII=1
     elif [[ $1 == "-v" ]]; then
+        justShowVersion=1
         shift
-        if [[ ! -f /usr/local/etc/A2SERVER-version ]]; then
-            echo "A2SERVER version available: $a2serverVersion"
-            echo "A2SERVER version installed: none"
-        fi
-        [[ $0 == "-bash" ]] && return 1 || exit 1
     elif [[ $1 ]]; then
         echo "options:"
         echo "-v: display installed and available versions, then exit"
@@ -111,6 +103,18 @@ while [[ $1 ]]; do
         [[ $0 == "-bash" ]] && return 1 || exit 1
     fi
 done
+
+
+echo "A2SERVER version available: $a2serverVersion"
+if [[ -f /usr/local/etc/A2SERVER-version ]]; then
+    echo "A2SERVER version installed: $(cat /usr/local/etc/A2SERVER-version)"
+else
+    echo "A2SERVER version installed: none"
+fi
+if [[ $justShowVersion ]]; then
+    # User passed -v to the script, so we stop here
+    [[ $0 == "-bash" ]] && return 1 || exit 1
+fi
 
 if [[ $updateRasppleII ]]; then
     echo "A2SERVER: Updating Raspple II (takes up to an hour)..."
