@@ -5,43 +5,6 @@
 
 # This script helps when running on the Linux console within the VM.
 
-function askYesNo()
-# Ask a yes/no question of the user, with potential default
-# arg1: Prompt text
-# arg2: Default; 0 for yes, 1 for no, anything else for no default
-# arg3: Info text for the user
-# returns: 0 for yes, 1 for no
-{
-    local default
-
-    case "$2" in
-        0) default="y" ;;
-        1) default="n" ;;
-        *) default="" ;;
-    esac
-
-    if [ -n "$autoAnswerDefault" -a -n "$default" ]; then
-        return $2
-    fi
-
-    if [ -n "$3" ]; then
-        echo
-        echo "$3"
-        echo
-    fi
-    while :; do
-        echo -n "$1 "
-        [ -n "$default" ] && echo -n "[$default] "
-        read
-        case "$REPLY" in
-            [Yy]*) return 0 ;;
-            [Nn]*) return 1 ;;
-            "") [ -n "$default" ] && return $2 ;;
-            *) echo "Please answer yes or no." ;;
-        esac
-    done
-}
-
 echo
 
 userPw=$(sudo grep "^$USER" /etc/shadow | cut -f 2 -d ':')
@@ -79,16 +42,19 @@ if [[ $(lsb_release -d 2> /dev/null | grep Ubuntu) ]]; then
 
             echo "A2SERVER: Ubuntu console has already been optimized."
         else
-            askYesNo "Do you want to optimize the Ubuntu console?" 0 \
-"Ubuntu console optimization for use in a virtual machine will:
-- show the default username/password on the login screen
-- remove the documentation URL and system statistics shown after login
-- ensure the screen clears before showing the login prompt
-- prevent the screen from dimming after 10 minutes (once logged in)
-- eliminate a harmless but annoying startup error about piix_smbus
-- fix an Ubuntu 10.04 issue with slow scrolling"
-
-            if [ $? -eq 0 ]; then
+            echo "Ubuntu console optimization for use in a virtual machine will:"
+            echo "- show the default username/password on the login screen"
+            echo "- remove the documentation URL and system statistics shown after login"
+            echo "- ensure the screen clears before showing the login prompt"
+            echo "- prevent the screen from dimming after 10 minutes (once logged in)"
+            echo "- eliminate a harmless but annoying startup error about piix_smbus"
+            echo "- fix an Ubuntu 10.04 issue with slow scrolling"
+            echo
+            if [[ ! $autoAnswerYes ]]; then
+                echo -n "Do you want to optimize the Ubuntu console? "
+                read
+            fi
+            if [[ $autoAnswerYes || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
 
                 echo "A2SERVER: Optimizing console..."
 

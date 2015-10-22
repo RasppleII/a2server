@@ -75,7 +75,6 @@ if [[ ! -f /usr/local/bin/unar ]]; then
         touch /tmp/a2server-packageReposUpdated
     fi
 
-:<<COMMENT
     if [[ $isRpi || $isDebian ]]; then
         sudo apt-get -y install libgnustep-base1.22
         sudo apt-get clean
@@ -85,17 +84,16 @@ if [[ ! -f /usr/local/bin/unar ]]; then
             wget -qO- "http://appleii.ivanx.com/a2server/files/unar-debian7_x86.tgz" | sudo tar Pzx
         fi
     fi
-COMMENT
-    if [[ ! -f /usr/local/bin/unar || "`/usr/local/bin/unar -v`" != "v1.9.1" ]]; then
-        sudo apt-get -y install build-essential \
-            libgnustep-base-dev libz-dev libbz2-dev \
-            libssl-dev libicu-dev unzip
+    if [[ ! -f /usr/local/bin/unar ]]; then
+        sudo apt-get -y install build-essential
+        sudo apt-get -y install libgnustep-base-dev libz-dev libbz2-dev
+        sudo apt-get -y install libssl-dev libicu-dev unzip
         sudo apt-get clean
         rm -rf /tmp/unar &> /dev/null
         mkdir /tmp/unar
         cd /tmp/unar
-        wget -qO unar1.9_src.zip http://unarchiver.c3.cx/downloads/unar1.9.1_src.zip
-        unzip -o unar1.9_src.zip
+        wget -qO unar1.7_src.zip http://theunarchiver.googlecode.com/files/unar1.7_src.zip
+        unzip -o unar1.7_src.zip
         cd The\ Unarchiver/XADMaster
         make -f Makefile.linux
         sudo mv lsar unar /usr/local/bin
@@ -123,7 +121,7 @@ sudo wget -q -O /usr/local/etc/a2server-help.txt "${scriptURL}scripts/tools/a2se
 sudo wget -q -O /usr/local/etc/a2server-aliases "${scriptURL}scripts/tools/a2server-aliases.txt"
 
 grep a2server-aliases /etc/bash.bashrc > /dev/null || \
-    echo "source /usr/local/etc/a2server-aliases" | sudo tee -a /etc/bash.bashrc > /dev/null
+echo "source /usr/local/etc/a2server-aliases" | sudo tee -a /etc/bash.bashrc > /dev/null
 
 [[ $(lsb_release -d 2> /dev/null | grep Ubuntu) ]] && motd="/etc/issue" || motd="/etc/motd"
 if [[ ! $(grep A2SERVER $motd) ]]; then
