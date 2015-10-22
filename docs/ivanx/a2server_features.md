@@ -1,34 +1,34 @@
 ## A2SERVER
 
-A2SERVER\'s central capability, sharing files to an Apple II, is provided by [Netatalk][1] 2.2.4.
+A2SERVER\'s central capability, sharing files to an Apple II, is provided by
+[Netatalk][1] 2.2.4.
 
 Here\'s the extra sauce that A2SERVER provides:
-* available as a ready-to-use [Raspberry Pi][2] operating system
-  installer
+
+* available as a ready-to-use [Raspberry Pi][2] operating system installer
 
   (plus new [Pi Filler][3] and [Pi Copier][3] utilities for easy SD card
   creation and backup)
 
-* available as a ready-to-use [VirtualBox][4] appliance for Mac OS X,
-  Windows, Linux, and Solari
+* available as a ready-to-use [VirtualBox][4] appliance for Mac OS X, Windows,
+  Linux, and Solari
 
-* simple downloadable installation script for Ubuntu Linux or Raspbian
-  takes care of setting up and configuring *everything*
+* simple downloadable installation script for Ubuntu Linux or Raspbian takes
+  care of setting up and configuring *everything*
 
-* enables reliable operation by Asante, Farallon and Dayna bridges on
-  both IIe *and* IIgs \[fixes contributed by Steven Hirsch and Geoff
-  Body\]
+* enables reliable operation by Asante, Farallon and Dayna bridges on both IIe
+  *and* IIgs \[fixes contributed by Steven Hirsch and Geoff Body\]
 
-* easy to configure for network boot, including ProDOS 8 and GS/OS
-  download and installation
+* easy to configure for network boot, including ProDOS 8 and GS/OS download
+  and installation
 
 * can network boot both IIe and IIgs computers on the same network
 
-* new ProDOS 8 tools (NETBOOT.P8 and NETBOOT.GSOS) for setting the IIg
-  network boot default
+* new ProDOS 8 tools (NETBOOT.P8 and NETBOOT.GSOS) for setting the IIg network
+  boot default
 
-* temporary ProDOS 8 network boot without changing GS/OS default
-  \[contributed by Geoff Body\]
+* temporary ProDOS 8 network boot without changing GS/OS default \[contributed
+  by Geoff Body\]
 
 * GS/OS installer that can be run from folders rather than disk
 
@@ -38,40 +38,39 @@ Here\'s the extra sauce that A2SERVER provides:
 
 * supports Wi-Fi when used with Apple AirPort or Time Capsul
 
-* maintains correct dates during GS/OS folder copy \[fix contributed by
-  Steven Hirsch\]
+* maintains correct dates during GS/OS folder copy \[fix contributed by Steven
+  Hirsch\]
 
-* uses randnum authentication for registered user sign-in (which alway
-  works, unlike cleartext)
+* uses randnum authentication for registered user sign-in (which alway works,
+  unlike cleartext)
 
-* supports login to shared volumes from latest versions of OS X and
-  Window
+* supports login to shared volumes from latest versions of OS X and Window
 
-* new Linux tool ([afptype](scripts/tools/afptype.txt)) for setting
-  ProDOS or classic Mac file types on shared volume
+* new Linux tool ([afptype](scripts/tools/afptype.txt)) for setting ProDOS or
+  classic Mac file types on shared volume
 
-* new Linux tool ([cppo](scripts/tools/cppo.txt)) for cataloging and
-  copying files (with optional resource forks) out of ProDOS disk image
+* new Linux tool ([cppo](scripts/tools/cppo.txt)) for cataloging and copying
+  files (with optional resource forks) out of ProDOS disk image
 
 * [Linux commands](a2server_commands.md) to ease server maintenanc
 
-* installs Linux tools for working with ShrinkIt and other old and new
-  archive formats ([nulib2][8] and [unar/lsar][9])
+* installs Linux tools for working with ShrinkIt and other old and new archive
+  formats ([nulib2][8] and [unar/lsar][9])
 
 <!--
-* sets up Raspberry Pi for shell login from Apple II via USB-serial cable or Raspberry Pi console cable
+* sets up Raspberry Pi for shell login from Apple II via USB-serial cable or
+  Raspberry Pi console cable
 -->
 
 * blinks Raspberry Pi OK/ACT LED for ten seconds when netatalk has just
-  started u
+  started
 
 * good documentation (or so I hope)
 
 
-Any content unique to A2SERVER and not covered under a specific license is licensed under the [WTFPL][10].
+Any content unique to A2SERVER and not covered under a specific license is
+licensed under the [WTFPL][10].
 
-
-[A2SERVER home page](index.md)
 
 [1]: http://netatalk.sourceforge.net
 [2]: http://www.raspberrypi.org

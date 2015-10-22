@@ -1,9 +1,7 @@
 ## A2SERVER
 
-
-
 You need to access the Raspberry Pi\'s command prompt in order set up A2SERVER
-for network boot, and [do other stuff](a2server_commands.html).
+for network boot, and [do other stuff](a2server_commands.md).
 
 The default username is \"pi\" and default password is \"apple2\". If you
 don\'t have a screen and keyboard attached, you can:
@@ -45,11 +43,6 @@ There are a few different options for logging in from an Apple II. They are:
   Spectrum Internet Suite; you might want to put a DHCP reservation into your
   router (type `showmac` to get your Pi\'s MAC address) so you don\'t have to
   figure it out again.
-
-
-
-
-[A2SERVER home page](index.html)
 
 
 [1]: http://support.apple.com/kb/dl999
