@@ -14,6 +14,6 @@ not and indeed cannot replace them.
 
 Thus the content of those pages as of mid-October 2015 (version 1.2.4) is
 reproduced here in Markdown format in order to be most widely readable.  Where
-no direct non-HTML equivalent for HTML source code exists, this reproduction
-will prefer readability to source accuracy, such as replacing formatting based
-upon non-breaking spaces with an unordered list.
+unconvertable HTML with no direct non-HTML equivalent exists, this archive
+will prefer readability to source accuracy.  Examples of this include things
+such as replacing formatting using non-breaking spaces with an unordered list.
