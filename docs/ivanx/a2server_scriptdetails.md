@@ -44,8 +44,8 @@ themselves):
   [cppo](scripts/tools/cppo.txt),
   [mkatinit](scripts/tools/mkatinit.txt),
   [volnifo](scripts/tools/mkvolinfo.txt),
-  [aliases](scripts/tools/aliases.txt) (described at the bottom of [this
-  page](a2server_commands.html))
+  [aliases](scripts/tools/a2server-aliases.txt) (described at the bottom of
+  [this page](a2server_commands.html))
 
 * set up aliases file to be read at each login (/etc/profile)
 
