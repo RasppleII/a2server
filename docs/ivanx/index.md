@@ -1,10 +1,10 @@
 ## A2SERVER
 
 A2SERVER lets you use a [Raspberry Pi][1], or almost any other computer, to
-serve files to Apple IIgs and enhanced IIe computers on your network. You\'ll
+serve files to Apple IIgs and enhanced IIe computers on your network. You'll
 also be able to boot into GS/OS or ProDOS 8 directly from tne network (no
 drives needed). A2SERVER has been designed to be as easy to set up and use as
-possible, and it\'s free.
+possible, and it's free.
 
 <!--
 A2SERVER is available as a Raspberry Pi installer, or a virtual machine which
@@ -29,7 +29,7 @@ you. Cool stuff!
  Pi 2 Model B and every other Raspberry Pi, and new command line options for
  the installer script. To update, type `a2server-setup`._
 
-Choose how you\'d like to use A2SERVER, and you\'ll be up and running shortly.
+Choose how you'd like to use A2SERVER, and you'll be up and running shortly.
 
  * [Raspberry Pi](a2server_raspberrypi.md)
  * [Virtual Machine](a2server_virtualbox.md) (for Mac OS X, Windows, Linux,
@@ -38,7 +38,7 @@ Choose how you\'d like to use A2SERVER, and you\'ll be up and running shortly.
 
 
 <a name="a2server_next_steps" />
-Once you\'ve got it set up, here are next steps:
+Once you've got it set up, here are next steps:
 
 [Attach your Apple II to your local network](a2server_lan.md)
 
@@ -62,7 +62,7 @@ And some other stuff that might (or might not) be helpful or interesting:
 
 [Recover from a crashed A2SERVER](a2server_recovery.md)
 
-[Details of what the \"a2server-setup\" script
+[Details of what the "a2server-setup" script
 does](a2server_scriptdetails.md)
 
 [See the March 2013 cover of Juiced.GS][4], featuring A2SERVER
