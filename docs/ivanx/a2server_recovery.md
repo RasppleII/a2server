@@ -7,12 +7,12 @@ kernel panic (crash) your system on startup when A2SERVER tries to activate
 AppleTalk networking.
 
 If you have a screen or console cable attached, you will see some debugging
-information that concludes with \"Kernel panic.\" If you don\'t have a screen
-attached, there will be no visible signs other than that you simply can\'t
+information that concludes with "Kernel panic." If you don't have a screen
+attached, there will be no visible signs other than that you simply can't
 connect from another computer on your network.
 
 To prevent this from happening, type `a2server-setup` *before* updating the
-software on your computer. If it\'s too late, and you need to recover from
+software on your computer. If it's too late, and you need to recover from
 this situation, you could [start over][1]. Or, if you want to keep your
 current installation, you have a few options, depending on your setup:
 
@@ -40,7 +40,7 @@ _A2SERVER on Raspberry Pi with screen/keyboard/mouse attached_
 
 * Press OK to save, then ESC to reboot.
 
-* Log in with username \"pi\" and password \"apple2\".
+* Log in with username "pi" and password "apple2".
 
 * At the Linux prompt, type `a2server-setup`
 
@@ -71,7 +71,7 @@ _A2SERVER on Raspberry Pi without screen/keyboard mouse, and a Linux computer_
 
 * Follow the on-screen instructions.
 
-* If after using the fix tool, you still can\'t connect from your Apple II,
+* If after using the fix tool, you still can't connect from your Apple II,
   [log in to your Pi][2], and type `a2server-setup`
 
 * (Alternative approach: Follow the Mac method above, though the volume may
@@ -86,8 +86,8 @@ computer_
 * Install the [A2SERVER virtual machine](a2server_virtualbox.md) on your
   Windows computer.
 
-* Start the virtual machine, and log in with user name \"user1\" and
-  password \"apple2\".
+* Start the virtual machine, and log in with user name "user1" and
+  password "apple2".
 
 * In the virtual machine window, type:
   ```
@@ -100,7 +100,7 @@ computer_
 
 * Quit VirtualBox.
 
-* If after using the fix tool, you still can\'t connect from your Apple
+* If after using the fix tool, you still can't connect from your Apple
   II, [Log in to your Pi](a2server_raspberrypi_login.md) and type
   `a2server-setup`
 
