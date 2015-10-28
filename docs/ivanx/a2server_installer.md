@@ -4,12 +4,12 @@ You can easily install A2SERVER on Debian, Ubuntu, or Raspbian Linux by using
 the A2SERVER install scripts.
 
 While these are the only Linux distributions the scripts have been tested on,
-other Debian-derived distributions may work as well, provided they\'re not
-based on Debian 8, don\'t use kernel 3.12 through 3.15, have AppleTalk
+other Debian-derived distributions may work as well, provided they're not
+based on Debian 8, don't use kernel 3.12 through 3.15, have AppleTalk
 networking support available as a kernel module or compiled into the kernel
 itself, and their repositories contain the packages the scripts require. The
 user running the scripts needs a bash shell, sudo privileges, and a search
-path containing all the \"bin\" and \"sbin\" directories.
+path containing all the "bin" and "sbin" directories.
 
 _Debian or Ubuntu Linux_
 
@@ -37,10 +37,10 @@ these, [log in to Linux](a2server_commands.md), and type:
 proceed, enter the password again, and go get a sandwich, but come back so you
 can answer questions when prompted.
 
-Once it\'s done, check out the links on the [A2SERVER home page](index.md) for
+Once it's done, check out the links on the [A2SERVER home page](index.md) for
 next steps.
 
-If you\'d like to set things up manually, or are curious as to what\'s
+If you'd like to set things up manually, or are curious as to what's
 happening, you can
 [view the contents of the setup scripts](a2server_scriptdetails.md).
 
