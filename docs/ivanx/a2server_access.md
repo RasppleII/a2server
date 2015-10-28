@@ -18,7 +18,12 @@ AppleShare.
 to A2SERVER](a2server_commands.md) to update, and if that doesn't work, to
 find its IP address. On Mac OS X, enter the IP address under "Connect To
 Server..." from the Go menu of the Finder; on Windows, type the IP address
-following \\\\ in an Explorer window.)
+following two backslash characters (\\) in an Explorer window.)
+
+<!--
+Content edit: Make sure both Markdown source and HTML target renderings of how
+to specify a backslash-delimited UNC path are understandable.  -Joseph
+-->
 
 You will see two or three shared volumes: A2FILES, GSFILES, and, if you have
 A2CLOUD installed, ADTDISKS. Avoid the A2FILES volume except for copying
