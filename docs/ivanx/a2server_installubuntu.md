@@ -4,7 +4,7 @@
 
 * Download [Ubuntu Server 12.04 LTS][1], and burn it to a CD if
   installing on a real machine; otherwise, attach the download to your
-  virtual machine\'s CD/DVD drive.
+  virtual machine's CD/DVD drive.
 
 * Click Start.
 
@@ -13,10 +13,10 @@
 
 * For hostname, enter *a2server*
 
-* Under Partition Disks, choose \"Guided - use entire disk\" (no LVM).
+* Under Partition Disks, choose "Guided - use entire disk" (no LVM).
 
 * Choose SCSI1 (or whatever other disk appears), and (two screens later)
-  confirm \"Write the changes to disks.\"
+  confirm "Write the changes to disks."
 
 * If you are installing Debian, and are prompted for a domain name or
   the root user password, leave them blank.
@@ -48,7 +48,7 @@
   sudo sed -i '0,/-eq 0/s/-eq 0/-ge 0/' /etc/profile
   ```
 
-* When you\'re back at the prompt, type `sudo shutdown -h now` which
+* When you're back at the prompt, type `sudo shutdown -h now` which
   will turn off the (virtual) machine.
 
 * Recommended: If you are using a virtual machine, take a snapshot you
