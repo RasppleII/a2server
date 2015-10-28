@@ -2,10 +2,10 @@
 
 In order to connect your Apple II to the network, you need a LocalTalk to
 Ethernet bridge. (Unfortunately, the [Uthernet card][1] will not work, as
-Apple\'s network drivers don\'t know what it is.)
+Apple's network drivers don't know what it is.)
 
 If you have an enhanced Apple IIe, you will also need an [Apple II Workstation
-Card][2], and, if you\'re not booting over the network, the [Workstation Card
+Card][2], and, if you're not booting over the network, the [Workstation Card
 software](a2server_howtouse.html#wsdisks). Make sure you buy one with the
 dongle. \[ <!-- [Blujay][3] --> [eBay][4] \]
 
@@ -23,7 +23,7 @@ idiosyncracies before you buy one.
 * A pre-USB Mac with any kind of Ethernet, and the [LocalTalk Bridge][10]
   control panel installed \[ [eBay][11] \]
 
-You\'ll also need an ImageWriter II printer cable (or any other 8-pin mini-DIN
+You'll also need an ImageWriter II printer cable (or any other 8-pin mini-DIN
 null-modem serial cable), or two LocalTalk transceivers joined by either a
 LocalTalk cable or four-wire phone cord, depending on whether you have Apple
 or PhoneNet transceivers. (PhoneNet transceivers also require a terminator at
@@ -33,12 +33,12 @@ between the bridge and your router.
 
 For an Apple IIgs, go to the Slots control panel by pressing ctrl-Apple-ESC,
 and set slot 1 or 2, depending on whether you are using the printer or modem
-port for networking, to \"Your Card\" (ROM 01 machines) or \"AppleTalk\" (ROM
-3 machines), and set slot 7 to \"AppleTalk\" (ROM 01 machines only). For an
+port for networking, to "Your Card" (ROM 01 machines) or "AppleTalk" (ROM
+3 machines), and set slot 7 to "AppleTalk" (ROM 01 machines only). For an
 Apple IIe, install the Workstation Card in any slot, and be sure to connect
 your LocalTalk cable to the port with the double-arrow icon.
 
-If you have multiple Apple II\'s you\'d like to network, you can use a bridge
+If you have multiple Apple II's you'd like to network, you can use a bridge
 for each, or a single bridge attached to daisy-chained LocalTalk transceivers.
 
 Wired ethernet is recommended, but if you have an Apple AirPort or Time
@@ -52,14 +52,14 @@ designed to handle AppleTalk networking.)
 Caveat emptor:
 
 * The AsanteTalk must be powered on while A2SERVER is up and running, or it
-  will enter a mode where it won\'t operate correctly. (On the AsanteTalk, you
+  will enter a mode where it won't operate correctly. (On the AsanteTalk, you
   will know it entered the right mode if the TX light blinks a lot during
   power-up. If it instead pulses only two or three times, then goes dark for a
-  little while, and then pulses very rapidly for about three seconds, you\'ll
+  little while, and then pulses very rapidly for about three seconds, you'll
   need to remove power, make sure A2SERVER is running, and try again.)
 
 * At least some of the Dayna bridges must be attached to a 10Base-T Ethernet
-  port; they won\'t work if attached to an autosensing 10/100 or Gigabit
+  port; they won't work if attached to an autosensing 10/100 or Gigabit
   Ethernet port such as those found on modern routers and switches. You can
   [buy a 10Base-T hub on eBay][14] for around $10 to go between your router
   and the bridge.
@@ -85,12 +85,12 @@ Caveat emptor:
 And finally:
 
 * The Cayman GatorBox CS and the Shiva FastPath IV and V have been reported to
-  work, but it\'s hard to find these, so I have been unable to test. If you
-  have one of these and it doesn\'t work, [log in](a2server_commands.html) to
-  A2SERVER and type `netatalk-router-off` (if you get \"command not found\",
+  work, but it's hard to find these, so I have been unable to test. If you
+  have one of these and it doesn't work, [log in](a2server_commands.html) to
+  A2SERVER and type `netatalk-router-off` (if you get "command not found",
   type `a2server-setup` to refresh the command list).
 
-* Other LocalTalk-to-Ethernet routers and bridges may work too, but haven\'t
+* Other LocalTalk-to-Ethernet routers and bridges may work too, but haven't
   been tested by me.
 
 
