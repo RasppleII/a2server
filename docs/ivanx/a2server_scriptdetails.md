@@ -9,7 +9,7 @@ themselves):
 
 [Master setup script](setup/index.txt)
 
-* checks for supported OS and warns if it isn\'t
+* checks for supported OS and warns if it isn't
 
 * offers to change user password (Raspberry Pi only)
 
@@ -84,7 +84,7 @@ initial setup and if upgrade to Netatalk is required; otherwise skipped)
 
 * use mkatinit to enable Apple II network boot
 
-* patch boot block files to support cleartext passwords, and typing \"8\"
+* patch boot block files to support cleartext passwords, and typing "8"
   during IIGS network startup to force ProDOS 8 boot
 
 * ask user whether to download and install GS/OS
@@ -102,7 +102,7 @@ initial setup and if upgrade to Netatalk is required; otherwise skipped)
 
 * set up samba configuration files
 
-* if user doesn\'t want Windows file sharing, stop the samba service
+* if user doesn't want Windows file sharing, stop the samba service
 
 
 [Console optimizing](scripts/a2server-7-console.txt) (runs during initial
