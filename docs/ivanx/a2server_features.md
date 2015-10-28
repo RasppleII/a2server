@@ -1,9 +1,9 @@
 ## A2SERVER
 
-A2SERVER\'s central capability, sharing files to an Apple II, is provided by
+A2SERVER's central capability, sharing files to an Apple II, is provided by
 [Netatalk][1] 2.2.4.
 
-Here\'s the extra sauce that A2SERVER provides:
+Here's the extra sauce that A2SERVER provides:
 
 * available as a ready-to-use [Raspberry Pi][2] operating system installer
 
