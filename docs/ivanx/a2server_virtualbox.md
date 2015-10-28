@@ -3,7 +3,7 @@
 
 To set up A2SERVER, follow these steps:
 
-* Download and install [VirtualBox][1]. It\'s free. (If you prefer different
+* Download and install [VirtualBox][1]. It's free. (If you prefer different
   virtual machine software, [you can instead use the A2SERVER installer
   script](a2server_installer.md).)
 
@@ -11,25 +11,25 @@ To set up A2SERVER, follow these steps:
   the [A2SERVER+A2CLOUD virtual machine](files/A2SERVER_A2CLOUD.ova) (~1.7
   GB).
 
-* Open VirtualBox, and choose \"Import Appliance...\" from the File menu.
+* Open VirtualBox, and choose "Import Appliance..." from the File menu.
   Select the file you downloaded (A2SERVER.ova).
 
-* Leave the \"Reinitialize the MAC address of all network cards\" box
+* Leave the "Reinitialize the MAC address of all network cards" box
   unchecked. Click Import.
 
-* When it\'s done importing, click A2SERVER, then click Settings, then click
+* When it's done importing, click A2SERVER, then click Settings, then click
   Network.
 
-* Ensure that \"Attached To:\" is set to \"Bridged Adapter\".
+* Ensure that "Attached To:" is set to "Bridged Adapter".
 
-* Set \"Name:\" to a _wired_ network interface on your computer. If you don\'t
-  have one, use a USB-to-Ethernet adapter. (A2SERVER won\'t work over Wi-Fi in
+* Set "Name:" to a _wired_ network interface on your computer. If you don't
+  have one, use a USB-to-Ethernet adapter. (A2SERVER won't work over Wi-Fi in
   a virtual machine.)
 
 * Click OK.
 
 
-You\'re all set up. For next steps, check out the links on the [A2SERVER home
+You're all set up. For next steps, check out the links on the [A2SERVER home
 page](index.md).
 
 
