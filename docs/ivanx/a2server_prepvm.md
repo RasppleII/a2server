@@ -5,7 +5,7 @@ specifically [VirtualBox][1], which has the notable virtue of being free.
 However, you can also use other virtual machine products, such as those from
 [Parallels][2] and [VMware][3], and the process should be similar.
 
-If you\'re comfortable doing so, you may also customize the steps below as you
+If you're comfortable doing so, you may also customize the steps below as you
 wish, or install Ubuntu Linux natively rather than in a VM.
 
 * Download [VirtualBox 4.2.10][4].
@@ -52,7 +52,7 @@ wish, or install Ubuntu Linux natively rather than in a VM.
 * Change \"Attached To:\" to \"Bridged Adapter\".
 
 * Change \"Name:\" to a **wired** network interface on your computer.  If you
-  don\'t have one, use a USB-to-Ethernet adapter. (A2SERVER won\'t work over
+  don't have one, use a USB-to-Ethernet adapter. (A2SERVER won't work over
   Wi-Fi when running in a VM.)
 
 * Optional but recommended: Under Advanced, change the MAC Address to
@@ -61,8 +61,8 @@ wish, or install Ubuntu Linux natively rather than in a VM.
 * Click OK.
 
 
-[1]: http://www.virtualbox.org
-[2]: http://www.parallels.com>
-[3]: http://www.vmware.com
-[4]: https://www.virtualbox.org/wiki/Downloads
-[5]: http://www.ubuntu.com/download/server/download
+[1]: http://www.virtualbox.org/
+[2]: http://www.parallels.com/
+[3]: http://www.vmware.com/
+[4]: https://www.virtualbox.org/wiki/Downloads/
+[5]: http://www.ubuntu.com/download/server/
