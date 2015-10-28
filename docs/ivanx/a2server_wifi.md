@@ -1,7 +1,7 @@
 ## A2SERVER
 
-While wired Ethernet is recommended, it\'s possible to use A2SERVER with Wi-Fi
-if you have an Apple AirPort or Time Capsule. (A2SERVER won\'t work with most
+While wired Ethernet is recommended, it's possible to use A2SERVER with Wi-Fi
+if you have an Apple AirPort or Time Capsule. (A2SERVER won't work with most
 non-Apple router and access point models, as they are not designed to handle
 AppleTalk networking.)
 
@@ -10,9 +10,9 @@ local network](a2server_lan.md).
 
 If you want your A2SERVER machine (whether virtual, real, or Raspberry Pi) to
 connect to your network via Wi-Fi, you first need to configure a Wi-Fi network
-adapter via the instructions below. Once you\'ve got that up and running, [log
+adapter via the instructions below. Once you've got that up and running, [log
 in](a2server_commands.md) to A2SERVER and type `netatalk-wifi` to tell
-A2SERVER to use the Wi-Fi interface (if you get \"command not found\", type
+A2SERVER to use the Wi-Fi interface (if you get "command not found", type
 `a2server-setup` to refresh the command list).
 
 
@@ -30,9 +30,9 @@ _Raspberry Pi_
 
 
 _Virtual machine_
-On a virtual machine, A2SERVER won\'t work over Wi-Fi with the virtual network
+On a virtual machine, A2SERVER won't work over Wi-Fi with the virtual network
 interface, but you may, or may not, be able to use a USB Wi-Fi adapter
-attached your VM\'s emulated USB port, and then follow the instructions below
+attached your VM's emulated USB port, and then follow the instructions below
 for a real machine. Some adapters may have issues with specific virtual
 machine software; for example, Atheros 9K based adapters [do not work with
 VirtualBox][4] or VMWare Fusion, though they do work with Parallels Desktop;
@@ -45,7 +45,7 @@ Wi-Fi adapter working, it will probably work with A2SERVER. Instructions will
 vary by distribution, but should be similar to [the guide for Raspberry
 Pi][3], with a much wider range of usable adapters.
 
-If those steps don\'t work, type `sudo nano /etc/network/interfaces`, and edit
+If those steps don't work, type `sudo nano /etc/network/interfaces`, and edit
 the file so it contains a sequence of lines that look like this:
 `allow-hotplug wlan0 iface wlan0 inet dhcp wpa-ssid MyNetworkName` (substitute
 your Wi-Fi network name) `wpa-psk abcdefgh` (substitute your WPA password, or
@@ -63,8 +63,8 @@ Remove any other chunks which mention wlan0, and save the file (press
 control-w). Then type: `sudo ifdown wlan0; sudo ifup wlan0`
 
 Finally, type `ip addr`. If you see an IP address for wlan0 (next to
-\"inet\"), your Wi-Fi adapter is on your network, and you can disconnect your
-Ethernet or serial cable. (If you don\'t seem to have internet access, type
+"inet"), your Wi-Fi adapter is on your network, and you can disconnect your
+Ethernet or serial cable. (If you don't seem to have internet access, type
 `sudo shutdown -r now` to restart.)
 
 
