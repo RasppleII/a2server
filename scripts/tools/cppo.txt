@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+# vim: set tabstop=4 shiftwidth=4 expandtab filetype=python:
+
 """cppo: Copy or catalog one or all files from a ProDOS raw disk image.
 
 copy all files:

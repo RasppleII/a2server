@@ -1,4 +1,6 @@
 #! /bin/bash
+# vim: set tabstop=4 shiftwidth=4 expandtab filetype=sh:
+
 # A2SERVER aliases:
 
 alias a2server-help="more /usr/local/etc/a2server-help.txt"
