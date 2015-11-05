@@ -35,9 +35,12 @@ Once you are up and running in Linux, you can execute the automated setup
 scripts to download, install, and configure the A2SERVER software. To use
 these, [log in to Linux](a2server_commands.md), and type:
 
-`wget appleii.ivanx.com/a2server/setup; source setup` Confirm that you want to
-proceed, enter the password again, and go get a sandwich, but come back so you
-can answer questions when prompted.
+~~~ bash
+wget appleii.ivanx.com/a2server/setup; source setup
+~~~
+
+Confirm that you want to proceed, enter the password again, and go get a
+sandwich, but come back so you can answer questions when prompted.
 
 Once it's done, check out the links on the [A2SERVER home page](index.md) for
 next steps.

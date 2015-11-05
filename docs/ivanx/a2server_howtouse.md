@@ -37,7 +37,7 @@ mixed case, punctuated names of up to 31 characters (same as a classic Mac).
 The network volumes hosted by A2SERVER will appear on the Finder desktop in
 GS/OS; in ProDOS 8, you can type `PREFIX /A2FILES`.
 
-### Workstation Software: ###  {#wsdisk}
+### Workstation Software:  {#wsdisk}
 
 <!--
 FIXME: These disk images are not (at present) contained within this archive.

@@ -25,9 +25,9 @@ supports Wi-Fi, and can download and install GS/OS on your network drive for
 you. Cool stuff!
 -->
 
- _Update 19-Mar-15: A2SERVER 1.2.2 is available. It has support for Raspberry
- Pi 2 Model B and every other Raspberry Pi, and new command line options for
- the installer script. To update, type `a2server-setup`._
+*Update 19-Mar-15: A2SERVER 1.2.2 is available. It has support for Raspberry
+Pi 2 Model B and every other Raspberry Pi, and new command line options for
+the installer script. To update, type `a2server-setup`.*
 
 Choose how you'd like to use A2SERVER, and you'll be up and running shortly.
 
