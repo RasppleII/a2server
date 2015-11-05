@@ -37,7 +37,6 @@ Choose how you'd like to use A2SERVER, and you'll be up and running shortly.
  * [Installer for Ubuntu or Debian Linux](a2server_installer.md)
 
 
-<a name="a2server_next_steps" />
 Once you've got it set up, here are next steps:
 
 [Attach your Apple II to your local network](a2server_lan.md)
