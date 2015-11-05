@@ -66,10 +66,9 @@ _A2SERVER on Raspberry Pi without screen/keyboard mouse, and a Linux computer_
 
 * On your Linux computer, type:
   
-  ~~~
+  ~~~ bash
   wget ivanx.com/a2server/fix; source fix
   ~~~
-  {: .language-bash}
 
 * Follow the on-screen instructions.
 
@@ -93,10 +92,9 @@ computer_
 
 * In the virtual machine window, type:
 
-  ~~~
+  ~~~ bash
   wget ivanx.com/a2server/fix;source fix
   ~~~
-  {: .language-bash}
 
 * Follow the on-screen instructions.
 

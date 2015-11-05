@@ -44,10 +44,9 @@
 
 * If you installed Debian rather than Ubuntu, type:
   
-  ~~~
+  ~~~ bash
   sudo sed -i '0,/-eq 0/s/-eq 0/-ge 0/' /etc/profile
   ~~~
-  {: .language-bash}
 
 * When you're back at the prompt, type `sudo shutdown -h now` which
   will turn off the (virtual) machine.
