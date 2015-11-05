@@ -35,7 +35,7 @@ Once logged in, you can enter the following commands.
 typing `a2server-setup`, answering "no" to all prompts if you like.)
 
 
-```
+~~~
 A2SERVER commands:
   (note: new commands may be added; use a2server-setup to refresh)
 
@@ -122,7 +122,7 @@ mkatinit: set up network boot configuration files
 cppo: catalog and copy files from ProDOS image file (slow, but works)
   (add -h to show help for the above four commands, e.g. "afptype -h")
 
-```
+~~~
 
 
 [1]: http://support.apple.com/kb/dl999

@@ -65,9 +65,11 @@ _A2SERVER on Raspberry Pi without screen/keyboard mouse, and a Linux computer_
 * Remove the SD card from your Pi.
 
 * On your Linux computer, type:
-  ```
+  
+  ~~~
   wget ivanx.com/a2server/fix; source fix
-  ```
+  ~~~
+  {: .language-bash}
 
 * Follow the on-screen instructions.
 
@@ -90,9 +92,11 @@ computer_
   password "apple2".
 
 * In the virtual machine window, type:
-  ```
+
+  ~~~
   wget ivanx.com/a2server/fix;source fix
-  ```
+  ~~~
+  {: .language-bash}
 
 * Follow the on-screen instructions.
 

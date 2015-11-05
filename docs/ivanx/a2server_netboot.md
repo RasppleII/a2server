@@ -7,9 +7,10 @@ running from "bare metal" if you wanted to.
 
 To do this, [log into the a2server console](a2server_commands.md), and type:
 
-```
+~~~
 a2server-setup
-```
+~~~
+{: .language-bash}
 
 After confirming that you want to proceed, you will be asked if you want to
 set up A2SERVER for network boot. Just follow the prompts. If you elect to
