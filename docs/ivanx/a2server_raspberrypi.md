@@ -13,7 +13,8 @@ stopped working after a Raspbian update, see the
 
 
 
-_Starting fresh:_
+### Starting fresh:
+
 If you haven't already started working with a Raspberry Pi, then [download
 Raspple II][2], a distribution of the Raspbian operating system which includes
 A2SERVER, [A2CLOUD][3], and David Schmenk's [Apple II Pi][4].
@@ -39,10 +40,14 @@ you wish to change any configuration options, type `raspi-config`.
 For next steps, check out the links on the [A2SERVER home page](index.md).
 
 
-_Already using a Raspberry Pi?_ If you're already using Raspbian, you can
-install A2SERVER by typing at a Linux prompt:
+### Already using a Raspberry Pi?
 
-`wget appleii.ivanx.com/a2server/setup; source setup`
+If you're already using Raspbian, you can install A2SERVER by typing at a
+Linux prompt:
+
+~~~ bash
+wget appleii.ivanx.com/a2server/setup; source setup
+~~~
 
 The process is straightforward -- just respond to the prompts.
 

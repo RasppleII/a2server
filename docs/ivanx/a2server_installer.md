@@ -11,7 +11,8 @@ itself, and their repositories contain the packages the scripts require. The
 user running the scripts needs a bash shell, sudo privileges, and a search
 path containing all the "bin" and "sbin" directories.
 
-_Debian or Ubuntu Linux_
+
+### Debian or Ubuntu Linux
 
 (Tested on Debian 7.8.0 and Ubuntu Server 12.04 LTS. Note that Ubuntu 14.04
 LTS includes kernel 3.13, which is *not* compatible with A2SERVER; you will
@@ -23,7 +24,8 @@ at this time.)
 2. [Install Debian](a2server_installubuntu.md) (or Ubuntu) on the virtual or
    real machine
 
-_Raspberry Pi_
+
+### Raspberry Pi
 
 1. [Download Raspbian][1]
 2. [Perform Raspberry Pi setup](a2server_raspberrypi.md)

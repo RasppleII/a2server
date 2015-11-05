@@ -18,18 +18,21 @@ A2SERVER to use the Wi-Fi interface (if you get "command not found", type
 
 Setting up Wi-Fi on your A2SERVER machine:
 
-_Multiple AirPorts_
+### Multiple AirPorts
+
 As an alternative to using a Wi-Fi network adapter, any of the machine types
 below can work with Wi-Fi simply by connecting the wired Ethernet interface to
 another AirPort and setting up an [extended network][1] (if all AirPorts are
 802.11n models), or a [WDS][2] (if any AirPort is an 802.11g model).
 
 
-_Raspberry Pi_
+### Raspberry Pi
+
 [We got a whole page about that.][3]
 
 
-_Virtual machine_
+### Virtual machine
+
 On a virtual machine, A2SERVER won't work over Wi-Fi with the virtual network
 interface, but you may, or may not, be able to use a USB Wi-Fi adapter
 attached your VM's emulated USB port, and then follow the instructions below
@@ -39,7 +42,8 @@ VirtualBox][4] or VMWare Fusion, though they do work with Parallels Desktop;
 Realtek 81xx based adapters seem to work with VirtualBox (at minimum).
 
 
-_Real machine (Intel or compatible)_
+### Real machine (Intel or compatible)
+
 On a standard computer with a native Linux installation, if you can get a
 Wi-Fi adapter working, it will probably work with A2SERVER. Instructions will
 vary by distribution, but should be similar to [the guide for Raspberry

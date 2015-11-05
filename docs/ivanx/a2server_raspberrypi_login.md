@@ -7,7 +7,7 @@ The default username is "pi" and default password is "apple2". If you
 don't have a screen and keyboard attached, you can:
 
 
-_Log in via SSH from another computer_
+### Log in via SSH from another computer
 
 On a Mac, open Terminal (in the Utilities folder of the Applications folder),
 and type `ssh pi@raspberrypi.local` to connect. If you have Windows, you can
@@ -23,7 +23,8 @@ reserve an IP address in your router so the Pi gets the same IP address every
 time.
 
 
-_Log in from an Apple II_
+### Log in from an Apple II
+
 There are a few different options for logging in from an Apple II. They are:
 
 * Apple II serial: With the appropriate cables, you can use a terminal

@@ -17,7 +17,7 @@ this situation, you could [start over][1]. Or, if you want to keep your
 current installation, you have a few options, depending on your setup:
 
 
-_A2SERVER virtual machine, or on other non-Raspberry Pi Linux computer_
+### A2SERVER virtual machine, or on other non-Raspberry Pi Linux computer
 
 * Start up the virtual or real machine.
 
@@ -26,7 +26,7 @@ _A2SERVER virtual machine, or on other non-Raspberry Pi Linux computer_
 * At the Linux prompt, type `a2server-setup`
 
 
-_A2SERVER on Raspberry Pi with screen/keyboard/mouse attached_
+### A2SERVER on Raspberry Pi with screen/keyboard/mouse attached
 
 * Press the shift key rapidly and repeatedly while your Pi starts up. If you
   have an HDMI monitor, you can stop when you see the installer screen. If you
@@ -45,7 +45,7 @@ _A2SERVER on Raspberry Pi with screen/keyboard/mouse attached_
 * At the Linux prompt, type `a2server-setup`
 
 
-_A2SERVER on Raspberry Pi without screen/keyboard mouse, and a Mac_
+### A2SERVER on Raspberry Pi without screen/keyboard mouse, and a Mac
 
 * Remove the SD card from your Pi and insert it in your Mac.
 
@@ -60,7 +60,7 @@ _A2SERVER on Raspberry Pi without screen/keyboard mouse, and a Mac_
 * [Log in to your Pi](a2server_raspberrypi_login.md) and type `a2server-setup`
 
 
-_A2SERVER on Raspberry Pi without screen/keyboard mouse, and a Linux computer_
+### A2SERVER on Raspberry Pi without screen/keyboard mouse, and a Linux computer
 
 * Remove the SD card from your Pi.
 
@@ -79,8 +79,7 @@ _A2SERVER on Raspberry Pi without screen/keyboard mouse, and a Linux computer_
   not appear as BOOT.)
 
 
-_A2SERVER on Raspberry Pi without screen/keyboard/mouse, and a Windows
-computer_
+### A2SERVER on Raspberry Pi without screen/keyboard/mouse, and a Windows computer
 
 * Remove the SD card from your Pi.
 
