@@ -53,6 +53,38 @@ def do_install():
     print(netboot_tmp)
     os.chdir(netboot_tmp)
 
+    #   If we need boot files:
+    #       Download a disk image
+    #       If it is one we need to unpack (.sea.bin):
+    #           unar it
+    #           extract the embedded image
+    #       If we need to apply boot block patches:
+    #           fix cleartext password bug in //e boot block
+    #           fix cleartext password bug in IIgs boot block
+    #           patch IIgs boot block to allow booting ProDOS 8
+    #   If we don't have A2SERVER tools:
+    #       Download the installer script
+    #       Run the installer script
+    #   Copy Basic.System to A2FILES for ProDOS 8
+    #   If NETBOOT.P8 (battery ram set to boot into ProDOS 8) doesn't exist:
+    #       Create it
+    #   If NETBOOT.GSOS (battery ram set to boot into GSOS) doesn't exist:
+    #       Create it
+    #   Set GS/OS to boot SYSTEM/FINDER (registered user or guest)
+    #   Set ProDOS 8 to boot BASIC.SYSTEM (guest)
+    #   If SYSTEM/START.GS.OS doesn't exist in A2FILES:
+    #       Ask if user wants to install GS/OS 6.0.1
+    #       If they answer yes:
+    #           create imagesDir
+    #           create netInstallDir
+    #           For each disk:
+    #               Download the disk
+    #               If it is one we need to unpack (.sea.bin):
+    #                   unar it
+    #                   extract the embedded image
+    #                   delete the wrapped image
+    #               unpack the disk to netInstallDir
+
     # You commonly see GS/OS 6.0.1 as six floppies for the Apple IIgs, but
     # there's actually a seventh HFS-formatted floppy containing AFP network
     # boot files the Apple //e and IIgs.  We need those.
