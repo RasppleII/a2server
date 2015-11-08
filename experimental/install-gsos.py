@@ -47,6 +47,44 @@ def download_url(url, filename):
     f.write(data)
     f.close
 
+# Apple's GS/OS 6.0.1 images are stored in MacBinary-wrapped
+# self-extracting disk image files.  The Unarchiver's unar is able
+# to unwrap the MacBinary wrapper for us, but we have to extract the
+# disk image oursselves.  Fortunately, it's uncompressed.
+def extract_800k_sea_bin(wrapper_name, image_name, sea_name = None):
+    # First we need to get rid of the MacBinary wrapper
+    # FIXME: Can we learn to read MacBinary?  I bet we can!
+    cmdline = ['unar', '-q', '-k', 'skip', wrapper_name]
+    ret = subprocess.call(cmdline)
+    if ret != 0:
+        raise IOError('unar returned with status ' + ret)
+
+    # MAYBE we can guess the name?
+    if sea_name == None:
+        if wrapper_name.endswith('.bin'):
+            sea_name = wrapper_name[:-4]
+        else:
+            raise ValueError('sea_name is None, but "' + wrapper_name +
+                    '" doesn\'t end with .sea.bin')
+
+    # Do we have the right file?
+    if not os.path.isfile(sea_name):
+        raise IOError('Expected image archive "' + sea_name + '" does not exist')
+
+    # The image starts 84 bytes in, and is exactly 819200 bytes long
+    with open(sea_name, 'rb') as src, open(image_name, 'wb') as dst:
+        src.seek(84)
+        dst.write(src.read(819200))
+        if dst.tell() != 819200:
+            raise IOError(wrapper_name + ' did not contain an 800k floppy image')
+
+    # Now just clean up the archive files and we're done
+    os.unlink(sea_name)
+    os.unlink(wrapper_name)
+
+def install_bootblocks(dir):
+    pass
+
 def do_install():
     netboot_tmp = tempfile.mkdtemp(suffix = '.a2server-netboot')
     print('You\'ll want to go and delete this directory:')
@@ -58,6 +96,20 @@ def do_install():
     #       If it is one we need to unpack (.sea.bin):
     #           unar it
     #           extract the embedded image
+
+    # You commonly see GS/OS 6.0.1 as six floppies for the Apple IIgs, but
+    # there's actually a seventh HFS-formatted floppy containing AFP network
+    # boot files the Apple //e and IIgs.  We need those.
+
+    disk7_file = os.path.join(netboot_tmp, disk7_filename)
+    download_url(disk7_url, disk7_file)
+
+    # If file is wrapped as .sea.bin (always true for now)
+    if True:
+        sea_name = 'Disk 7 of 7-Apple II Setup.sea'
+        a2setup_hdv_name = 'A2SETUP.HDV'
+        extract_800k_sea_bin(disk7_filename, a2setup_hdv_name, sea_name)
+
     #       If we need to apply boot block patches:
     #           fix cleartext password bug in //e boot block
     #           fix cleartext password bug in IIgs boot block
@@ -80,36 +132,9 @@ def do_install():
     #           For each disk:
     #               Download the disk
     #               If it is one we need to unpack (.sea.bin):
-    #                   unar it
-    #                   extract the embedded image
-    #                   delete the wrapped image
+    #                   extract_800k_sea_bin it
     #               unpack the disk to netInstallDir
 
-    # You commonly see GS/OS 6.0.1 as six floppies for the Apple IIgs, but
-    # there's actually a seventh HFS-formatted floppy containing AFP network
-    # boot files the Apple //e and IIgs.  We need those.
-
-    disk7_file = os.path.join(netboot_tmp, disk7_filename)
-    download_url(disk7_url, disk7_file)
-
-    # The file's wrapped in MacBinary, unar can unwrap it for us
-    unar = ['unar', '-q', '-k', 'skip', disk7_filename]
-    ret = subprocess.call(unar)
-    if ret == 0:
-        # The actual HFS image is exactly 819200 bytes long and appears after
-        # the first 84 bytes of the file.  Admittedly we're dealing with a lot
-        # of magic numbers here.
-        source = 'Disk 7 of 7-Apple II Setup.sea'
-        a2setup_hdv_name = 'A2SETUP.HDV'
-        with open(source, 'rb') as src, open(a2setup_hdv_name, 'wb') as dst:
-            src.seek(84)
-            dst.write(src.read(819200))
-            if dst.tell() != 819200:
-                print('Disk 7 was somehow corrupted')
-                return False
-    else:
-        print('Failed to extract %s: unar returned with error %i' % (disk7_name, ret))
-        return False
 
     # XXX Re-enable this
     #os.rmdir(netboot_tmp)
@@ -139,7 +164,7 @@ if __name__ == '__main__':
         print ('Rerunning with sudo...')
         ret = subprocess.call(args)
         sys.exit(ret)
-        """
+    """
 
     reply = stdin_input("""
 Do you want to set up A2SERVER to be able to boot Apple II
