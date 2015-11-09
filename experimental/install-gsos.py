@@ -69,7 +69,7 @@ except ImportError:
 if 'A2SERVER_SCRIPT_URL' in os.environ:
     scriptURL = os.environ['A2SERVER_SCRIPT_URL']
     # Strip trailing slash
-    if scriptURL.endsWith('/'):
+    if scriptURL.endswith('/'):
         scriptURL = scriptURL[:-1]
 else:
     scriptURL = 'http://appleii.ivanx.com/a2server'
