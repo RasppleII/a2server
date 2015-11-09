@@ -173,7 +173,6 @@ def install_bootblocks(installdir, installtype):
     platform = os.uname()[0]
     if platform not in ['Linux', 'Darwin']:
         platform = "hfsutils"
-    platform = "hfsutils"
 
     unpacked_a2boot = False
     for bootfile in a2boot_files:
@@ -202,21 +201,35 @@ def install_bootblocks(installdir, installtype):
                             a2setup_img_name])
                     mountpoint = find_mountpoint(xmlstr)
                     srcdir = os.path.join(mountpoint, 'System Folder')
+                elif platform == 'hfsutils':
+                    srcdir = os.path.join(bootblock_tmp, 'a2boot')
+                    os.mkdir(srcdir)
+                    subprocess.check_output(['hmount', a2setup_img_name])
+                    subprocess.check_output(['hcopy', 'Apple II Setup:System Folder:*',
+                            srcdir])
+                    subprocess.check_output(['humount', 'Apple II Setup'])
 
                 unpacked_a2boot = True
 
             # Copy the file
             if platform == 'Darwin':
                 src = os.path.join(srcdir, bootfile['unix'])
+            elif platform == 'hfsutils':
+                src = os.path.join(srcdir, bootfile['hfsutils'])
             shutil.copyfile(src, dst)
 
+    # Clean up the mounted/unpacked image
     if unpacked_a2boot:
         if platform == 'Darwin':
             subprocess.check_output(['hdiutil', 'eject', mountpoint])
+        elif platform == 'hfsutils':
+            for bootfile in a2boot_files:
+                name = os.path.join(srcdir, bootfile['hfsutils'])
+                if os.path.isfile(name):
+                    os.unlink(name)
+            os.rmdir(srcdir)
         os.unlink(a2setup_img_name)
 
-    print ('Contents of "' + installdir + '"')
-    os.system('ls -l "' + installdir + '"')
     os.removedirs(bootblock_tmp)
 
 def do_install():
