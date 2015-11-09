@@ -32,7 +32,7 @@ except ImportError:
 
 
 # Differing from the shell script in that we explicitly strip the / here
-if os.environ.has_key('A2SERVER_SCRIPT_URL'):
+if 'A2SERVER_SCRIPT_URL' in os.environ:
     scriptURL = os.environ['A2SERVER_SCRIPT_URL']
     # Strip trailing slash
     if scriptURL.endsWith('/'):
