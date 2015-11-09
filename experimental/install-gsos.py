@@ -2,6 +2,8 @@
 
 import os, sys, subprocess
 import tempfile
+import hashlib
+import xml.etree.cElementTree as ET
 
 gsosDir = '/media/A2SHARED/FILES'
 imagesDir = gsosDir + '/GSOS.INSTALLER/IMAGES'
@@ -20,6 +22,38 @@ adtproDir = commDir + '/ADTPRO'
 disk7_filename = 'Disk_7_of_7-Apple_II_Setup.sea.bin'
 disk7_url = 'http://archive.org/download/download.info.apple.com.2012.11/download.info.apple.com.2012.11.zip/download.info.apple.com%2FApple_Support_Area%2FApple_Software_Updates%2FEnglish-North_American%2FApple_II%2FApple_IIGS_System_6.0.1%2F' + disk7_filename
 
+a2boot_files = [
+        {
+            'unix':             'Apple ::e Boot Blocks',
+            'hfsutils':         'Apple_--e_Boot_Blocks.bin',
+            'netatalk':         'Apple :2f:2fe Boot Blocks',
+            'digest':           'cada362ac2eca3ffa506e9b4e76650ba031e0035',
+            'digest_patched':   '6b7fc12fd118e1cb9e39c7a2b8cc870c844a3bac'
+        },
+        {
+            'unix':             'Basic.System',
+            'hfsutils':         'Basic.System.bin',
+            'digest':           '4d53424f1451cd2e874cf792dbdc8cc6735dcd36'
+        },
+        {
+            'unix':             'ProDOS16 Boot Blocks',
+            'hfsutils':         'ProDOS16_Boot_Blocks.bin',
+            'digest':           'fab829e82e6662ed6aab119ad18e16ded7d43cda',
+        },
+        {
+            'unix':             'ProDOS16 Image',
+            'hfsutils':         'ProDOS16_Image.bin',
+            'digest':           'db4608067b9e7877f45eb557971c4d8c45b46be5',
+            'digest_patched':   '5c35d5533901b292ab7c2f5a3c76cb3113f66085'
+        },
+        {
+            'unix':             'p8',
+            'hfsutils':         'p8.bin',
+            'digest':           '36c288a5272cf01e0a64eed16786258959118e0e'
+        }
+]
+
+
 try:
     stdin_input = raw_input     # Python 2
 except NameError:
@@ -30,7 +64,6 @@ try:
 except ImportError:
     import urllib2 as urlrequest            # Python 2
 
-
 # Differing from the shell script in that we explicitly strip the / here
 if 'A2SERVER_SCRIPT_URL' in os.environ:
     scriptURL = os.environ['A2SERVER_SCRIPT_URL']
@@ -39,6 +72,16 @@ if 'A2SERVER_SCRIPT_URL' in os.environ:
         scriptURL = scriptURL[:-1]
 else:
     scriptURL = 'http://appleii.ivanx.com/a2server'
+
+def sha1file (filename, blocksize=65536):
+    f = open(filename, "rb")
+    digest = hashlib.sha1()
+    buf = f.read(blocksize)
+    while len(buf) > 0:
+        digest.update(buf)
+        buf = f.read(blocksize)
+    f.close()
+    return digest.hexdigest()
 
 def download_url(url, filename):
     html = urlrequest.urlopen(url)
@@ -51,13 +94,15 @@ def download_url(url, filename):
 # self-extracting disk image files.  The Unarchiver's unar is able
 # to unwrap the MacBinary wrapper for us, but we have to extract the
 # disk image oursselves.  Fortunately, it's uncompressed.
-def extract_800k_sea_bin(wrapper_name, image_name, sea_name = None):
+def extract_800k_sea_bin(wrapper_name, image_name, extract_dir, sea_name = None):
     # First we need to get rid of the MacBinary wrapper
     # FIXME: Can we learn to read MacBinary?  I bet we can!
-    cmdline = ['unar', '-q', '-k', 'skip', wrapper_name]
+    if not os.path.isfile(wrapper_name):
+        raise IOError('Archive file "' + wrapper_name + '" does not exist')
+    cmdline = ['unar', '-q', '-o', extract_dir, '-k', 'skip', wrapper_name]
     ret = subprocess.call(cmdline)
     if ret != 0:
-        raise IOError('unar returned with status ' + ret)
+        raise IOError('unar returned with status %i' % (ret))
 
     # MAYBE we can guess the name?
     if sea_name == None:
@@ -68,8 +113,13 @@ def extract_800k_sea_bin(wrapper_name, image_name, sea_name = None):
                     '" doesn\'t end with .sea.bin')
 
     # Do we have the right file?
+    sea_name = os.path.join(extract_dir, sea_name)
     if not os.path.isfile(sea_name):
         raise IOError('Expected image archive "' + sea_name + '" does not exist')
+
+    # Cowardly refuse to overwrite image_name
+    if os.path.exists(image_name):
+        raise IOError('"' + image_name + '" already exists')
 
     # The image starts 84 bytes in, and is exactly 819200 bytes long
     with open(sea_name, 'rb') as src, open(image_name, 'wb') as dst:
@@ -82,8 +132,76 @@ def extract_800k_sea_bin(wrapper_name, image_name, sea_name = None):
     os.unlink(sea_name)
     os.unlink(wrapper_name)
 
-def install_bootblocks(dir):
-    pass
+def plist_keyvalue(plist_dict, key):
+    if plist_dict.tag != 'dict':
+        raise ValueError('not a plist dict')
+    found = False
+    for elem in plist_dict:
+        if found:
+            return elem
+        if elem.tag == 'key' and elem.text == key:
+            found = True
+    return None
+
+def find_mountpoint(xmlstr):
+    plistroot = ET.fromstring(xmlstr)
+    if plistroot.tag != 'plist':
+        raise ValueError('xmlstr is not an XML-format plist')
+    if plistroot[0].tag == 'dict':
+        sys_entities = plist_keyvalue(plistroot[0], 'system-entities')
+        if sys_entities.tag != 'array':
+            raise ValueError('expected dict to contain an array')
+        for child in sys_entities:
+            if child.tag == 'dict':
+                mountpoint = plist_keyvalue(child, 'mount-point')
+                return mountpoint.text
+            else:
+                raise ValueError('system-entities should be an array of dict objects')
+    else:
+        raise ValueError('Root element is not a dict')
+
+def install_bootblocks(installdir, installtype):
+    if installtype not in ['unix', 'netatalk']:
+        raise ValueError('Only basic UNIX and netatalk formats are supported for now')
+
+    if not os.path.isdir(installdir):
+        os.makedirs(installdir, mode=0755)
+
+    bootblock_tmp = tempfile.mkdtemp(prefix = "tmp-a2sv-bootblocks.")
+
+    unpacked_a2boot = False
+    for bootfile in a2boot_files:
+        if installtype == 'unix':
+            dst = bootfile['unix']
+        elif installtype == 'netatalk':
+            dst = bootfile['netatalk'] or bootfile['unix']
+
+        if not os.path.isfile(os.path.join(installdir, dst)):
+            # We need to fetch it
+            if not unpacked_a2boot:
+                disk7_file = os.path.join(bootblock_tmp, disk7_filename)
+                a2setup_img_name = os.path.join(bootblock_tmp, 'A2SETUP.img')
+                download_url(disk7_url, disk7_file)
+                # If file is wrapped as .sea.bin (always true for now)
+                if True:
+                    sea_name = 'Disk 7 of 7-Apple II Setup.sea'
+                    extract_800k_sea_bin(disk7_file, a2setup_img_name, bootblock_tmp, sea_name)
+                else:
+                    # Implement non .sea.bin version
+                    pass
+
+                if os.uname()[0] == 'Darwin':
+                    xmlstr = subprocess.check_output(['hdiutil', 'attach', '-plist',
+                            a2setup_img_name])
+                    mountpoint = find_mountpoint(xmlstr)
+                    print ('Contents of ' + mountpoint)
+                    os.system('ls -l "' + mountpoint + '"')
+                    os.system('hdiutil eject "' + mountpoint + '"')
+
+                unpacked_a2boot = True
+
+    os.unlink(a2setup_img_name)
+    os.removedirs(bootblock_tmp)
 
 def do_install():
     netboot_tmp = tempfile.mkdtemp(suffix = '.a2server-netboot')
@@ -166,8 +284,7 @@ if __name__ == '__main__':
         sys.exit(ret)
     """
 
-    reply = stdin_input("""
-Do you want to set up A2SERVER to be able to boot Apple II
-computers over the network? [y] """)
-    if reply.startswith('y') or reply.startswith('Y') or reply == '':
-        do_install()
+    install_bootblocks(os.path.join(os.getcwd(), 'a2boot'), 'unix')
+    #reply = stdin_input("""\nDo you want to set up A2SERVER to be able to boot Apple II\ncomputers over the network? [y] """)
+    #if reply.startswith('y') or reply.startswith('Y') or reply == '':
+    #    do_install()
