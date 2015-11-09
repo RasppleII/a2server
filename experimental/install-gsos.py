@@ -3,6 +3,7 @@
 import os, sys, subprocess
 import tempfile
 import hashlib
+import shutil
 import xml.etree.cElementTree as ET
 
 gsosDir = '/media/A2SHARED/FILES'
@@ -169,14 +170,20 @@ def install_bootblocks(installdir, installtype):
 
     bootblock_tmp = tempfile.mkdtemp(prefix = "tmp-a2sv-bootblocks.")
 
+    platform = os.uname()[0]
+    if platform not in ['Linux', 'Darwin']:
+        platform = "hfsutils"
+    platform = "hfsutils"
+
     unpacked_a2boot = False
     for bootfile in a2boot_files:
         if installtype == 'unix':
             dst = bootfile['unix']
         elif installtype == 'netatalk':
             dst = bootfile['netatalk'] or bootfile['unix']
+        dst = os.path.join(installdir, dst)
 
-        if not os.path.isfile(os.path.join(installdir, dst)):
+        if not os.path.isfile(dst):
             # We need to fetch it
             if not unpacked_a2boot:
                 disk7_file = os.path.join(bootblock_tmp, disk7_filename)
@@ -190,17 +197,26 @@ def install_bootblocks(installdir, installtype):
                     # Implement non .sea.bin version
                     pass
 
-                if os.uname()[0] == 'Darwin':
+                if platform == 'Darwin':
                     xmlstr = subprocess.check_output(['hdiutil', 'attach', '-plist',
                             a2setup_img_name])
                     mountpoint = find_mountpoint(xmlstr)
-                    print ('Contents of ' + mountpoint)
-                    os.system('ls -l "' + mountpoint + '"')
-                    os.system('hdiutil eject "' + mountpoint + '"')
+                    srcdir = os.path.join(mountpoint, 'System Folder')
 
                 unpacked_a2boot = True
 
-    os.unlink(a2setup_img_name)
+            # Copy the file
+            if platform == 'Darwin':
+                src = os.path.join(srcdir, bootfile['unix'])
+            shutil.copyfile(src, dst)
+
+    if unpacked_a2boot:
+        if platform == 'Darwin':
+            subprocess.check_output(['hdiutil', 'eject', mountpoint])
+        os.unlink(a2setup_img_name)
+
+    print ('Contents of "' + installdir + '"')
+    os.system('ls -l "' + installdir + '"')
     os.removedirs(bootblock_tmp)
 
 def do_install():
