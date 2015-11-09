@@ -1,13 +1,11 @@
 #! /bin/bash
 # vim: set tabstop=4 shiftwidth=4 expandtab filetype=sh:
 
-# A2SERVER aliases:
-
 alias a2server-help="more /usr/local/etc/a2server-help.txt"
-alias a2server-setup="wget -q -O /tmp/a2server-setup ${A2SERVER_SCRIPT_URL:-http://appleii.ivanx.com/a2server}$([[ "$A2SERVER_SCRIPT_URL" == */ ]] || echo -n "/")setup/; source /tmp/a2server-setup"
+alias a2server-setup="wget -q -O /tmp/a2server-setup ${A2SERVER_SCRIPT_URL:-http://appleii.ivanx.com/a2server}$([[ "$A2SERVER_SCRIPT_URL" == */ ]] || echo -n "/")setup/ || { echo \"Can't download A2SERVER setup scripts. Do you has internet?\"; false; } && source /tmp/a2server-setup"
 
 alias a2server-version="cat /usr/local/etc/A2SERVER-version"
-alias a2server-update="wget -q -O /tmp/a2server-update ${A2SERVER_SCRIPT_URL:-http://appleii.ivanx.com/a2server}$([[ "$A2SERVER_SCRIPT_URL" == */ ]] || echo -n "/")update/; source /tmp/a2server-update"
+alias a2server-update="wget -q -O /tmp/a2server-update ${A2SERVER_SCRIPT_URL:-http://appleii.ivanx.com/a2server}$([[ "$A2SERVER_SCRIPT_URL" == */ ]] || echo -n "/")update/ || { echo \"Can't download A2SERVER setup scripts. Do you has internet?\"; false; } && source /tmp/a2server-update"
 
 alias system-shutdown='sudo shutdown -h now'
 alias system-restart='sudo shutdown -r now'
@@ -77,3 +75,12 @@ alias a2files-share="sudo sed -i 's/^\/media\/A2SHARED\/A2FILES\ A2FILES options
 alias a2files-unshare="sudo sed -i 's/^#share2/\/media\/A2SHARED\/A2FILES\ A2FILES options:prodos\ casefold:toupper/' /usr/local/etc/netatalk/AppleVolumes.default; [[ -d /media/A2SHARED/A2FILES ]] || mkdir /media/A2SHARED/A2FILES"
 
 alias showalias="alias | cut -d= -f 1 | cut -d' ' -f2 | more"
+
+
+
+
+
+
+
+
+#

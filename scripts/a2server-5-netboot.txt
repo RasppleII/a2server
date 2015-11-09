@@ -27,6 +27,9 @@ protermDir=$commDir/PROTERM
 zlinkDir=$commDir/Z.LINK
 adtproDir=$commDir/ADTPRO
 
+gsosURL="http://download.info.apple.com/Apple_Support_Area/Apple_Software_Updates/English-North_American/Apple_II/Apple_IIGS_System_6.0.1/"
+gsosBackupURL="http://archive.org/download/download.info.apple.com.2012.11/download.info.apple.com.2012.11.zip/download.info.apple.com%2FApple_Support_Area%2FApple_Software_Updates%2FEnglish-North_American%2FApple_II%2FApple_IIGS_System_6.0.1%2F"
+
 # bail out on automated netboot setup unless -b is also specified
 [[ -f /tmp/a2server-autoAnswerYes ]] && autoAnswerYes=1 || autoAnswerYes=
 if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
@@ -123,39 +126,109 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
         mkatinit -gs -d -f     # GS/OS registered user and Guest starts up with SYSTEM/FINDER
         mkatinit -d -f guest   # ProDOS 8 Guest starts up with BASIC.SYSTEM (no registered user)
 
-        if [[ -f "/media/A2SHARED/A2FILES/SYSTEM/START.GS.OS" ]]; then
-            echo "A2SERVER: GS/OS has already been downloaded and installed."
-            gsosInstall=1
-        else
+        gsosInstall=
+        gsosReinstall=1
+        if [[ -f "$gsosDir/SYSTEM/START.GS.OS" ]]; then
+            while true; do
+                gsosInstall=
+                gsosReinstall=
+                echo
+                echo "GS/OS is already installed on this volume."
+                echo "0: don't install GS/OS now"
+                echo "1: delete installed GS/OS, then install new GS/OS"
+                echo "2: install GS/OS over existing system"
+                echo
+                echo -n "What do you wanna do? "
+                read
+                if [[ $REPLY == "1" || $REPLY == "2" ]]; then
+                    gsosReinstall=$REPLY
+                    if (( $gsosReinstall == 1 )); then
+                        echo
+                        echo -n "Are you sure you want to delete your entire GS/OS System folder? "
+                        read
+                        if [[ ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
+                            rm -r "$gsosDir/SYSTEM/* $gsosDir/System/.AppleDouble/*" 2> /dev/null
+                            afpsync &> /dev/null
+                            echo
+                            break
+                        fi
+                    else
+                        echo -n "Are you sure you want to reinstall GS/OS over your existing system? "
+                        read
+                        if [[ ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
+                            rm -r "$gsosDir/SYSTEM/START.GS.OS $gsosDir/System/.AppleDouble/START.GS.OS" 2> /dev/null
+                            afpsync &> /dev/null
+                            echo
+                            break
+                        fi
+                    fi
+                else
+                    gsosInstall=1
+                    break
+                fi
+            done
+        fi
+
+        if [[ $gsosReinstall ]]; then
             if [[ ! $autoAnswerYes ]]; then
-                echo "You can set up GS/OS 6.0.1 on your network drive, for network boot."
-                echo -n "This may take a while. Download and install it now? "
+                echo "You can set up GS/OS for network boot. This may take a while."
+                echo "0: don't install GS/OS"
+                echo "1: GS/OS 6.0.1 (official Apple release, May 1993)"
+                echo "2: GS/OS 6.0.2 (community release by Antoine Vignau, July 2015)"
+                echo "3: GS/OS 6.0.3 (community release by Tony Diaz, August 2015)"
+                echo
+                echo -n "Which flavor would you like? "
                 read
             fi
-            if [[ $autoAnswerYes || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
-                gsosInstall=1
+            [[ $autoAnswerYes ]] && gsosVersion=1
+            if [[ $REPLY == "1" || $REPLY == "2" || $REPLY == "3" ]]; then
+                gsosInstall=$REPLY
 
                 # get GS/OS disks from Internet Archive and put them in IMAGES
                 # also dump contents into NET.INSTALL and modify scripts to work from there
                 # echo
-                # echo "Come back in a while. This takes a long time."
+                # echo "Come back in a while."
                 echo
-                echo "A2SERVER: Downloading GS/OS 6.0.1 installer disk images..."
+                echo "A2SERVER: Downloading GS/OS 6.0.${gsosInstall} installer disk images..."
                 cd /tmp/netboot
                 mkdir -p $imagesDir
                 mkdir -p $netInstallDir
                 activeDisk=0
-                for diskname in Install System.Disk SystemTools1 SystemTools2 Fonts synthLAB; do
-                    outfile="$imagesDir/$(tr [:lower:] [:upper:] <<< $diskname)"
-                    if [ ! -f $outfile ]; then
-                        (( activeDisk++ ))
-                        echo "A2SERVER: Disk ${activeDisk} of 6: $diskname"
-                        wget -qO "Disk_${activeDisk}_of_7-$diskname.sea.bin" "http://archive.org/download/download.info.apple.com.2012.11/download.info.apple.com.2012.11.zip/download.info.apple.com%2FApple_Support_Area%2FApple_Software_Updates%2FEnglish-North_American%2FApple_II%2FApple_IIGS_System_6.0.1%2FDisk_${activeDisk}_of_7-$diskname.sea.bin"
+
+                diskNames=( Install System.Disk SystemTools1 SystemTools2 Fonts synthLAB )
+                if (( $gsosInstall == 1 )); then
+                    :
+                elif (( $gsosInstall == 2 )); then
+                    gsosURL="http://mirrors.apple2.org.za/Apple%20II%20Documentation%20Project/Software/Operating%20Systems/Apple%20IIGS%20System/Disk%20Images/"
+                    diskNames=( Install System.Disk SystemTools1 SystemTools2 SystemTools3 Fonts1 Fonts2 synthLAB )
+                    diskWebNames=( Install System%20disk System%20tools%201 System%20tools%202 System%20tools%203 Fonts%201 Fonts%202 Synthlab )
+                elif (( $gsosInstall == 3 )); then
+                    gsosURL="ftp://ftp.apple.asimov.net/pub/apple_II/images/gs/os/gsos/Apple_IIGS_System_6.0.3/"
+                fi
+
+                # delete previously downloaded installer
+                rm "$imagesDir/* $imagesDir/.AppleDouble/*" 2> /dev/null
+                rm "$netInstallDir/* $netInstallDir/.AppleDouble/*" 2> /dev/null
+                afpsync -v $gsosDir > /dev/null
+
+                for diskname in ${diskNames[@]}; do
+                   outfile="$imagesDir/$(tr [:lower:] [:upper:] <<< $diskname)"
+                    (( activeDisk++ ))
+                    echo "A2SERVER: Disk ${activeDisk} of ${#diskNames[@]}: $diskname"
+                    if (( $gsosInstall == 1 )); then
+                        wget --max-redirect 0 -qO "Disk_${activeDisk}_of_7-$diskname.sea.bin" "${gsosURL}Disk_${activeDisk}_of_7-$diskname.sea.bin"
+                        if (( $? != 0 )); then
+                            wget -qO "Disk_${activeDisk}_of_7-$diskname.sea.bin" "${gsosBackupURL}Disk_${activeDisk}_of_7-$diskname.sea.bin"
+                        fi
                         unar -k skip "Disk_${activeDisk}_of_7-$diskname.sea.bin" &> /dev/null
                         truncate -s 819284 "Disk ${activeDisk} of 7-${diskname}.sea"
                         dd if="Disk ${activeDisk} of 7-${diskname}.sea" of=${outfile} bs=84 skip=1 &> /dev/null
-                        cppo -s -ad $outfile $netInstallDir 2> /dev/null
-                    fi
+                    elif (( $gsosInstall == 2 )); then
+                        wget -qO $outfile "$gsosURL/IIGS%20System%206.0.2%20-%20Disk%20${activeDisk}%20${diskWebNames[$activeDisk-1]}.po"
+                    elif (( $gsosInstall == 3 )); then
+                        wget -qO $outfile "$gsosURL/$diskname.po"
+                   fi
+                    cppo -s -ad $outfile $netInstallDir 2> /dev/null
                 done
                 rm *.sea* &> /dev/null
                 sed -i "s/\([^\\]\r:\)/\1A2FILES:GSOS.INSTALLER:NET.INSTALL:/g" $netInstallDir/INSTALL/SCRIPTS/*
@@ -172,11 +245,12 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                     pathPrefix="/A2FILES/GSOS.INSTALLER/NET.INSTALL"$(tr ':' '/' <<< ${scriptEntries[0]##S*\\\\#})
                     entryCount=${#scriptEntries[@]}
                     (( entryCount -= 2 ))
-                    entryIndex=3
-                    while (( entryIndex < entryCount )); do
+                    # echo "entryCount: $entryCount"
+                    entryIndex=2
+                    while (( entryIndex <= entryCount )); do
                         IFS='#'
                         scriptEntry=(${scriptEntries[entryIndex]})
-                        # echo $entryIndex $entryCount ${scriptEntry[1]}
+                        # echo $entryIndex $entryCount ${scriptEntry[@]}
                         action=${scriptEntry[1]:0:1}
                         sourcePathMixed=$(tr ':' '/' <<<  ${scriptEntry[5]})
                         [[ ${sourcePathMixed:0:1} != '/' ]] && sourcePathMixed="${pathPrefix}/$sourcePathMixed"
@@ -214,13 +288,19 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 
                 echo "A2SERVER: Preparing GS/OS installer scripts..."
                 # work through installer scripts
+                echo "Script: INSTALL.SYS.FILE"
                 processScript $netInstallDir/INSTALL/SCRIPTS/INSTAL.SYS.FILE
+                echo "Script: HFS.FST"
+                processScript $netInstallDir/INSTALL/SCRIPTS/HFS.FST
+                echo "Script: APPLESHARE"
                 processScript $netInstallDir/INSTALL/SCRIPTS/APPLESHARE
+                echo "Script: SERVER.SYS.FILE"
                 processScript $netInstallDir/INSTALL/SCRIPTS/SERVER.SYS.FILE
 
                 # sync netatalk database
                 afpsync -v $gsosDir > /dev/null
-
+            else
+                gsosInstall=
             fi
         fi
 
@@ -327,7 +407,10 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
             else
                 echo
                 cd /tmp/netboot
-                wget -qO Apple_II_System_Disk_3.2.sea.bin http://archive.org/download/download.info.apple.com.2012.11/download.info.apple.com.2012.11.zip/download.info.apple.com%2FApple_Support_Area%2FApple_Software_Updates%2FEnglish-North_American%2FApple_II%2FApple_II_Supplemental%2FApple_II_System_Disk_3.2.sea.bin
+                wget --max-redirect 0 -qO Apple_II_System_Disk_3.2.sea.bin http://download.info.apple.com/Apple_Support_Area/Apple_Software_Updates/English-North_American/Apple_II/Apple_II_Supplemental/Apple_II_System_Disk_3.2.sea.bin
+                if (( $? != 0 )); then
+                    wget -qO Apple_II_System_Disk_3.2.sea.bin http://archive.org/download/download.info.apple.com.2012.11/download.info.apple.com.2012.11.zip/download.info.apple.com%2FApple_Support_Area%2FApple_Software_Updates%2FEnglish-North_American%2FApple_II%2FApple_II_Supplemental%2FApple_II_System_Disk_3.2.sea.bin
+                fi
                 unar -k skip Apple_II_System_Disk_3.2.sea.bin &> /dev/null
                 truncate -s 819284 'Apple II System Disk 3.2.sea'
                 dd if='Apple II System Disk 3.2.sea' of=A2SYSDISK32.HDV bs=84 skip=1 2> /dev/null
@@ -414,7 +497,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
         echo
 
         echo
-        if (( $gsosInstall )); then
+        if [[ $gsosInstall ]]; then
             echo "GS/OS network boot (for registered user and Guest) and"
         fi
         echo "ProDOS 8 network boot (for Guest only) is now configured."
