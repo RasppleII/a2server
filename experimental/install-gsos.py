@@ -173,6 +173,20 @@ def install_bootblocks(installdir, installtype):
     platform = os.uname()[0]
     if platform not in ['Linux', 'Darwin']:
         platform = "hfsutils"
+    elif platform == 'Linux':
+        use_sudo = False
+        if os.geteuid() != 0:
+            reply = stdin_input("""
+You must have either root access or the hfsutils package to
+access the disk image containing Apple // boot blocks.  Do
+you want to mount the image using the sudo command? [y] """)
+            if reply.startswith('y') or reply.startswith('Y') or reply == '':
+                use_sudo = True
+                print("""
+Okay, if asked for a password, type your user password.  It
+will not be echoed when you type.""")
+            else:
+                platform = 'hfsutils'
 
     unpacked_a2boot = False
     for bootfile in a2boot_files:
@@ -186,25 +200,33 @@ def install_bootblocks(installdir, installtype):
             # We need to fetch it
             if not unpacked_a2boot:
                 disk7_file = os.path.join(bootblock_tmp, disk7_filename)
-                a2setup_img_name = os.path.join(bootblock_tmp, 'A2SETUP.img')
+                a2setup_img = os.path.join(bootblock_tmp, 'A2SETUP.img')
                 download_url(disk7_url, disk7_file)
                 # If file is wrapped as .sea.bin (always true for now)
                 if True:
                     sea_name = 'Disk 7 of 7-Apple II Setup.sea'
-                    extract_800k_sea_bin(disk7_file, a2setup_img_name, bootblock_tmp, sea_name)
+                    extract_800k_sea_bin(disk7_file, a2setup_img, bootblock_tmp, sea_name)
                 else:
                     # Implement non .sea.bin version
                     pass
 
-                if platform == 'Darwin':
+                if platform == 'Linux':
+                    mountpoint = os.path.join(bootblock_tmp, 'a2boot')
+                    os.mkdir(mountpoint)
+                    mount_cmd = ['mount', '-t', 'hfs', '-o', 'ro,loop', a2setup_img, mountpoint]
+                    if use_sudo:
+                        mount_cmd = ['sudo'] + mount_cmd
+                    subprocess.call(mount_cmd)
+                    srcdir = os.path.join(mountpoint, 'System Folder')
+                elif platform == 'Darwin':
                     xmlstr = subprocess.check_output(['hdiutil', 'attach', '-plist',
-                            a2setup_img_name])
+                            a2setup_img])
                     mountpoint = find_mountpoint(xmlstr)
                     srcdir = os.path.join(mountpoint, 'System Folder')
                 elif platform == 'hfsutils':
                     srcdir = os.path.join(bootblock_tmp, 'a2boot')
                     os.mkdir(srcdir)
-                    subprocess.check_output(['hmount', a2setup_img_name])
+                    subprocess.check_output(['hmount', a2setup_img])
                     subprocess.check_output(['hcopy', 'Apple II Setup:System Folder:*',
                             srcdir])
                     subprocess.check_output(['humount', 'Apple II Setup'])
@@ -212,7 +234,7 @@ def install_bootblocks(installdir, installtype):
                 unpacked_a2boot = True
 
             # Copy the file
-            if platform == 'Darwin':
+            if platform == 'Linux' or platform == 'Darwin':
                 src = os.path.join(srcdir, bootfile['unix'])
             elif platform == 'hfsutils':
                 src = os.path.join(srcdir, bootfile['hfsutils'])
@@ -220,7 +242,13 @@ def install_bootblocks(installdir, installtype):
 
     # Clean up the mounted/unpacked image
     if unpacked_a2boot:
-        if platform == 'Darwin':
+        if platform == 'Linux':
+            umount_cmd = ['umount', mountpoint]
+            if use_sudo:
+                umount_cmd = ['sudo'] + umount_cmd
+            subprocess.call(umount_cmd)
+            os.rmdir(mountpoint)
+        elif platform == 'Darwin':
             subprocess.check_output(['hdiutil', 'eject', mountpoint])
         elif platform == 'hfsutils':
             for bootfile in a2boot_files:
@@ -228,9 +256,9 @@ def install_bootblocks(installdir, installtype):
                 if os.path.isfile(name):
                     os.unlink(name)
             os.rmdir(srcdir)
-        os.unlink(a2setup_img_name)
+        os.unlink(a2setup_img)
 
-    os.removedirs(bootblock_tmp)
+    os.rmdir(bootblock_tmp)
 
 def do_install():
     netboot_tmp = tempfile.mkdtemp(suffix = '.a2server-netboot')
