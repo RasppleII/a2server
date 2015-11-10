@@ -57,7 +57,10 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
             echo "A2SERVER: Downloading Apple II Boot Blocks..."
             cd /tmp/netboot
 
-            wget -qO Disk_7_of_7-Apple_II_Setup.sea.bin http://archive.org/download/download.info.apple.com.2012.11/download.info.apple.com.2012.11.zip/download.info.apple.com%2FApple_Support_Area%2FApple_Software_Updates%2FEnglish-North_American%2FApple_II%2FApple_IIGS_System_6.0.1%2FDisk_7_of_7-Apple_II_Setup.sea.bin
+            wget --max-redirect 0 -qO Disk_7_of_7-Apple_II_Setup.sea.bin ${gsosURL}Disk_7_of_7-Apple_II_Setup.sea.bin
+            if (( $? != 0 )); then
+                wget -qO Disk_7_of_7-Apple_II_Setup.sea.bin ${gsosBackupURL}Disk_7_of_7-Apple_II_Setup.sea.bin
+            fi
             unar -k skip Disk_7_of_7-Apple_II_Setup.sea.bin &> /dev/null
             truncate -s 819284 'Disk 7 of 7-Apple II Setup.sea'
             dd if='Disk 7 of 7-Apple II Setup.sea' of=APPLE2SETUP.HDV bs=84 skip=1 2> /dev/null
@@ -443,10 +446,14 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                 mkdir -p $spectrumDir
                 echo
                 cd /tmp/netboot
-                wget -qO- http://www.speccie.co.uk/speccie/software/spectrum.2mg | dd bs=64 skip=1 of=$spectrumDir/SPECTRUM.HDV 2> /dev/null
-                wget -qO- http://www.speccie.co.uk/speccie/software/spectrum_extras.2mg | dd bs=64 skip=1 of=$spectrumDir/EXTRAS.HDV 2> /dev/null
-                wget -qO- http://www.speccie.co.uk/speccie/software/spectrum_sounds.2mg | dd bs=64 skip=1 of=$spectrumDir/SOUNDS.HDV 2> /dev/null
-                wget -qO- http://www.speccie.co.uk/speccie/software/spectrum_manuals.2mg | dd bs=64 skip=1 of=$spectrumDir/MANUALS.HDV 2> /dev/null
+                wget -qO- http://www.speccie.co.uk/speccie/software/spectrum.2mg | dd bs=64 skip=1 of=SPECTRUM.HDV 2> /dev/null
+                wget -qO- http://www.speccie.co.uk/speccie/software/spectrum_extras.2mg | dd bs=64 skip=1 of=EXTRAS.HDV 2> /dev/null
+                wget -qO- http://www.speccie.co.uk/speccie/software/spectrum_sounds.2mg | dd bs=64 skip=1 of=SOUNDS.HDV 2> /dev/null
+                wget -qO- http://www.speccie.co.uk/speccie/software/spectrum_manuals.2mg | dd bs=64 skip=1 of=MANUALS.HDV 2> /dev/null
+                cppo -s -ad SPECTRUM.HDV $spectrumDir
+                cppo -s -ad EXTRAS.HDV $spectrumDir
+                cppo -s -ad MANUALS.HDV $spectrumDir
+                cppo -s -ad SOUNDS.HDV $spectrumDir
                 afpsync -v $gsosDir > /dev/null
             fi
 
