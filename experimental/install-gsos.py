@@ -21,38 +21,49 @@ zlinkDir = commDir + '/Z.LINK'
 adtproDir = commDir + '/ADTPRO'
 
 disk7_filename = 'Disk_7_of_7-Apple_II_Setup.sea.bin'
+disk7_sources = [
+        {
+            'type'  : 'sea.bin',
+            'url'   : 'http://download.info.apple.com/Apple_Support_Area/Apple_Software_Updates/English-North_American/Apple_II/Apple_IIGS_System_6.0.1/Disk_7_of_7-Apple_II_Setup.sea.bin',
+        },
+        {
+            'type'  : 'sea.bin',
+            'url'   : 'http://archive.org/download/download.info.apple.com.2012.11/download.info.apple.com.2012.11.zip/download.info.apple.com%2FApple_Support_Area%2FApple_Software_Updates%2FEnglish-North_American%2FApple_II%2FApple_IIGS_System_6.0.1%2FDisk_7_of_7-Apple_II_Setup.sea.bin'
+        }
+    ]
+
 disk7_url = 'http://archive.org/download/download.info.apple.com.2012.11/download.info.apple.com.2012.11.zip/download.info.apple.com%2FApple_Support_Area%2FApple_Software_Updates%2FEnglish-North_American%2FApple_II%2FApple_IIGS_System_6.0.1%2F' + disk7_filename
 
 a2boot_files = [
         {
-            'unix':             'Apple ::e Boot Blocks',
-            'hfsutils':         'Apple_--e_Boot_Blocks.bin',
-            'netatalk':         'Apple :2f:2fe Boot Blocks',
-            'digest':           'cada362ac2eca3ffa506e9b4e76650ba031e0035',
-            'digest_patched':   '6b7fc12fd118e1cb9e39c7a2b8cc870c844a3bac'
+            'unix'              : 'Apple ::e Boot Blocks',
+            'hfsutils'          : 'Apple_--e_Boot_Blocks.bin',
+            'netatalk'          : 'Apple :2f:2fe Boot Blocks',
+            'digest'            : 'cada362ac2eca3ffa506e9b4e76650ba031e0035',
+            'digest_patched'    : '6b7fc12fd118e1cb9e39c7a2b8cc870c844a3bac'
         },
         {
-            'unix':             'Basic.System',
-            'hfsutils':         'Basic.System.bin',
-            'digest':           '4d53424f1451cd2e874cf792dbdc8cc6735dcd36'
+            'unix'              : 'Basic.System',
+            'hfsutils'          : 'Basic.System.bin',
+            'digest'            : '4d53424f1451cd2e874cf792dbdc8cc6735dcd36'
         },
         {
-            'unix':             'ProDOS16 Boot Blocks',
-            'hfsutils':         'ProDOS16_Boot_Blocks.bin',
-            'digest':           'fab829e82e6662ed6aab119ad18e16ded7d43cda',
+            'unix'              : 'ProDOS16 Boot Blocks',
+            'hfsutils'          : 'ProDOS16_Boot_Blocks.bin',
+            'digest'            : 'fab829e82e6662ed6aab119ad18e16ded7d43cda',
         },
         {
-            'unix':             'ProDOS16 Image',
-            'hfsutils':         'ProDOS16_Image.bin',
-            'digest':           'db4608067b9e7877f45eb557971c4d8c45b46be5',
-            'digest_patched':   '5c35d5533901b292ab7c2f5a3c76cb3113f66085'
+            'unix'              : 'ProDOS16 Image',
+            'hfsutils'          : 'ProDOS16_Image.bin',
+            'digest'            : 'db4608067b9e7877f45eb557971c4d8c45b46be5',
+            'digest_patched'    : '5c35d5533901b292ab7c2f5a3c76cb3113f66085'
         },
         {
-            'unix':             'p8',
-            'hfsutils':         'p8.bin',
-            'digest':           '36c288a5272cf01e0a64eed16786258959118e0e'
+            'unix'              : 'p8',
+            'hfsutils'          : 'p8.bin',
+            'digest'            : '36c288a5272cf01e0a64eed16786258959118e0e'
         }
-]
+    ]
 
 
 try:
@@ -85,11 +96,15 @@ def sha1file (filename, blocksize=65536):
     return digest.hexdigest()
 
 def download_url(url, filename):
-    html = urlrequest.urlopen(url)
-    data = html.read()
-    f = open(filename, 'wb')
-    f.write(data)
-    f.close
+    try:
+        html = urlrequest.urlopen(url)
+        data = html.read()
+        f = open(filename, 'wb')
+        f.write(data)
+        f.close
+        return True
+    except:
+        return False
 
 # Apple's GS/OS 6.0.1 images are stored in MacBinary-wrapped
 # self-extracting disk image files.  The Unarchiver's unar is able
@@ -201,14 +216,24 @@ will not be echoed when you type.""")
             if not unpacked_a2boot:
                 disk7_file = os.path.join(bootblock_tmp, disk7_filename)
                 a2setup_img = os.path.join(bootblock_tmp, 'A2SETUP.img')
-                download_url(disk7_url, disk7_file)
-                # If file is wrapped as .sea.bin (always true for now)
-                if True:
-                    sea_name = 'Disk 7 of 7-Apple II Setup.sea'
-                    extract_800k_sea_bin(disk7_file, a2setup_img, bootblock_tmp, sea_name)
-                else:
-                    # Implement non .sea.bin version
-                    pass
+                disk7_downloaded = False
+                for disk7_source in disk7_sources:
+                    if download_url(disk7_source['url'], disk7_file):
+                        disk7_downloaded = True
+                    else:
+                        continue
+
+                    # If file is wrapped as .sea.bin (always true for now)
+                    if disk7_source['type'] == 'sea.bin':
+                        sea_name = 'Disk 7 of 7-Apple II Setup.sea'
+                        extract_800k_sea_bin(disk7_file, a2setup_img, bootblock_tmp, sea_name)
+                    else:
+                        # Implement non .sea.bin version
+                        pass
+                    break
+
+                if not disk7_downloaded:
+                    raise IOError('Could not download disk7')
 
                 if platform == 'Linux':
                     mountpoint = os.path.join(bootblock_tmp, 'a2boot')
