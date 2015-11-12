@@ -20,19 +20,18 @@ protermDir = commDir + '/PROTERM'
 zlinkDir = commDir + '/Z.LINK'
 adtproDir = commDir + '/ADTPRO'
 
-disk7_filename = 'Disk_7_of_7-Apple_II_Setup.sea.bin'
 disk7_sources = [
         {
             'type'  : 'sea.bin',
             'url'   : 'http://download.info.apple.com/Apple_Support_Area/Apple_Software_Updates/English-North_American/Apple_II/Apple_IIGS_System_6.0.1/Disk_7_of_7-Apple_II_Setup.sea.bin',
+            'file'  : 'Disk_7_of_7-Apple_II_Setup.sea.bin'
         },
         {
             'type'  : 'sea.bin',
-            'url'   : 'http://archive.org/download/download.info.apple.com.2012.11/download.info.apple.com.2012.11.zip/download.info.apple.com%2FApple_Support_Area%2FApple_Software_Updates%2FEnglish-North_American%2FApple_II%2FApple_IIGS_System_6.0.1%2FDisk_7_of_7-Apple_II_Setup.sea.bin'
+            'url'   : 'http://archive.org/download/download.info.apple.com.2012.11/download.info.apple.com.2012.11.zip/download.info.apple.com%2FApple_Support_Area%2FApple_Software_Updates%2FEnglish-North_American%2FApple_II%2FApple_IIGS_System_6.0.1%2FDisk_7_of_7-Apple_II_Setup.sea.bin',
+            'file'  : 'Disk_7_of_7-Apple_II_Setup.sea.bin'
         }
     ]
-
-disk7_url = 'http://archive.org/download/download.info.apple.com.2012.11/download.info.apple.com.2012.11.zip/download.info.apple.com%2FApple_Support_Area%2FApple_Software_Updates%2FEnglish-North_American%2FApple_II%2FApple_IIGS_System_6.0.1%2F' + disk7_filename
 
 a2boot_files = [
         {
@@ -146,7 +145,6 @@ def extract_800k_sea_bin(wrapper_name, image_name, extract_dir, sea_name = None)
 
     # Now just clean up the archive files and we're done
     os.unlink(sea_name)
-    os.unlink(wrapper_name)
 
 def plist_keyvalue(plist_dict, key):
     if plist_dict.tag != 'dict':
@@ -214,10 +212,10 @@ will not be echoed when you type.""")
         if not os.path.isfile(dst):
             # We need to fetch it
             if not unpacked_a2boot:
-                disk7_file = os.path.join(bootblock_tmp, disk7_filename)
                 a2setup_img = os.path.join(bootblock_tmp, 'A2SETUP.img')
                 disk7_downloaded = False
                 for disk7_source in disk7_sources:
+                    disk7_file = os.path.join(bootblock_tmp, disk7_source['file'])
                     if download_url(disk7_source['url'], disk7_file):
                         disk7_downloaded = True
                     else:
@@ -227,6 +225,7 @@ will not be echoed when you type.""")
                     if disk7_source['type'] == 'sea.bin':
                         sea_name = 'Disk 7 of 7-Apple II Setup.sea'
                         extract_800k_sea_bin(disk7_file, a2setup_img, bootblock_tmp, sea_name)
+                        os.unlink(disk7_file)
                     else:
                         # Implement non .sea.bin version
                         pass
@@ -296,20 +295,6 @@ def do_install():
     #       If it is one we need to unpack (.sea.bin):
     #           unar it
     #           extract the embedded image
-
-    # You commonly see GS/OS 6.0.1 as six floppies for the Apple IIgs, but
-    # there's actually a seventh HFS-formatted floppy containing AFP network
-    # boot files the Apple //e and IIgs.  We need those.
-
-    disk7_file = os.path.join(netboot_tmp, disk7_filename)
-    download_url(disk7_url, disk7_file)
-
-    # If file is wrapped as .sea.bin (always true for now)
-    if True:
-        sea_name = 'Disk 7 of 7-Apple II Setup.sea'
-        a2setup_hdv_name = 'A2SETUP.HDV'
-        extract_800k_sea_bin(disk7_filename, a2setup_hdv_name, sea_name)
-
     #       If we need to apply boot block patches:
     #           fix cleartext password bug in //e boot block
     #           fix cleartext password bug in IIgs boot block
