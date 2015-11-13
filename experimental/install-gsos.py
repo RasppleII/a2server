@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# vim: set tabstop=4 shiftwidth=4 expandtab filetype=py:
 
 import os, sys, subprocess
 import tempfile
@@ -21,48 +22,69 @@ zlinkDir = commDir + '/Z.LINK'
 adtproDir = commDir + '/ADTPRO'
 
 disk7_sources = [
-        {
-            'type'  : 'sea.bin',
-            'url'   : 'http://download.info.apple.com/Apple_Support_Area/Apple_Software_Updates/English-North_American/Apple_II/Apple_IIGS_System_6.0.1/Disk_7_of_7-Apple_II_Setup.sea.bin',
-            'file'  : 'Disk_7_of_7-Apple_II_Setup.sea.bin'
-        },
-        {
-            'type'  : 'sea.bin',
-            'url'   : 'http://archive.org/download/download.info.apple.com.2012.11/download.info.apple.com.2012.11.zip/download.info.apple.com%2FApple_Support_Area%2FApple_Software_Updates%2FEnglish-North_American%2FApple_II%2FApple_IIGS_System_6.0.1%2FDisk_7_of_7-Apple_II_Setup.sea.bin',
-            'file'  : 'Disk_7_of_7-Apple_II_Setup.sea.bin'
-        }
-    ]
+    {
+        'type'  : 'sea.bin',
+        'url'   : 'http://download.info.apple.com/Apple_Support_Area/Apple_Software_Updates/English-North_American/Apple_II/Apple_IIGS_System_6.0.1/Disk_7_of_7-Apple_II_Setup.sea.bin',
+        'file'  : 'Disk_7_of_7-Apple_II_Setup.sea.bin'
+    },
+    {
+        'type'  : 'sea.bin',
+        'url'   : 'http://archive.org/download/download.info.apple.com.2012.11/download.info.apple.com.2012.11.zip/download.info.apple.com%2FApple_Support_Area%2FApple_Software_Updates%2FEnglish-North_American%2FApple_II%2FApple_IIGS_System_6.0.1%2FDisk_7_of_7-Apple_II_Setup.sea.bin',
+        'file'  : 'Disk_7_of_7-Apple_II_Setup.sea.bin'
+    }
+]
 
 a2boot_files = [
-        {
-            'unix'              : 'Apple ::e Boot Blocks',
-            'hfsutils'          : 'Apple_--e_Boot_Blocks.bin',
-            'netatalk'          : 'Apple :2f:2fe Boot Blocks',
-            'digest'            : 'cada362ac2eca3ffa506e9b4e76650ba031e0035',
-            'digest_patched'    : '6b7fc12fd118e1cb9e39c7a2b8cc870c844a3bac'
-        },
-        {
-            'unix'              : 'Basic.System',
-            'hfsutils'          : 'Basic.System.bin',
-            'digest'            : '4d53424f1451cd2e874cf792dbdc8cc6735dcd36'
-        },
-        {
-            'unix'              : 'ProDOS16 Boot Blocks',
-            'hfsutils'          : 'ProDOS16_Boot_Blocks.bin',
-            'digest'            : 'fab829e82e6662ed6aab119ad18e16ded7d43cda',
-        },
-        {
-            'unix'              : 'ProDOS16 Image',
-            'hfsutils'          : 'ProDOS16_Image.bin',
-            'digest'            : 'db4608067b9e7877f45eb557971c4d8c45b46be5',
-            'digest_patched'    : '5c35d5533901b292ab7c2f5a3c76cb3113f66085'
-        },
-        {
-            'unix'              : 'p8',
-            'hfsutils'          : 'p8.bin',
-            'digest'            : '36c288a5272cf01e0a64eed16786258959118e0e'
+    {
+        'unix'     : 'Apple ::e Boot Blocks',
+        'hfsutils' : 'Apple_--e_Boot_Blocks.bin',
+        'netatalk' : 'Apple :2f:2fe Boot Blocks',
+        'digest'   : 'cada362ac2eca3ffa506e9b4e76650ba031e0035',
+        'patches'  : {
+            '6.0.1' : (
+                [
+                    'Cleartext password login bug',
+                    (0x4d43, '\xA8\xA2\x01\xBD\x80\x38\x99\xA0\x38\xC8\xE8\xE0\x09\x90\xF4')
+                ],
+                '6b7fc12fd118e1cb9e39c7a2b8cc870c844a3bac'
+            )
         }
-    ]
+    },
+    {
+        'unix'     : 'Basic.System',
+        'hfsutils' : 'Basic.System.bin',
+        'digest'   : '4d53424f1451cd2e874cf792dbdc8cc6735dcd36'
+    },
+    {
+        'unix'     : 'ProDOS16 Boot Blocks',
+        'hfsutils' : 'ProDOS16_Boot_Blocks.bin',
+        'digest'   : 'fab829e82e6662ed6aab119ad18e16ded7d43cda',
+    },
+    {
+        'unix'     : 'ProDOS16 Image',
+        'hfsutils' : 'ProDOS16_Image.bin',
+        'digest'   : 'db4608067b9e7877f45eb557971c4d8c45b46be5',
+        'patches'  : {
+            '6.0.1' : (
+                [
+                    'Cleartext password login bug',
+                    (0x5837, '\xA8\xA2\x01\xBD\x80\x38\x99\xA0\x38\xC8\xE8\xE0\x09\x90\xF4'),
+
+                    'Enable pressing "8" during GS/OS netboot to load ProDOS 8',
+                    (0x0100, '\x92'),
+                    (0x0360, '\x20\x7d\x14'),
+                    (0x067d, '\xad\x00\xc0\x29\xff\x00\xc9\xb8\x00\xd0\x06\xa9\x02\x00\x8d\x53\x14\xa9\x10\x0f\x60')
+                ],
+                '5c35d5533901b292ab7c2f5a3c76cb3113f66085'
+            )
+        }
+    },
+    {
+        'unix'     : 'p8',
+        'hfsutils' : 'p8.bin',
+        'digest'   : '36c288a5272cf01e0a64eed16786258959118e0e'
+    }
+]
 
 # True for Python 3.0 and later
 PY3 = sys.version_info >= (3, 0)
