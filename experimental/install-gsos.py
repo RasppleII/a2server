@@ -64,6 +64,7 @@ a2boot_files = [
         }
     ]
 
+PY3 = sys.version_info >= (3, 0)
 
 try:
     stdin_input = raw_input     # Python 2
@@ -109,23 +110,26 @@ def download_url(url, filename):
 # self-extracting disk image files.  The Unarchiver's unar is able
 # to unwrap the MacBinary wrapper for us, but we have to extract the
 # disk image oursselves.  Fortunately, it's uncompressed.
-def extract_800k_sea_bin(wrapper_name, image_name, extract_dir, sea_name = None):
+def extract_800k_sea_bin(wrapper_name, image_name, extract_dir):
     # First we need to get rid of the MacBinary wrapper
     # FIXME: Can we learn to read MacBinary?  I bet we can!
     if not os.path.isfile(wrapper_name):
         raise IOError('Archive file "' + wrapper_name + '" does not exist')
+
+    # Extract the original filename from the file
+    # FIXME: We should eventually implement our own MacBinary II reader
+    f = open(wrapper_name, "rb")
+    sea_name = f.read(65)
+    f.close()
+    if PY3:
+        sea_name = sea_name[2:2 + sea_name[1]].decode('mac_roman')
+    else:
+        sea_name = sea_name[2:2 + ord(sea_name[1])]
+
     cmdline = ['unar', '-q', '-o', extract_dir, '-k', 'skip', wrapper_name]
     ret = subprocess.call(cmdline)
     if ret != 0:
         raise IOError('unar returned with status %i' % (ret))
-
-    # MAYBE we can guess the name?
-    if sea_name == None:
-        if wrapper_name.endswith('.bin'):
-            sea_name = wrapper_name[:-4]
-        else:
-            raise ValueError('sea_name is None, but "' + wrapper_name +
-                    '" doesn\'t end with .sea.bin')
 
     # Do we have the right file?
     sea_name = os.path.join(extract_dir, sea_name)
@@ -180,7 +184,7 @@ def install_bootblocks(installdir, installtype):
 
     devnull = open(os.devnull, "wb")
     if not os.path.isdir(installdir):
-        os.makedirs(installdir, mode=0755)
+        os.makedirs(installdir, mode=0o0755)
 
     bootblock_tmp = tempfile.mkdtemp(prefix = "tmp-a2sv-bootblocks.")
 
@@ -224,8 +228,7 @@ will not be echoed when you type.""")
 
                     # If file is wrapped as .sea.bin (always true for now)
                     if disk7_source['type'] == 'sea.bin':
-                        sea_name = 'Disk 7 of 7-Apple II Setup.sea'
-                        extract_800k_sea_bin(disk7_file, a2setup_img, bootblock_tmp, sea_name)
+                        extract_800k_sea_bin(disk7_file, a2setup_img, bootblock_tmp)
                         os.unlink(disk7_file)
                     else:
                         # Implement non .sea.bin version
