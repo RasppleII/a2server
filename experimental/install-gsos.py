@@ -64,17 +64,16 @@ a2boot_files = [
         }
     ]
 
+# True for Python 3.0 and later
 PY3 = sys.version_info >= (3, 0)
 
-try:
-    stdin_input = raw_input     # Python 2
-except NameError:
-    stdin_input = input         # Python 3
+if PY3:
+    stdin_input = input
+    import urllib.request as urlrequest
+else:
+    stdin_input = raw_input
+    import urllib2 as urlrequest
 
-try:
-    import urllib.request as urlrequest     # Python 3
-except ImportError:
-    import urllib2 as urlrequest            # Python 2
 
 # Differing from the shell script in that we explicitly strip the / here
 if 'A2SERVER_SCRIPT_URL' in os.environ:
@@ -117,7 +116,13 @@ def extract_800k_sea_bin(wrapper_name, image_name, extract_dir):
         raise IOError('Archive file "' + wrapper_name + '" does not exist')
 
     # Extract the original filename from the file
-    # FIXME: We should eventually implement our own MacBinary II reader
+    # MacBinary II header is 128 bytes.  The first byte is NUL, followed by a
+    # Pascal string of length 63 (so 64 bytes total) containing the encoded
+    # filename.
+    #
+    # Source: http://files.stairways.com/other/macbinaryii-standard-info.txt
+    # FIXME: We should eventually implement a full MacBinary reader.
+
     f = open(wrapper_name, "rb")
     sea_name = f.read(65)
     f.close()
