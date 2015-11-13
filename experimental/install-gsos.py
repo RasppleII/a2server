@@ -178,6 +178,7 @@ def install_bootblocks(installdir, installtype):
     if installtype not in ['unix', 'netatalk']:
         raise ValueError('Only basic UNIX and netatalk formats are supported for now')
 
+    devnull = open(os.devnull, "wb")
     if not os.path.isdir(installdir):
         os.makedirs(installdir, mode=0755)
 
@@ -250,10 +251,10 @@ will not be echoed when you type.""")
                 elif platform == 'hfsutils':
                     srcdir = os.path.join(bootblock_tmp, 'a2boot')
                     os.mkdir(srcdir)
-                    subprocess.check_output(['hmount', a2setup_img])
-                    subprocess.check_output(['hcopy', 'Apple II Setup:System Folder:*',
-                            srcdir])
-                    subprocess.check_output(['humount', 'Apple II Setup'])
+                    subprocess.call(['hmount', a2setup_img], stdout=devnull)
+                    subprocess.call(['hcopy', 'Apple II Setup:System Folder:*',
+                            srcdir], stdout=devnull)
+                    subprocess.call(['humount', 'Apple II Setup'], stdout=devnull)
 
                 unpacked_a2boot = True
 
@@ -273,7 +274,7 @@ will not be echoed when you type.""")
             subprocess.call(umount_cmd)
             os.rmdir(mountpoint)
         elif platform == 'Darwin':
-            subprocess.check_output(['hdiutil', 'eject', mountpoint])
+            subprocess.call(['hdiutil', 'eject', mountpoint], stdout=devnull)
         elif platform == 'hfsutils':
             for bootfile in a2boot_files:
                 name = os.path.join(srcdir, bootfile['hfsutils'])
@@ -282,6 +283,7 @@ will not be echoed when you type.""")
             os.rmdir(srcdir)
         os.unlink(a2setup_img)
 
+    devnull.close()
     os.rmdir(bootblock_tmp)
 
 def do_install():
