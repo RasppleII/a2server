@@ -238,7 +238,10 @@ will not be echoed when you type.""")
         if installtype == 'unix':
             dst = bootfile['unix']
         elif installtype == 'netatalk':
-            dst = bootfile['netatalk'] or bootfile['unix']
+            if 'netatalk' in bootfile:
+                dst = bootfile['netatalk']
+            else:
+                dst = bootfile['unix']
         dst = os.path.join(installdir, dst)
 
         if not os.path.isfile(dst):
@@ -383,7 +386,7 @@ if __name__ == '__main__':
         sys.exit(ret)
     """
 
-    install_bootblocks(os.path.join(os.getcwd(), 'a2boot'), 'unix')
+    install_bootblocks(os.path.join(os.getcwd(), 'a2boot'), 'netatalk')
     #reply = stdin_input("""\nDo you want to set up A2SERVER to be able to boot Apple II\ncomputers over the network? [y] """)
     #if reply.startswith('y') or reply.startswith('Y') or reply == '':
     #    do_install()
