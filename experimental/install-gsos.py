@@ -45,14 +45,14 @@ a2boot_files = [
         "hfsutils" : "Apple_--e_Boot_Blocks.bin",
         "netatalk" : "Apple :2f:2fe Boot Blocks",
         "digest"   : "cada362ac2eca3ffa506e9b4e76650ba031e0035",
-        "patches"  : {
-            "6.0.1" : (
-                [
+        "patch"    : {
+            "6.0.1" : {
+                "patches" : [
                     "Cleartext password login bug",
                     (0x4d43, "\xA8\xA2\x01\xBD\x80\x38\x99\xA0\x38\xC8\xE8\xE0\x09\x90\xF4")
                 ],
-                "6b7fc12fd118e1cb9e39c7a2b8cc870c844a3bac"
-            )
+                "digest"  :  "6b7fc12fd118e1cb9e39c7a2b8cc870c844a3bac"
+            }
         }
     },
     {
@@ -72,9 +72,9 @@ a2boot_files = [
         "hfsutils" : "ProDOS16_Image.bin",
         "netatalk" : "ProDOS16 Image",
         "digest"   : "db4608067b9e7877f45eb557971c4d8c45b46be5",
-        "patches"  : {
-            "6.0.1" : (
-                [
+        "patch"    : {
+            "6.0.1" : {
+                "patches" : [
                     "Cleartext password login bug",
                     (0x5837, "\xA8\xA2\x01\xBD\x80\x38\x99\xA0\x38\xC8\xE8\xE0\x09\x90\xF4"),
 
@@ -83,8 +83,8 @@ a2boot_files = [
                     (0x0360, "\x20\x7d\x14"),
                     (0x067d, "\xad\x00\xc0\x29\xff\x00\xc9\xb8\x00\xd0\x06\xa9\x02\x00\x8d\x53\x14\xa9\x10\x0f\x60")
                 ],
-                "5c35d5533901b292ab7c2f5a3c76cb3113f66085"
-            )
+                "digest"  : "5c35d5533901b292ab7c2f5a3c76cb3113f66085"
+            }
         }
     },
     {
@@ -106,16 +106,7 @@ else:
     import urllib2 as urlrequest
 
 
-# Differing from the shell script in that we explicitly strip the / here
-if "A2SERVER_SCRIPT_URL" in os.environ:
-    scriptURL = os.environ["A2SERVER_SCRIPT_URL"]
-    # Strip trailing slash
-    if scriptURL.endswith("/"):
-        scriptURL = scriptURL[:-1]
-else:
-    scriptURL = "http://appleii.ivanx.com/a2server"
-
-def sha1file (filename, blocksize=65536):
+def sha1sum_file (filename, blocksize=65536):
     f = open(filename, "rb")
     digest = hashlib.sha1()
     buf = f.read(blocksize)
@@ -123,9 +114,8 @@ def sha1file (filename, blocksize=65536):
         digest.update(buf)
         buf = f.read(blocksize)
     f.close()
-    if verbose:
-        print("SHA-1: %s  %s" % (digest.hexdigest(), filename))
     return digest.hexdigest()
+
 
 def download_url(url, filename, output_dir = None):
     try:
@@ -284,20 +274,38 @@ will not be echoed when you type.""")
             else:
                 platform = "hfsutils"
 
-    unpacked_a2boot = False
+    a2boot_needed = False
+    a2boot_unpacked = False
     for bootfile in a2boot_files:
-        if dest_fmt == "unix":
-            dst_name = bootfile["unix"]
-        elif dest_fmt == "netatalk":
-            if "netatalk" in bootfile:
-                dst_name = bootfile["netatalk"]
+        dest_path = os.path.join(dest_dir, bootfile[dest_fmt])
+        if not os.path.isfile(dest_path):
+            # A file is missing
+            a2boot_needed = True
+            break
+        else:
+            # Now check the digest
+            dest_digest = sha1sum_file(dest_path)
+            if bootfile["digest"] == dest_digest:
+                # File is pristine, good
+                pass
             else:
-                dst_name = bootfile["unix"]
-        dst_path = os.path.join(dest_dir, dst_name)
+                if "patch" in bootfile and gsos_version in bootfile["patch"]:
+                    if bootfile["patch"][gsos_version]["digest"] == dest_digest:
+                        # File is patched for this GS/OS version, good
+                        pass
+                    else:
+                        # File is wrong version or corrupt
+                        a2boot_needed = True
+                else:
+                    # File is wrong version or corrupt
+                    a2boot_needed = True
 
-        if not os.path.isfile(dst_path):
+    for bootfile in a2boot_files:
+        dest_path = os.path.join(dest_dir, bootfile[dest_fmt])
+
+        if not os.path.isfile(dest_path):
             # We need to fetch it
-            if not unpacked_a2boot:
+            if not a2boot_unpacked:
                 a2setup_path = os.path.join(work_dir, a2setup_name)
                 disk7_downloaded = False
                 for disk7_source in disk7_sources:
@@ -341,20 +349,20 @@ will not be echoed when you type.""")
                             src_dir], stdout=devnull)
                     subprocess.call(["humount", "Apple II Setup"], stdout=devnull)
 
-                unpacked_a2boot = True
+                a2boot_unpacked = True
 
             # Copy the file
             if platform == "Linux" or platform == "Darwin":
                 src_path = os.path.join(src_dir, bootfile["unix"])
             elif platform == "hfsutils":
                 src_path = os.path.join(src_dir, bootfile["hfsutils"])
-            shutil.copyfile(src_path, dst_path)
+            shutil.copyfile(src_path, dest_path)
         else:
             if verbose:
-                print("\"%s\" already exists." % (dst_name))
+                print("\"%s\" already exists." % (bootfile[dest_fmt]))
 
     # Clean up the mounted/unpacked image
-    if unpacked_a2boot:
+    if a2boot_unpacked:
         if platform == "Linux":
             umount_cmd = ["umount", mountpoint]
             if use_sudo:
