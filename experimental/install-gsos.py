@@ -22,22 +22,17 @@ zlinkDir = commDir + "/Z.LINK"
 adtproDir = commDir + "/ADTPRO"
 
 quiet = False
-verbose = False
+verbose = True
 
-disk7_sources = [
-    {
-        "src"   : "Apple",
-        "type"  : "sea.bin",
-        "url"   : "http://download.info.apple.com/Apple_Support_Area/Apple_Software_Updates/English-North_American/Apple_II/Apple_IIGS_System_6.0.1/Disk_7_of_7-Apple_II_Setup.sea.bin",
-        "file"  : "Disk_7_of_7-Apple_II_Setup.sea.bin"
-    },
-    {
-        "src"   : "archive.org",
-        "type"  : "sea.bin",
-        "url"   : "http://archive.org/download/download.info.apple.com.2012.11/download.info.apple.com.2012.11.zip/download.info.apple.com%2FApple_Support_Area%2FApple_Software_Updates%2FEnglish-North_American%2FApple_II%2FApple_IIGS_System_6.0.1%2FDisk_7_of_7-Apple_II_Setup.sea.bin",
-        "file"  : "Disk_7_of_7-Apple_II_Setup.sea.bin"
-    }
-]
+disk7_sources = {
+    "file"    : "Disk_7_of_7-Apple_II_Setup.sea.bin",
+    "digest"  : "43fbc296ab66da84aadc275b80fd51ec4f7fe986",
+    "type"    : "sea.bin",
+    "sources" : [
+        ( "Apple", "http://download.info.apple.com/Apple_Support_Area/Apple_Software_Updates/English-North_American/Apple_II/Apple_IIGS_System_6.0.1/Disk_7_of_7-Apple_II_Setup.sea.bin" ),
+        ( "archive.org", "http://archive.org/download/download.info.apple.com.2012.11/download.info.apple.com.2012.11.zip/download.info.apple.com%2FApple_Support_Area%2FApple_Software_Updates%2FEnglish-North_American%2FApple_II%2FApple_IIGS_System_6.0.1%2FDisk_7_of_7-Apple_II_Setup.sea.bin" )
+    ]
+}
 
 a2boot_files = [
     {
@@ -141,6 +136,46 @@ def download_url(url, filename, output_dir = None):
         if verbose:
             print("Download failed.")
         return False
+
+
+def download_from_sources(fileinfo, output_dir):
+    output_path = os.path.join(output_dir, fileinfo["file"])
+    if not quiet:
+        print("Downloading %s:" % (fileinfo["file"]))
+    for (source, url) in fileinfo["sources"]:
+        if verbose:
+            print("   Trying %s (%s)..." % (source, url))
+        elif not quiet:
+            print("   Trying %s..." % (source))
+
+        try:
+            html = urlrequest.urlopen(url)
+            data = html.read()
+            f = open(output_path, "wb")
+            f.write(data)
+            f.close()
+        except:
+            if 'f' in locals():
+                if not f.isclosed():
+                    f.close()
+            continue
+
+        digest = sha1sum_file(output_path)
+        if digest == fileinfo["digest"]:
+            if verbose:
+                print("   Digest of %s matches, download complete.\n" % (digest))
+            elif not quiet:
+                print("   Download complete.\n")
+            return True
+        else:
+            if verbose:
+                print("      Expected: %s\n      Received: %s"
+                        % (fileinfo["digest"], digest))
+
+    if not quiet:
+        print("Download failed.")
+    return False
+
 
 # Apple's GS/OS 6.0.1 images are stored in MacBinary-wrapped
 # self-extracting disk image files.  The Unarchiver's unar is able
@@ -287,6 +322,16 @@ def a2setup_mount(image_path):
     return mountpoint
 
 
+def a2setup_copyfile(bootfile, mountpoint, dest_dir, dest_fmt):
+    src_dir = os.path.join(mountpoint, "System Folder")
+    if a2setup_platform == "Linux" or a2setup_platform == "Darwin":
+        src_path = os.path.join(src_dir, bootfile["unix"])
+    elif a2setup_platform == "hfsutils":
+        src_path = os.path.join(src_dir, bootfile["hfsutils"])
+    dest_path = os.path.join(dest_dir, bootfile[dest_fmt])
+    shutil.copyfile(src_path, dest_path)
+
+
 def a2setup_umount(mountpoint):
     if a2setup_platform == "Linux":
         umount_cmd = ["umount", mountpoint]
@@ -350,55 +395,29 @@ def install_bootblocks(dest_dir, dest_fmt, gsos_version):
                     # File is wrong version or corrupt
                     a2boot_needed = True
 
-    for bootfile in a2boot_files:
-        dest_path = os.path.join(dest_dir, bootfile[dest_fmt])
+    if a2boot_needed:
+        if download_from_sources(disk7_sources, work_dir):
+            if disk7_sources["type"] == "sea.bin":
+                extract_800k_sea_bin(disk7_sources["file"], a2setup_name, work_dir)
+            else:
+                # Placeholder for 6.0.4+ files packed some other way
+                pass
 
-        if not os.path.isfile(dest_path):
-            # We need to fetch it
-            if not a2boot_unpacked:
-                a2setup_path = os.path.join(work_dir, a2setup_name)
-                disk7_downloaded = False
-                for disk7_source in disk7_sources:
-                    if not quiet:
-                        print("Downloading %s from %s..." 
-                                % (disk7_source["file"], disk7_source["src"]))
+            a2setup_path = os.path.join(work_dir, a2setup_name)
+            mountpoint = a2setup_mount(a2setup_path)
+            src_dir = os.path.join(mountpoint, "System Folder")
 
-                    if download_url(disk7_source["url"], disk7_source["file"], work_dir):
-                        disk7_downloaded = True
-                    else:
-                        continue
+            for bootfile in a2boot_files:
+                a2setup_copyfile(bootfile, mountpoint, dest_dir, dest_fmt)
 
-                    if disk7_source["type"] == "sea.bin":
-                        extract_800k_sea_bin(disk7_source["file"], a2setup_name, work_dir)
-                    else:
-                        # Placeholder for 6.0.4+ files packed some other way
-                        pass
-                    break
+            a2setup_umount(mountpoint)
+            os.unlink(a2setup_path)
 
-                if not disk7_downloaded:
-                    raise IOError("Could not download disk7")
-
-                mountpoint = a2setup_mount(a2setup_path)
-                src_dir = os.path.join(mountpoint, "System Folder")
-
-                a2boot_unpacked = True
-
-            # Copy the file
-            if a2setup_platform == "Linux" or a2setup_platform == "Darwin":
-                src_path = os.path.join(src_dir, bootfile["unix"])
-            elif a2setup_platform == "hfsutils":
-                src_path = os.path.join(src_dir, bootfile["hfsutils"])
-            shutil.copyfile(src_path, dest_path)
         else:
-            if verbose:
-                print("\"%s\" already exists." % (bootfile[dest_fmt]))
+            print("Installation failed.")
 
-    # Clean up the mounted/unpacked image
-    if a2boot_unpacked:
-        a2setup_umount(mountpoint)
-        os.unlink(a2setup_path)
+        os.rmdir(work_dir)
 
-    os.rmdir(work_dir)
 
 def do_install():
     netboot_tmp = tempfile.mkdtemp(suffix = ".a2server-netboot")
