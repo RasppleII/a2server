@@ -33,7 +33,7 @@ a2boot_files = [
             "6.0.1" : {
                 "patches" : [
                     "Cleartext password login bug",
-                    (0x4d43, "\xA8\xA2\x01\xBD\x80\x38\x99\xA0\x38\xC8\xE8\xE0\x09\x90\xF4")
+                    (0x4d43, b"\xA8\xA2\x01\xBD\x80\x38\x99\xA0\x38\xC8\xE8\xE0\x09\x90\xF4")
                 ],
                 "digest"  :  "6b7fc12fd118e1cb9e39c7a2b8cc870c844a3bac"
             }
@@ -60,12 +60,12 @@ a2boot_files = [
             "6.0.1" : {
                 "patches" : [
                     "Cleartext password login bug",
-                    (0x5837, "\xA8\xA2\x01\xBD\x80\x38\x99\xA0\x38\xC8\xE8\xE0\x09\x90\xF4"),
+                    (0x5837, b"\xA8\xA2\x01\xBD\x80\x10\x99\xA0\x10\xC8\xE8\xE0\x09\x90\xF4"),
 
                     "Enable pressing \"8\" during GS/OS netboot to load ProDOS 8",
-                    (0x0100, "\x92"),
-                    (0x0360, "\x20\x7d\x14"),
-                    (0x067d, "\xad\x00\xc0\x29\xff\x00\xc9\xb8\x00\xd0\x06\xa9\x02\x00\x8d\x53\x14\xa9\x10\x0f\x60")
+                    (0x0100, b"\x92"),
+                    (0x0360, b"\x20\x7d\x14"),
+                    (0x067d, b"\xad\x00\xc0\x29\xff\x00\xc9\xb8\x00\xd0\x06\xa9\x02\x00\x8d\x53\x14\xa9\x10\x0f\x60")
                 ],
                 "digest"  : "5c35d5533901b292ab7c2f5a3c76cb3113f66085"
             }
@@ -104,10 +104,10 @@ def sha1sum_file (filename, blocksize=65536):
 def download_from_sources(fileinfo, output_dir):
     output_path = os.path.join(output_dir, fileinfo["file"])
     if not quiet:
-        print("Downloading %s:" % (fileinfo["file"]))
+        print("Downloading %s" % (fileinfo["file"]))
     for (source, url) in fileinfo["sources"]:
         if not quiet:
-            print("   Trying %s..." % (source), end="")
+            print("   From %s..." % (source), end="")
 
         try:
             html = urlrequest.urlopen(url)
@@ -380,6 +380,8 @@ def install_bootblocks(dest_dir, dest_fmt, gsos_version):
             break
 
     if not a2boot_needed:
+        if not quiet:
+            print("Files already copied.")
         a2boot_installed = True
     else:
         if download_from_sources(disk7_sources, work_dir):
@@ -415,6 +417,40 @@ def install_bootblocks(dest_dir, dest_fmt, gsos_version):
 
     if not a2boot_installed and not quiet:
         print("Installation failed.")
+        return False
+
+    for bootfile in a2boot_files:
+        if "patch" in bootfile and gsos_version in bootfile["patch"]:
+            patch_path = os.path.join(dest_dir, bootfile[dest_fmt])
+            dest_digest = sha1sum_file(patch_path)
+            if a2setup_check_digest(bootfile, dest_digest, gsos_version, pristine=False):
+                if not quiet:
+                    print("  \"%s\" is already patched." % (bootfile[dest_fmt]))
+            else:
+                if verbose:
+                    print("  Patching %s..." % (bootfile[dest_fmt]))
+                elif not quiet:
+                    print("  Patching %s..." % (bootfile[dest_fmt]), end="")
+                f = open(patch_path, "r+b")
+                for patch in bootfile["patch"][gsos_version]["patches"]:
+                    if isinstance(patch, str):
+                        if verbose:
+                            print("    %s" % (patch))
+                    else:
+                        (offset, data) = patch
+                        f.seek(offset)
+                        f.write(data)
+                f.close()
+
+                # Verify...
+                dest_digest = sha1sum_file(patch_path)
+                if a2setup_check_digest(bootfile, dest_digest, gsos_version, pristine=False):
+                    print("  patched.")
+                else:
+                    print("  patch failed.\n      Expected: %s\n      Received: %s"
+                            % (bootfile["patch"][gsos_version]["digest"], dest_digest))
+
+    return True
 
 
 def do_install():
