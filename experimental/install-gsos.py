@@ -1,6 +1,9 @@
 #! /usr/bin/env python
 # vim: set tabstop=4 shiftwidth=4 expandtab filetype=python:
 
+from __future__ import print_function
+
+
 import os, sys, subprocess
 import tempfile
 import hashlib
@@ -103,10 +106,8 @@ def download_from_sources(fileinfo, output_dir):
     if not quiet:
         print("Downloading %s:" % (fileinfo["file"]))
     for (source, url) in fileinfo["sources"]:
-        if verbose:
-            print("   Trying %s (%s)..." % (source, url))
-        elif not quiet:
-            print("   Trying %s..." % (source))
+        if not quiet:
+            print("   Trying %s..." % (source), end="")
 
         try:
             html = urlrequest.urlopen(url)
@@ -115,6 +116,8 @@ def download_from_sources(fileinfo, output_dir):
             f.write(data)
             f.close()
         except:
+            if not quiet:
+                print("  download failed.")
             if 'f' in locals():
                 if not f.isclosed():
                     f.close()
@@ -122,12 +125,12 @@ def download_from_sources(fileinfo, output_dir):
 
         digest = sha1sum_file(output_path)
         if digest == fileinfo["digest"]:
-            if verbose:
-                print("   Digest of %s matches, download complete.\n" % (digest))
-            elif not quiet:
-                print("   Download complete.\n")
+            if not quiet:
+                print("  successfully downloaded.")
             return True
         else:
+            if not quiet:
+                print("  failed (digest mismatch).")
             if verbose:
                 print("      Expected: %s\n      Received: %s"
                         % (fileinfo["digest"], digest))
