@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# vim: set tabstop=4 shiftwidth=4 expandtab filetype=py:
+# vim: set tabstop=4 shiftwidth=4 expandtab filetype=python:
 
 import os, sys, subprocess
 import tempfile
