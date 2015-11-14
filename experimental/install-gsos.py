@@ -135,8 +135,6 @@ def download_from_sources(fileinfo, output_dir):
                 print("      Expected: %s\n      Received: %s"
                         % (fileinfo["digest"], digest))
 
-    if not quiet:
-        print("Download failed.")
     return False
 
 
@@ -146,17 +144,15 @@ def download_from_sources(fileinfo, output_dir):
 # disk image oursselves.  Fortunately, it's uncompressed.
 def extract_800k_sea_bin(archive_name, image_name, archive_dir):
     if not quiet:
-        print("Extracting %s from %s..." % (image_name, archive_name))
+        print("Extracting %s..." % (archive_name), end="")
 
-    if archive_dir != None:
-        archive_path = os.path.join(archive_dir, archive_name)
-        image_path = os.path.join(archive_dir, image_name)
-    else:
-        archive_path = archive_name
-        impage_path = image_name
+    archive_path = os.path.join(archive_dir, archive_name)
+    image_path = os.path.join(archive_dir, image_name)
 
     if not os.path.isfile(archive_path):
-        raise IOError("Archive file \"" + archive_path + "\" does not exist")
+        if not quiet:
+            print("  not found.")
+            return False
 
     # Extract the original filename from the file
     # MacBinary II header is 128 bytes.  The first byte is NUL, followed by a
@@ -166,46 +162,66 @@ def extract_800k_sea_bin(archive_name, image_name, archive_dir):
     # Source: http://files.stairways.com/other/macbinaryii-standard-info.txt
     # FIXME: We should eventually implement a full MacBinary reader.
 
-    f = open(archive_path, "rb")
-    sea_name = f.read(65)
-    f.close()
-    if PY3:
-        sea_name = sea_name[2:2 + sea_name[1]].decode("mac_roman")
-    else:
-        sea_name = sea_name[2:2 + ord(sea_name[1])]
+    try:
+        f = open(archive_path, "rb")
+        sea_name = f.read(65)
+        f.close()
 
-    if verbose:
-        print("Running unar on \"%s\" to extract %s..." % (archive_name, sea_name))
+        if len(sea_name) < 65:
+            if not quiet:
+                print("  file too short.")
+            return False
 
-    cmdline = ["unar", "-q", "-o", archive_dir, "-k", "skip", archive_path]
-    ret = subprocess.call(cmdline)
-    if ret != 0:
-        raise IOError("unar returned with status %i" % (ret))
-    # Do we have the right file?
+        if PY3:
+            sea_name = sea_name[2:2 + sea_name[1]].decode("mac_roman")
+        else:
+            sea_name = sea_name[2:2 + ord(sea_name[1])]
+    except:
+        if not quiet:
+            print("  error: cannot read expanded name")
+        if 'f' in locals():
+            if not f.isclosed():
+                f.close()
+        return False
+
+    try:
+        cmdline = ["unar", "-q", "-o", archive_dir, "-k", "skip", archive_path]
+        ret = subprocess.call(cmdline)
+        if ret != 0:
+            if not quiet:
+                print("  error: unar returned error %i" % (ret))
+            return False
+    except OSError as e:
+        if not quiet:
+            print("  error: running unar: %s" % (e))
+        return False
+
     sea_path = os.path.join(archive_dir, sea_name)
     if not os.path.isfile(sea_path):
-        raise IOError("Expected image archive \"" + sea_name + "\" does not exist")
+        if not quiet:
+            print("  error: \"%s\" was not extracted." % (sea_name))
+        return False
 
-    if verbose:
-        print("Extracting disk image from %s..." % (sea_name))
+    try:
+        # The image starts 84 bytes in, and is exactly 819200 bytes long
+        with open(sea_path, "rb") as src, open(image_path, "wb") as dst:
+            src.seek(84)
+            dst.write(src.read(819200))
+            if dst.tell() != 819200:
+                raise IOError()
+            extracted = True
+    except:
+        if not quiet:
+            print("  error: \"%s\" is not an 800k floppy image"
+                    % (sea_name))
+        extracted = False
+    finally:
+        if not quiet:
+            print("  done.")
+        os.unlink(sea_path)
+        os.unlink(archive_path)
 
-    # Cowardly refuse to overwrite image_path
-    if os.path.exists(image_path):
-        raise IOError("\"" + image_path + "\" already exists")
-
-    # The image starts 84 bytes in, and is exactly 819200 bytes long
-    with open(sea_path, "rb") as src, open(image_path, "wb") as dst:
-        src.seek(84)
-        dst.write(src.read(819200))
-        if dst.tell() != 819200:
-            raise IOError(archive_name + " did not contain an 800k floppy image")
-
-    # Now just clean up the archive files and we're done
-    os.unlink(sea_path)
-    os.unlink(archive_path)
-
-    if verbose:
-        print("%s extracted." % (image_name))
+    return extracted
 
 
 def plist_keyvalue(plist_dict, key):
