@@ -238,11 +238,12 @@ def find_mountpoint(xmlstr):
     else:
         raise ValueError("Root element is not a dict")
 
-a2setup_platform = "hfsutils"
+a2setup_platform = None
 
-def a2setup_set_a2setup_platform():
+def a2setup_set_platform():
+    global a2setup_platform
+    
     a2setup_platform = os.uname()[0]
-    a2setup_platform = "hfsutils"
     if a2setup_platform not in ["Linux", "Darwin"]:
         a2setup_platform = "hfsutils"
     elif a2setup_platform == "Linux":
@@ -298,7 +299,7 @@ def a2setup_umount(mountpoint):
         subprocess.call(["hdiutil", "eject", mountpoint], stdout=devnull)
         devnull.close()
     elif a2setup_platform == "hfsutils":
-        sys_folder = os.path.joint(mountpoint, "System Folder")
+        sys_folder = os.path.join(mountpoint, "System Folder")
         for f in os.listdir(sys_folder):
             os.unlink(os.path.join(sys_folder, f))
         os.rmdir(sys_folder)
@@ -321,7 +322,7 @@ def install_bootblocks(dest_dir, dest_fmt, gsos_version):
         print("   dest_fmt : %s\n   dest_dir : %s\n   work_dir : %s\n"
                 % (dest_fmt, dest_dir, work_dir))
 
-    a2setup_set_a2setup_platform()
+    a2setup_set_platform()
 
     a2boot_needed = False
     a2boot_unpacked = False
