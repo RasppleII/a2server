@@ -308,7 +308,12 @@ def a2setup_copyfile(bootfile, mountpoint, dest_dir, dest_fmt):
     elif a2setup_platform == "hfsutils":
         src_path = os.path.join(src_dir, bootfile["hfsutils"])
     dest_path = os.path.join(dest_dir, bootfile[dest_fmt])
-    shutil.copyfile(src_path, dest_path)
+    try:
+        shutil.copyfile(src_path, dest_path)
+    except:
+        return False
+
+    return True
 
 
 def a2setup_umount(mountpoint):
@@ -349,7 +354,9 @@ def install_bootblocks(dest_dir, dest_fmt, gsos_version):
     a2setup_set_platform()
 
     a2boot_needed = False
-    a2boot_unpacked = False
+    a2setup_extracted = False
+    a2boot_installed = False
+
     for bootfile in a2boot_files:
         dest_path = os.path.join(dest_dir, bootfile[dest_fmt])
         if not os.path.isfile(dest_path):
@@ -370,32 +377,46 @@ def install_bootblocks(dest_dir, dest_fmt, gsos_version):
                     else:
                         # File is wrong version or corrupt
                         a2boot_needed = True
+                        break
                 else:
                     # File is wrong version or corrupt
                     a2boot_needed = True
+                    break
 
     if a2boot_needed:
         if download_from_sources(disk7_sources, work_dir):
             if disk7_sources["type"] == "sea.bin":
-                extract_800k_sea_bin(disk7_sources["file"], a2setup_name, work_dir)
+                a2setup_extracted = extract_800k_sea_bin(disk7_sources["file"],
+                        a2setup_name, work_dir)
             else:
                 # Placeholder for 6.0.4+ files packed some other way
                 pass
 
-            a2setup_path = os.path.join(work_dir, a2setup_name)
-            mountpoint = a2setup_mount(a2setup_path)
-            src_dir = os.path.join(mountpoint, "System Folder")
+            if a2setup_extracted:
+                a2setup_path = os.path.join(work_dir, a2setup_name)
+                mountpoint = a2setup_mount(a2setup_path)
+                src_dir = os.path.join(mountpoint, "System Folder")
 
-            for bootfile in a2boot_files:
-                a2setup_copyfile(bootfile, mountpoint, dest_dir, dest_fmt)
+                if not quiet:
+                    print("Copying files...", end="")
+                a2setup_installed = True
+                for bootfile in a2boot_files:
+                    if not a2setup_copyfile(bootfile, mountpoint, dest_dir, dest_fmt):
+                        a2setup_installed = False
 
-            a2setup_umount(mountpoint)
-            os.unlink(a2setup_path)
+                if not quiet:
+                    if a2setup_installed:
+                        print("  success.")
+                    else:
+                        print("  error copying files")
 
-        else:
-            print("Installation failed.")
+                a2setup_umount(mountpoint)
+                os.unlink(a2setup_path)
 
-        os.rmdir(work_dir)
+    os.rmdir(work_dir)
+
+    if not a2setup_installed and not quiet:
+        print("Installation failed.")
 
 
 def do_install():
