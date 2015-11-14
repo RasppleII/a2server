@@ -335,6 +335,17 @@ def a2setup_umount(mountpoint):
         os.rmdir(mountpoint)
 
 
+def a2setup_check_digest(bootfile, file_digest, gsos_version, pristine=True, patched=True):
+    if pristine and bootfile["digest"] == file_digest:
+        return True
+
+    if patched and "patch" in bootfile and gsos_version in bootfile["patch"]:
+        if bootfile["patch"][gsos_version]["digest"] == file_digest:
+            return True
+
+    return False
+
+
 def install_bootblocks(dest_dir, dest_fmt, gsos_version):
     if dest_fmt not in ["unix", "netatalk"]:
         raise ValueError("Only basic UNIX and netatalk formats are supported for now")
@@ -359,31 +370,18 @@ def install_bootblocks(dest_dir, dest_fmt, gsos_version):
 
     for bootfile in a2boot_files:
         dest_path = os.path.join(dest_dir, bootfile[dest_fmt])
-        if not os.path.isfile(dest_path):
-            # A file is missing
+        if os.path.isfile(dest_path):
+            dest_digest = sha1sum_file(dest_path)
+            if not a2setup_check_digest(bootfile, dest_digest, gsos_version):
+                a2boot_needed = True
+                break
+        else:
             a2boot_needed = True
             break
-        else:
-            # Now check the digest
-            dest_digest = sha1sum_file(dest_path)
-            if bootfile["digest"] == dest_digest:
-                # File is pristine, good
-                pass
-            else:
-                if "patch" in bootfile and gsos_version in bootfile["patch"]:
-                    if bootfile["patch"][gsos_version]["digest"] == dest_digest:
-                        # File is patched for this GS/OS version, good
-                        pass
-                    else:
-                        # File is wrong version or corrupt
-                        a2boot_needed = True
-                        break
-                else:
-                    # File is wrong version or corrupt
-                    a2boot_needed = True
-                    break
 
-    if a2boot_needed:
+    if not a2boot_needed:
+        a2boot_installed = True
+    else:
         if download_from_sources(disk7_sources, work_dir):
             if disk7_sources["type"] == "sea.bin":
                 a2setup_extracted = extract_800k_sea_bin(disk7_sources["file"],
@@ -399,13 +397,13 @@ def install_bootblocks(dest_dir, dest_fmt, gsos_version):
 
                 if not quiet:
                     print("Copying files...", end="")
-                a2setup_installed = True
+                a2boot_installed = True
                 for bootfile in a2boot_files:
                     if not a2setup_copyfile(bootfile, mountpoint, dest_dir, dest_fmt):
-                        a2setup_installed = False
+                        a2boot_installed = False
 
                 if not quiet:
-                    if a2setup_installed:
+                    if a2boot_installed:
                         print("  success.")
                     else:
                         print("  error copying files")
@@ -415,7 +413,7 @@ def install_bootblocks(dest_dir, dest_fmt, gsos_version):
 
     os.rmdir(work_dir)
 
-    if not a2setup_installed and not quiet:
+    if not a2boot_installed and not quiet:
         print("Installation failed.")
 
 
