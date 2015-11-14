@@ -238,28 +238,14 @@ def find_mountpoint(xmlstr):
     else:
         raise ValueError("Root element is not a dict")
 
+a2setup_platform = "hfsutils"
 
-def install_bootblocks(dest_dir, dest_fmt, gsos_version):
-    if dest_fmt not in ["unix", "netatalk"]:
-        raise ValueError("Only basic UNIX and netatalk formats are supported for now")
-
-    if not quiet:
-        print("Installing Apple // boot blocks (GS/OS version %s)..." % (gsos_version))
-
-    devnull = open(os.devnull, "wb")
-    if not os.path.isdir(dest_dir):
-        os.makedirs(dest_dir, mode=0o0755)
-
-    work_dir = tempfile.mkdtemp(prefix = "tmp-a2sv-bootblocks.")
-    a2setup_name = "A2SETUP.img"
-    if verbose:
-        print("   dest_fmt : %s\n   dest_dir : %s\n   work_dir : %s\n"
-                % (dest_fmt, dest_dir, work_dir))
-
-    platform = os.uname()[0]
-    if platform not in ["Linux", "Darwin"]:
-        platform = "hfsutils"
-    elif platform == "Linux":
+def a2setup_set_a2setup_platform():
+    a2setup_platform = os.uname()[0]
+    a2setup_platform = "hfsutils"
+    if a2setup_platform not in ["Linux", "Darwin"]:
+        a2setup_platform = "hfsutils"
+    elif a2setup_platform == "Linux":
         use_sudo = False
         if os.geteuid() != 0:
             reply = stdin_input("""
@@ -272,7 +258,70 @@ you want to mount the image using the sudo command? [y] """)
 Okay, if asked for a password, type your user password.  It
 will not be echoed when you type.""")
             else:
-                platform = "hfsutils"
+                a2setup_platform = "hfsutils"
+
+
+def a2setup_mount(image_path):
+    mountpoint = None
+    if a2setup_platform == "Linux":
+        mountpoint = tempfile.mkdtemp(prefix = "tmp-hfsmount.")
+        mount_cmd = ["mount", "-t", "hfs", "-o", "ro,loop", image_path, mountpoint]
+        if use_sudo:
+            mount_cmd = ["sudo"] + mount_cmd
+        subprocess.call(mount_cmd)
+    elif a2setup_platform == "Darwin":
+        xmlstr = subprocess.check_output(["hdiutil", "attach", "-plist",
+                image_path])
+        mountpoint = find_mountpoint(xmlstr)
+    elif a2setup_platform == "hfsutils":
+        mountpoint = tempfile.mkdtemp(prefix = "tmp-hfsmount.")
+        sys_folder = os.path.join(mountpoint, "System Folder")
+        os.mkdir(sys_folder)
+        devnull = open(os.devnull, "wb")
+        subprocess.call(["hmount", image_path], stdout=devnull)
+        devnull.close()
+        subprocess.call(["hcopy", "Apple II Setup:System Folder:*", sys_folder])
+        subprocess.call(["humount", "Apple II Setup"])
+
+    return mountpoint
+
+
+def a2setup_umount(mountpoint):
+    if a2setup_platform == "Linux":
+        umount_cmd = ["umount", mountpoint]
+        if use_sudo:
+            umount_cmd = ["sudo"] + umount_cmd
+        subprocess.call(umount_cmd)
+        os.rmdir(mountpoint)
+    elif a2setup_platform == "Darwin":
+        devnull = open(os.devnull, "wb")
+        subprocess.call(["hdiutil", "eject", mountpoint], stdout=devnull)
+        devnull.close()
+    elif a2setup_platform == "hfsutils":
+        sys_folder = os.path.joint(mountpoint, "System Folder")
+        for f in os.listdir(sys_folder):
+            os.unlink(os.path.join(sys_folder, f))
+        os.rmdir(sys_folder)
+        os.rmdir(mountpoint)
+
+
+def install_bootblocks(dest_dir, dest_fmt, gsos_version):
+    if dest_fmt not in ["unix", "netatalk"]:
+        raise ValueError("Only basic UNIX and netatalk formats are supported for now")
+
+    if not quiet:
+        print("Installing Apple // boot blocks (GS/OS version %s)..." % (gsos_version))
+
+    if not os.path.isdir(dest_dir):
+        os.makedirs(dest_dir, mode=0o0755)
+
+    work_dir = tempfile.mkdtemp(prefix = "tmp-a2sv-bootblocks.")
+    a2setup_name = "A2SETUP.img"
+    if verbose:
+        print("   dest_fmt : %s\n   dest_dir : %s\n   work_dir : %s\n"
+                % (dest_fmt, dest_dir, work_dir))
+
+    a2setup_set_a2setup_platform()
 
     a2boot_needed = False
     a2boot_unpacked = False
@@ -328,33 +377,15 @@ will not be echoed when you type.""")
                 if not disk7_downloaded:
                     raise IOError("Could not download disk7")
 
-                if platform == "Linux":
-                    mountpoint = os.path.join(work_dir, "a2boot")
-                    os.mkdir(mountpoint)
-                    mount_cmd = ["mount", "-t", "hfs", "-o", "ro,loop", a2setup_path, mountpoint]
-                    if use_sudo:
-                        mount_cmd = ["sudo"] + mount_cmd
-                    subprocess.call(mount_cmd)
-                    src_dir = os.path.join(mountpoint, "System Folder")
-                elif platform == "Darwin":
-                    xmlstr = subprocess.check_output(["hdiutil", "attach", "-plist",
-                            a2setup_path])
-                    mountpoint = find_mountpoint(xmlstr)
-                    src_dir = os.path.join(mountpoint, "System Folder")
-                elif platform == "hfsutils":
-                    src_dir = os.path.join(work_dir, "a2boot")
-                    os.mkdir(src_dir)
-                    subprocess.call(["hmount", a2setup_path], stdout=devnull)
-                    subprocess.call(["hcopy", "Apple II Setup:System Folder:*",
-                            src_dir], stdout=devnull)
-                    subprocess.call(["humount", "Apple II Setup"], stdout=devnull)
+                mountpoint = a2setup_mount(a2setup_path)
+                src_dir = os.path.join(mountpoint, "System Folder")
 
                 a2boot_unpacked = True
 
             # Copy the file
-            if platform == "Linux" or platform == "Darwin":
+            if a2setup_platform == "Linux" or a2setup_platform == "Darwin":
                 src_path = os.path.join(src_dir, bootfile["unix"])
-            elif platform == "hfsutils":
+            elif a2setup_platform == "hfsutils":
                 src_path = os.path.join(src_dir, bootfile["hfsutils"])
             shutil.copyfile(src_path, dest_path)
         else:
@@ -363,23 +394,9 @@ will not be echoed when you type.""")
 
     # Clean up the mounted/unpacked image
     if a2boot_unpacked:
-        if platform == "Linux":
-            umount_cmd = ["umount", mountpoint]
-            if use_sudo:
-                umount_cmd = ["sudo"] + umount_cmd
-            subprocess.call(umount_cmd)
-            os.rmdir(mountpoint)
-        elif platform == "Darwin":
-            subprocess.call(["hdiutil", "eject", mountpoint], stdout=devnull)
-        elif platform == "hfsutils":
-            for bootfile in a2boot_files:
-                name = os.path.join(src_dir, bootfile["hfsutils"])
-                if os.path.isfile(name):
-                    os.unlink(name)
-            os.rmdir(src_dir)
+        a2setup_umount(mountpoint)
         os.unlink(a2setup_path)
 
-    devnull.close()
     os.rmdir(work_dir)
 
 def do_install():
