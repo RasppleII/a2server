@@ -7,20 +7,6 @@ import hashlib
 import shutil
 import xml.etree.cElementTree as ET
 
-gsosDir = "/media/A2SHARED/FILES"
-imagesDir = gsosDir + "/GSOS.INSTALLER/IMAGES"
-imageToolsDir = gsosDir + "/GSOS.INSTALLER/IMAGE.TOOLS"
-netInstallDir = gsosDir + "/GSOS.INSTALLER/NET.INSTALL"
-
-p8Dir = "/media/A2SHARED/A2FILES"
-diskToolsP8Dir = p8Dir + "/DISK.TOOLS.P8"
-
-commDir = "/media/A2SHARED/A2FILES/COMM"
-spectrumDir = commDir + "/SPECTRUM"
-protermDir = commDir + "/PROTERM"
-zlinkDir = commDir + "/Z.LINK"
-adtproDir = commDir + "/ADTPRO"
-
 quiet = False
 verbose = True
 
@@ -110,32 +96,6 @@ def sha1sum_file (filename, blocksize=65536):
         buf = f.read(blocksize)
     f.close()
     return digest.hexdigest()
-
-
-def download_url(url, filename, output_dir = None):
-    try:
-        if output_dir != None:
-            dest = os.path.join(output_dir, filename)
-        else:
-            dest = filename
-
-        if verbose:
-            print("""   URL  : %s
-   Dest : %s""" % (url, dest))
-
-        html = urlrequest.urlopen(url)
-        data = html.read()
-        f = open(dest, "wb")
-        f.write(data)
-        f.close
-        if verbose:
-            print("File downloaded.\n")
-        return True
-
-    except:
-        if verbose:
-            print("Download failed.")
-        return False
 
 
 def download_from_sources(fileinfo, output_dir):
