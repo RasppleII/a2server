@@ -346,6 +346,42 @@ def a2setup_check_digest(bootfile, file_digest, gsos_version, pristine=True, pat
     return False
 
 
+def apply_patches(bootfile, gsos_version, dest_dir, dest_fmt):
+    if "patch" in bootfile and gsos_version in bootfile["patch"]:
+        patch_path = os.path.join(dest_dir, bootfile[dest_fmt])
+        dest_digest = sha1sum_file(patch_path)
+        if a2setup_check_digest(bootfile, dest_digest, gsos_version, pristine=False):
+            if not quiet:
+                print("  \"%s\" is already patched." % (bootfile[dest_fmt]))
+                return True
+        else:
+            if verbose:
+                print("  Patching %s..." % (bootfile[dest_fmt]))
+            elif not quiet:
+                print("  Patching %s..." % (bootfile[dest_fmt]), end="")
+            f = open(patch_path, "r+b")
+            for patch in bootfile["patch"][gsos_version]["patches"]:
+                if isinstance(patch, str):
+                    if verbose:
+                        print("    %s" % (patch))
+                else:
+                    (offset, data) = patch
+                    f.seek(offset)
+                    f.write(data)
+            f.close()
+
+            # Verify...
+            dest_digest = sha1sum_file(patch_path)
+            if a2setup_check_digest(bootfile, dest_digest, gsos_version, pristine=False):
+                print("  patched.")
+            else:
+                print("  patch failed.\n      Expected: %s\n      Received: %s"
+                        % (bootfile["patch"][gsos_version]["digest"], dest_digest))
+                return False
+
+    return True
+
+
 def install_bootblocks(dest_dir, dest_fmt, gsos_version):
     if dest_fmt not in ["unix", "netatalk"]:
         raise ValueError("Only basic UNIX and netatalk formats are supported for now")
@@ -420,35 +456,7 @@ def install_bootblocks(dest_dir, dest_fmt, gsos_version):
         return False
 
     for bootfile in a2boot_files:
-        if "patch" in bootfile and gsos_version in bootfile["patch"]:
-            patch_path = os.path.join(dest_dir, bootfile[dest_fmt])
-            dest_digest = sha1sum_file(patch_path)
-            if a2setup_check_digest(bootfile, dest_digest, gsos_version, pristine=False):
-                if not quiet:
-                    print("  \"%s\" is already patched." % (bootfile[dest_fmt]))
-            else:
-                if verbose:
-                    print("  Patching %s..." % (bootfile[dest_fmt]))
-                elif not quiet:
-                    print("  Patching %s..." % (bootfile[dest_fmt]), end="")
-                f = open(patch_path, "r+b")
-                for patch in bootfile["patch"][gsos_version]["patches"]:
-                    if isinstance(patch, str):
-                        if verbose:
-                            print("    %s" % (patch))
-                    else:
-                        (offset, data) = patch
-                        f.seek(offset)
-                        f.write(data)
-                f.close()
-
-                # Verify...
-                dest_digest = sha1sum_file(patch_path)
-                if a2setup_check_digest(bootfile, dest_digest, gsos_version, pristine=False):
-                    print("  patched.")
-                else:
-                    print("  patch failed.\n      Expected: %s\n      Received: %s"
-                            % (bootfile["patch"][gsos_version]["digest"], dest_digest))
+        apply_patches(bootfile, gsos_version, dest_dir, dest_fmt)
 
     return True
 
