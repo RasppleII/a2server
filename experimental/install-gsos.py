@@ -336,12 +336,16 @@ def a2setup_umount(mountpoint):
 
 
 def a2setup_check_digest(bootfile, file_digest, gsos_version, pristine=True, patched=True):
+    if patched:
+        if "patch" in bootfile and gsos_version in bootfile["patch"]:
+            if bootfile["patch"][gsos_version]["digest"] == file_digest:
+                return True
+        else:
+            # This file doesn't have a patch for this GS/OS version
+            pristine = True
+
     if pristine and bootfile["digest"] == file_digest:
         return True
-
-    if patched and "patch" in bootfile and gsos_version in bootfile["patch"]:
-        if bootfile["patch"][gsos_version]["digest"] == file_digest:
-            return True
 
     return False
 
