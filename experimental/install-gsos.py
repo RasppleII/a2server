@@ -75,7 +75,19 @@ a2boot_files = [
         "unix"     : "p8",
         "hfsutils" : "p8.bin",
         "netatalk" : "p8",
-        "digest"   : "36c288a5272cf01e0a64eed16786258959118e0e"
+        "digest"   : "36c288a5272cf01e0a64eed16786258959118e0e",
+        "patch"    : {
+            # p8 in A2SETUP.img has a different date on the splash than
+            # the version in 6.0.1--no we're not patching that, but it's
+            # useful to note the other version exists.  :)
+            #"6.0.1": {
+            #    "patches" : [
+            #        "Patch date splash to match 6.0.1's P8",
+            #        (0x0026, b"\xb0\xb6\xad\xcd\xe1\xf9\xad\xb9\xb3")
+            #    ],
+            #    "digest"  : "c99f69c8dbfe79f02c715162fb409aedf52d378a"
+            #},
+        }
     }
 ]
 
