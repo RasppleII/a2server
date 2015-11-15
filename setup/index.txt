@@ -97,6 +97,10 @@ doSetup=1
 unsupportedOS=1
 if [[ $isRpi ]]; then #supported Raspbian? (16-Feb-15, 20-Jun-14, 09-Jan-14, etc)
     fwhash=$(zcat /usr/share/doc/raspberrypi-bootloader/changelog.Debian.gz | grep -m 1 'as of' | awk '{print $NF}')
+    fwsupported="-8aca5762- -462f3e3f476f7b6- -c32bc633039cd9- -9d34d0475f9-
+            -d4f5315cfac4e- -6f4a90c8cb8817f- -5dd9b4962e- -17c8799375-
+            -960832a6c2590635216c296b6ee0bebf67b21d50-"
+    [[ "$fwsupported" == *-$fwhash-* ]] && unsupportedOS=0
     [[ ($fwhash == "8aca5762") || ($fwhash == "462f3e3f476f7b6") || ($fwhash == "c32bc633039cd9") || ($fwhash == "9d34d0475f9") || ($fwhash == "d4f5315cfac4e") || ($fwhash == "6f4a90c8cb8817f") || ($fwhash == "5dd9b4962e") || ($fwhash == "17c8799375") ]] && unsupportedOS=0
 elif [[ "$(lsb_release -rs 2> /dev/null)" == "12.04" ]]; then #Ubuntu 12.04?
     unsupportedOS=0
