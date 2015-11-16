@@ -29,17 +29,23 @@ a2boot_files = [
         "hfsutils" : "Apple_--e_Boot_Blocks.bin",
         "netatalk" : "Apple :2f:2fe Boot Blocks",
         "digest"   : "cada362ac2eca3ffa506e9b4e76650ba031e0035",
-        "patch-digest" : "6b7fc12fd118e1cb9e39c7a2b8cc870c844a3bac",
-        "patches"  : [
-            "Cleartext password login bug",
-            (0x4d43, b"\xA8\xA2\x01\xBD\x80\x38\x99\xA0\x38\xC8\xE8\xE0\x09\x90\xF4")
-        ],
+        "patches"  : (
+            [
+                "Cleartext password login bug",
+                (0x4d43, b"\xA8\xA2\x01\xBD\x80\x38\x99\xA0\x38\xC8\xE8\xE0\x09\x90\xF4"),
+
+                "ProDOS 8 patch: year table, splash date (6.0.3)",
+                (0x004f, b"\xb0\xb2\xad\xc1\xf5\xe7\xad\xb1\xb5"),
+                (0x1b9f, b"\x12\x11\x0b\x10\x0f\x0e\x0d"),
+            ],
+            "8cff6ef453533423b34b5b4fefd642441e2ee374",
+        ),
     },
     {
         "unix"     : "Basic.System",
         "hfsutils" : "Basic.System.bin",
         "netatalk" : "Basic.System",
-        "digest"   : "4d53424f1451cd2e874cf792dbdc8cc6735dcd36"
+        "digest"   : "4d53424f1451cd2e874cf792dbdc8cc6735dcd36",
     },
     {
         "unix"     : "ProDOS16 Boot Blocks",
@@ -52,31 +58,41 @@ a2boot_files = [
         "hfsutils" : "ProDOS16_Image.bin",
         "netatalk" : "ProDOS16 Image",
         "digest"   : "db4608067b9e7877f45eb557971c4d8c45b46be5",
-        "patch-digest" : "5c35d5533901b292ab7c2f5a3c76cb3113f66085",
-        "patches"  : [
-            "Cleartext password login bug",
-            (0x5837, b"\xA8\xA2\x01\xBD\x80\x10\x99\xA0\x10\xC8\xE8\xE0\x09\x90\xF4"),
+        "patches"  : (
+            [
+                "Cleartext password login bug",
+                (0x5837, b"\xA8\xA2\x01\xBD\x80\x10\x99\xA0\x10\xC8\xE8\xE0\x09\x90\xF4"),
 
-            "Enable pressing \"8\" during GS/OS netboot to load ProDOS 8",
-            (0x0100, b"\x92"),
-            (0x0360, b"\x20\x7d\x14"),
-            (0x067d, b"\xad\x00\xc0\x29\xff\x00\xc9\xb8\x00\xd0\x06\xa9\x02\x00\x8d\x53\x14\xa9\x10\x0f\x60")
-        ],
+                "Enable pressing \"8\" during GS/OS netboot to load ProDOS 8",
+                (0x0100, b"\x92"),
+                (0x0360, b"\x20\x7d\x14"),
+                (0x067d, b"\xad\x00\xc0\x29\xff\x00\xc9\xb8\x00\xd0\x06\xa9\x02\x00\x8d\x53\x14\xa9\x10\x0f\x60"),
+
+                "ProDOS 8 patch: year table, splash date (6.0.3)",
+                (0x0c26, b"\xb0\xb2\xad\xc1\xf5\xe7\xad\xb1\xb5"),
+                (0x1b76, b"\x12\x11\x0b\x10\x0f\x0e\x0d"),
+            ],
+            "1f0477030b7e9c809b0a2282896ca66033e7ca9f",
+        ),
     },
     {
         "unix"     : "p8",
         "hfsutils" : "p8.bin",
         "netatalk" : "p8",
+        # 36c288a5272cf01e0a64eed16786258959118e0e  P8 (02-Apr-93, a2setup)
+        # c99f69c8dbfe79f02c715162fb409aedf52d378a  P8 (06-May-93, 6.0.1)
+        # Only splash date differs.
         "digest"   : "36c288a5272cf01e0a64eed16786258959118e0e",
-        #"patch-digest" : "c99f69c8dbfe79f02c715162fb409aedf52d378a",
-        #"patches"  : [
-        #    # p8 in A2SETUP.img has a different date on the splash than
-        #    # the version in 6.0.1--no we're not patching that, but it's
-        #    # useful to note the other version exists.  :)
-        #    "Patch date splash to match 6.0.1's P8",
-        #    (0x0026, b"\xb0\xb6\xad\xcd\xe1\xf9\xad\xb9\xb3")
-        #],
-    }
+        "patches"  : (
+            [
+                # May as well patch the splash as well.  *shrug*
+                "ProDOS 8 patch: year table, splash date (6.0.3)",
+                (0x0026, b"\xb0\xb2\xad\xc1\xf5\xe7\xad\xb1\xb5"),
+                (0x0f76, b"\x12\x11\x0b\x10\x0f\x0e\x0d"),
+            ],
+            "ad1e6c8f653df428d13cb8ae5ce4f8425a52016b",
+        ),
+    },
 ]
 
 # True for Python 3.0 and later
@@ -335,26 +351,12 @@ def a2setup_umount(mountpoint):
         os.rmdir(mountpoint)
 
 
-def a2setup_check_digest(bootfile, file_digest, pristine=True, patched=True):
-    if patched:
-        if "patch-digest" in bootfile:
-            if bootfile["patch-digest"] == file_digest:
-                return True
-        else:
-            # This file doesn't have a patch for this GS/OS version
-            pristine = True
-
-    if pristine and bootfile["digest"] == file_digest:
-        return True
-
-    return False
-
-
 def apply_patches(bootfile, dest_dir, dest_fmt):
     if "patches" in bootfile:
+        (patches, digest) = bootfile["patches"]
         patch_path = os.path.join(dest_dir, bootfile[dest_fmt])
         dest_digest = sha1sum_file(patch_path)
-        if a2setup_check_digest(bootfile, dest_digest, pristine=False):
+        if dest_digest == digest:
             if not quiet:
                 print("  \"%s\" is already patched." % (bootfile[dest_fmt]))
                 return True
@@ -364,7 +366,7 @@ def apply_patches(bootfile, dest_dir, dest_fmt):
             elif not quiet:
                 print("  Patching %s..." % (bootfile[dest_fmt]), end="")
             f = open(patch_path, "r+b")
-            for patch in bootfile["patches"]:
+            for patch in patches:
                 if isinstance(patch, str):
                     if verbose:
                         print("    %s" % (patch))
@@ -376,11 +378,11 @@ def apply_patches(bootfile, dest_dir, dest_fmt):
 
             # Verify...
             dest_digest = sha1sum_file(patch_path)
-            if a2setup_check_digest(bootfile, dest_digest, pristine=False):
+            if dest_digest == digest:
                 print("  patched.")
             else:
                 print("  patch failed.\n      Expected: %s\n      Received: %s"
-                        % (bootfile["patch-digest"], dest_digest))
+                        % (bootfile["patches"][1], dest_digest))
                 return False
 
     return True
@@ -410,14 +412,15 @@ def install_bootblocks(dest_dir, dest_fmt):
 
     for bootfile in a2boot_files:
         dest_path = os.path.join(dest_dir, bootfile[dest_fmt])
-        if os.path.isfile(dest_path):
-            dest_digest = sha1sum_file(dest_path)
-            if not a2setup_check_digest(bootfile, dest_digest):
-                a2boot_needed = True
-                break
-        else:
+        if not os.path.isfile(dest_path):
             a2boot_needed = True
             break
+        else:
+            dest_digest = sha1sum_file(dest_path)
+            if dest_digest != bootfile["digest"]:
+                if "patches" not in bootfile or dest_digest != bootfile["patches"][1]:
+                    a2boot_needed = True
+                    break
 
     if not a2boot_needed:
         if not quiet:
