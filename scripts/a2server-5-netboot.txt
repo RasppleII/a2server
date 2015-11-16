@@ -85,6 +85,15 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
             echo -n -e "\x20\x7d\x14" | sudo dd of='ProDOS16 Image' bs=864 seek=1 conv=notrunc 2> /dev/null
             echo -n -e "\xad\x00\xc0\x29\xff\x00\xc9\xb8\x00\xd0\x06\xa9\x02\x00\x8d\x53\x14\xa9\x10\x0f\x60" | \
                 sudo dd of='ProDOS16 Image' bs=1661 seek=1 conv=notrunc 2> /dev/null
+            # Geoff Body and Andrew Roughan helped Joseph Carter with this one
+            # Update ProDOS 8 year table (and spalsh date because may as well)
+            # Effectively, we're turning p8 into the 6.0.3 version here.
+            echo -n -e "\xb0\xb2\xad\xc1\xf5\xe7\xad\xb1\xb5" | sudo dd of="p8" bs=38 seek=1 conv=notrunc 2> /dev/null
+            echo -n -e "\x12\x11\x0b\x10\x0f\x0e\x0d" | sudo dd of="p8" bs=3958 seek=1 conv=notrunc 2> /dev/null
+            echo -n -e "\xb0\xb2\xad\xc1\xf5\xe7\xad\xb1\xb5" | sudo dd of="ProDOS16 Image" bs=3110 seek=1 conv=notrunc 2> /dev/null
+            echo -n -e "\x12\x11\x0b\x10\x0f\x0e\x0d" | sudo dd of="ProDOS16 Image" bs=7030 seek=1 conv=notrunc 2> /dev/null
+            echo -n -e "\xb0\xb2\xad\xc1\xf5\xe7\xad\xb1\xb5" | sudo dd of="Apple :2f:2fe Boot Blocks" bs=79 seek=1 conv=notrunc 2> /dev/null
+            echo -n -e "\x12\x11\x0b\x10\x0f\x0e\x0d" | sudo dd of="Apple :2f:2fe Boot Blocks" bs=7071 seek=1 conv=notrunc 2> /dev/null
         fi
         echo "A2SERVER: Boot Blocks have been installed."
 
