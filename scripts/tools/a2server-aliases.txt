@@ -15,7 +15,7 @@ alias raspi-config='[[ -f /usr/bin/raspi-config ]] && sudo /usr/bin/raspi-config
 alias raspbian-update='wget -qO /tmp/raspbian-update ivanx.com/a2server/files/raspbian-update.txt; source /tmp/raspbian-update'
 alias rasppleii-update='raspbian-update a2cloud a2server'
 
-alias welcome-message-edit='[[ $(lsb_release -d 2> /dev/null | grep Ubuntu) ]] && motd=/etc/issue || motd=/etc/motd; sudo nano $motd'
+alias welcome-message-edit='sudo nano /etc/motd'
 
 alias showip='ifconfig eth0 | grep "inet\ addr" | cut -d: -f2 | cut -d" " -f1'
 alias showmac='ifconfig eth0 | grep "HWaddr" | cut -dH -f2 | cut -c7-23'
@@ -63,11 +63,11 @@ alias guest-on="sudo sed -i 's/-uamlist uams_clrtxt.so/-uamlist uams_guest.so,ua
 
 
 
-alias samba-off='[[ $(lsb_release -d 2> /dev/null | grep Ubuntu) ]] && { sudo initctl stop smbd; sudo initctl stop nmbd; [[ -f /etc/init/smbd.conf ]] && sudo mv /etc/init/smbd.conf /etc/init/smbd.conf.off; [[ -f /etc/init/nmbd.conf ]] && sudo mv /etc/init/nmbd.conf /etc/init/nmbd.conf.off; } || { sudo /etc/init.d/samba stop; sudo update-rc.d -f samba remove &> /dev/null; }'
-alias samba-on='[[ $(lsb_release -d 2> /dev/null | grep Ubuntu) ]] && { [[ -f /etc/init/smbd.conf.off ]] && sudo mv /etc/init/smbd.conf.off /etc/init/smbd.conf; [[ -f /etc/init/nmbd.conf.off ]] && sudo mv /etc/init/nmbd.conf.off /etc/init/nmbd.conf; sudo initctl start smbd; sudo initctl start nmbd; } || { sudo update-rc.d samba defaults &> /dev/null; sudo /etc/init.d/samba restart; }'
-alias samba-stop='[[ $(lsb_release -d 2> /dev/null | grep Ubuntu) ]] && { sudo initctl stop smbd; sudo initctl stop nmbd; } || { sudo /etc/init.d/samba stop; }'
-alias samba-start='[[ $(lsb_release -d 2> /dev/null | grep Ubuntu) ]] && { sudo initctl start smbd; sudo initctl start nmbd; } || { sudo /etc/init.d/samba start; }'
-alias samba-restart='[[ $(lsb_release -d 2> /dev/null | grep Ubuntu) ]] && { sudo initctl restart smbd; sudo initctl restart nmbd; } || { sudo /etc/init.d/samba restart; }'
+alias samba-off='sudo /etc/init.d/samba stop; sudo update-rc.d -f samba remove &> /dev/null'
+alias samba-on='sudo update-rc.d samba defaults &> /dev/null; sudo /etc/init.d/samba restart'
+alias samba-stop='sudo /etc/init.d/samba stop'
+alias samba-start='sudo /etc/init.d/samba start'
+alias samba-restart='sudo /etc/init.d/samba restart'
 
 alias gsfiles-share="sudo sed -i 's/^\/media\/A2SHARED\/GSFILES\ GSFILES options:prodos/#share1/' /usr/local/etc/netatalk/AppleVolumes.default"
 alias gsfiles-unshare="sudo sed -i 's/^#share1/\/media\/A2SHARED\/GSFILES\ GSFILES options:prodos/' /usr/local/etc/netatalk/AppleVolumes.default; [[ -d /media/A2SHARED/GSFILES ]] || mkdir /media/A2SHARED/GSFILES"

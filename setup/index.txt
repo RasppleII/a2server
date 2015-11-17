@@ -1,9 +1,9 @@
 #! /bin/bash
 # vim: set tabstop=4 shiftwidth=4 expandtab filetype=sh:
 
-# A2SERVER master setup script, last update 15-Feb-2015
+# A2SERVER master setup script, last update 17-Nov-15
 # it downloads and executes several scripts related to the setup of
-# netatalk configured for Apple II use on Debian, Raspbian, or Ubuntu.
+# netatalk configured for Apple II use on Debian or Raspbian.
 # more info is at http://appleii.ivanx.com/a2server
 
 # to download and execute, type:
@@ -102,8 +102,6 @@ if [[ $isRpi ]]; then #supported Raspbian? (16-Feb-15, 20-Jun-14, 09-Jan-14, etc
             -960832a6c2590635216c296b6ee0bebf67b21d50-"
     [[ "$fwsupported" == *-$fwhash-* ]] && unsupportedOS=0
     [[ ($fwhash == "8aca5762") || ($fwhash == "462f3e3f476f7b6") || ($fwhash == "c32bc633039cd9") || ($fwhash == "9d34d0475f9") || ($fwhash == "d4f5315cfac4e") || ($fwhash == "6f4a90c8cb8817f") || ($fwhash == "5dd9b4962e") || ($fwhash == "17c8799375") ]] && unsupportedOS=0
-elif [[ "$(lsb_release -rs 2> /dev/null)" == "12.04" ]]; then #Ubuntu 12.04?
-    unsupportedOS=0
 elif [[ "$(lsb_release -rs 2> /dev/null)" == "7.3" || "$(lsb_release -rs 2> /dev/null)" == "7.6" || "$(lsb_release -rs 2> /dev/null)" == "7.8" ]]; then # tested Debian?
     unsupportedOS=0
 fi

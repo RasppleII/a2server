@@ -18,14 +18,8 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupWindowsSharing ]]; then
         echo "A2SERVER: Setting up Windows file sharing..."
         sudo true
 
-        if [[ $(lsb_release -d 2> /dev/null | grep Ubuntu) ]]; then
-            [[ -f /etc/init/smbd.conf.off ]] && sudo mv /etc/init/smbd.conf.off /etc/init/smbd.conf
-            [[ -f /etc/init/nmbd.conf.off ]] && sudo mv /etc/init/nmbd.conf.off /etc/init/nmbd.conf
-            [[ ! -f /etc/init/smbd.conf || ! -f /etc/init/nmbd.conf ]] && installSamba=1
-        else
-            sudo update-rc.d samba defaults &> /dev/null
-            [[ ! -f /etc/init.d/samba ]] && installSamba=1
-        fi
+        sudo update-rc.d samba defaults &> /dev/null
+        [[ ! -f /etc/init.d/samba ]] && installSamba=1
 
         if (( $installSamba )); then
             if [[ ! -f /tmp/a2server-packageReposUpdated ]]; then
@@ -39,12 +33,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupWindowsSharing ]]; then
             sudo apt-get clean
         fi
 
-        if [[ $(lsb_release -d 2> /dev/null | grep Ubuntu) ]]; then
-            sudo initctl start smbd &> /dev/null
-            sudo initctl start nmbd &> /dev/null
-        else
-            sudo /etc/init.d/samba start &> /dev/null
-        fi
+        sudo /etc/init.d/samba start &> /dev/null
 
         workgroup=$(grep -o "^   workgroup = .*$" /etc/samba/smb.conf 2> /dev/null | cut -c 16-)
         [[ $workgroup ]] || workgroup="WORKGROUP"
@@ -80,15 +69,8 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupWindowsSharing ]]; then
         echo
         echo "A2SERVER: Windows file sharing is now running."
     else
-        if [[ $(lsb_release -d 2> /dev/null | grep Ubuntu) ]]; then
-            sudo initctl stop smbd &> /dev/null
-            sudo initctl stop nmbd &> /dev/null
-            [[ -f /etc/init/smbd.conf ]] && sudo mv /etc/init/smbd.conf /etc/init/smbd.conf.off
-            [[ -f /etc/init/nmbd.conf ]] && sudo mv /etc/init/nmbd.conf /etc/init/nmbd.conf.off
-        else
-            sudo /etc/init.d/samba stop &> /dev/null
-            sudo update-rc.d -f samba remove &> /dev/null
-        fi
+        sudo /etc/init.d/samba stop &> /dev/null
+        sudo update-rc.d -f samba remove &> /dev/null
         echo "A2SERVER: Windows file sharing has been turned off."
     fi
 

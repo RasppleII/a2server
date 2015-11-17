@@ -123,7 +123,7 @@ sudo wget -q -O /usr/local/etc/a2server-aliases "${scriptURL}scripts/tools/a2ser
 grep a2server-aliases /etc/bash.bashrc > /dev/null || \
 echo "source /usr/local/etc/a2server-aliases" | sudo tee -a /etc/bash.bashrc > /dev/null
 
-[[ $(lsb_release -d 2> /dev/null | grep Ubuntu) ]] && motd="/etc/issue" || motd="/etc/motd"
+motd="/etc/motd"
 if [[ ! $(grep A2SERVER $motd) ]]; then
     echo | sudo tee -a $motd > /dev/null
     echo "Type 'system-shutdown' to turn off A2SERVER." | sudo tee -a $motd > /dev/null

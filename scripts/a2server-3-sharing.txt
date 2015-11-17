@@ -4,7 +4,7 @@
 # A2SERVER -- a virtual machine for sharing files to Apple II clients
 # by Ivan X, ivan@ivanx.com
 
-# Installs Netatalk 2.2.4 for debian/raspbian (Wheezy) or Ubuntu (12.04)
+# Installs Netatalk 2.2.4 for debian/raspbian (Wheezy)
 # last update: 3-Mar-15
 
 # The lastest version of this document, and the ready-to-use premade
