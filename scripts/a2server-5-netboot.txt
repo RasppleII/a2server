@@ -304,6 +304,10 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                 processScript $netInstallDir/INSTALL/SCRIPTS/INSTAL.SYS.FILE
                 echo "Script: HFS.FST"
                 processScript $netInstallDir/INSTALL/SCRIPTS/HFS.FST
+                echo "Script: DOS33.FST"
+                processScript $netInstallDir/INSTALL/SCRIPTS/DOS3.3.FST
+                echo "Script: TEACH"
+                processScript $netInstallDir/INSTALL/SCRIPTS/TEACH
                 echo "Script: APPLESHARE"
                 processScript $netInstallDir/INSTALL/SCRIPTS/APPLESHARE
                 echo "Script: SERVER.SYS.FILE"
@@ -449,21 +453,52 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 
             echo -n "Spectrum"
             # get Spectrum
-            if [[ -f $commDir/SPECTRUM/SPECTRUM.HDV ]]; then
+            if [[ -f $spectrumDir/SPECTRUM.HDV || -d $spectrumDir/SPECTRUM.2.5.4 ]]; then
                 echo " is already installed."
             else
                 mkdir -p $spectrumDir
                 echo
+                mkdir -p /tmp/netboot
                 cd /tmp/netboot
-                wget -qO- http://www.speccie.co.uk/speccie/software/spectrum.2mg | dd bs=64 skip=1 of=SPECTRUM.HDV 2> /dev/null
-                wget -qO- http://www.speccie.co.uk/speccie/software/spectrum_extras.2mg | dd bs=64 skip=1 of=EXTRAS.HDV 2> /dev/null
-                wget -qO- http://www.speccie.co.uk/speccie/software/spectrum_sounds.2mg | dd bs=64 skip=1 of=SOUNDS.HDV 2> /dev/null
-                wget -qO- http://www.speccie.co.uk/speccie/software/spectrum_manuals.2mg | dd bs=64 skip=1 of=MANUALS.HDV 2> /dev/null
-                cppo -s -ad SPECTRUM.HDV $spectrumDir
-                cppo -s -ad EXTRAS.HDV $spectrumDir
-                cppo -s -ad MANUALS.HDV $spectrumDir
-                cppo -s -ad SOUNDS.HDV $spectrumDir
-                afpsync -v $gsosDir > /dev/null
+                if [[ ! -f $gsosDir/SYSTEM/START.GS.OS ]]; then
+                    #if true; then
+                    # provide disk images for MountIt if no GS/OS present
+                    wget -qO- http://www.speccie.co.uk/speccie/software/spectrum.2mg | dd bs=64 skip=1 of=$spectrumDir/SPECTRUM.HDV 2> /dev/null
+                    wget -qO- http://www.speccie.co.uk/speccie/software/spectrum_extras.2mg | dd bs=64 skip=1 of=$spectrumDir/EXTRAS.HDV 2> /dev/null
+                    wget -qO- http://www.speccie.co.uk/speccie/software/spectrum_sounds.2mg | dd bs=64 skip=1 of=$spectrumDir/SOUNDS.HDV 2> /dev/null
+                    wget -qO- http://www.speccie.co.uk/speccie/software/spectrum_manuals.2mg | dd bs=64 skip=1 of=$spectrumDir/MANUALS.HDV 2> /dev/null
+                    echo -n "These Spectrum installer disk image files can be converted to floppy disks with Asimov or DSK2FILE, or mounted directly with MountIt. If using MountIt, mount bouth SPECTRUM.HDV and EXTRAS.HDV before running the installer." > $spectrumDir/SPECTRUM.README
+                    afpsync -v $gsosDir > /dev/null
+                    afptype -p TXT -q $spectrumDir/SPECTRUM.README
+                else
+                    # install Spectrum into GS/OS
+                    wget -qO spectrum_gold_2mg.zip http://www.speccie.co.uk/speccie/software/spectrum_gold_2mg.zip
+                    unzip -p spectrum_gold_2mg.zip | dd bs=64 skip=1 of=Spectrum.Gold.HDV 2> /dev/null
+                    cppo -s -ad Spectrum.Gold.HDV .
+                    userFolder=$(tr [:lower:] [:upper:] <<< $USER)
+                    for thisFolder in \
+                        INSTALLER/EXTRAS/CDEVS^SYSTEM/CDEVS \
+                        INSTALLER/EXTRAS/TOOLS^SYSTEM/TOOLS \
+                        INSTALLER/EXTRAS/FONTS^SYSTEM/FONTS \
+                        INSTALLER/EXTRAS/SYSTEM.SETUP^SYSTEM/SYSTEM.SETUP \
+                        INSTALLER/HELP^SYSTEM/DESK.ACCS \
+                        INSTALLER/SPECTRUM.SOUNDS^SYSTEM/SOUNDS \
+                        SPECTRUM.2.5.4/ADD.ONS^USERS/$userFolder/ADD.ONS \
+                        SPECTRUM.2.5.4/SPECTRUM.SCRIPT^USERS/$userFolder/SPECTRUM.SCRIPT \
+                        SPECTRUM.2.5.4/ADD.ONS^COMM/SPECTRUM/ADD.ONS \
+                        SPECTRUM.2.5.4/SPECTRUM.SCRIPT^COMM/SPECTRUM/SPECTRUM.SCRIPT \
+                        MANUALS^COMM/SPECTRUM/MANUALS
+                    do
+                        mkdir -p $gsosDir/"${thisFolder##*^}"
+                        cp -R SPECTRUM.GOLD/${thisFolder%%^*}/* $gsosDir/"${thisFolder##*^}"
+                        mkdir -p $gsosDir/"${thisFolder##*^}"/.AppleDouble
+                        cp -R SPECTRUM.GOLD/${thisFolder%%^*}/.AppleDouble/* $gsosDir/"${thisFolder##*^}"/.AppleDouble
+                    done
+                    mv SPECTRUM.GOLD/INSTALLER/SOUNDPATCH SPECTRUM.GOLD/SPECTRUM.2.5.4/SPECTRUM $spectrumDir
+                    mkdir -p $spectrumDir/.AppleDouble
+                    mv SPECTRUM.GOLD/INSTALLER/.AppleDouble/SOUNDPATCH SPECTRUM.GOLD/SPECTRUM.2.5.4/.AppleDouble/SPECTRUM $spectrumDir/.AppleDouble
+                    afpsync -v $gsosDir > /dev/null
+                fi
             fi
 
             echo -n "ProTERM and Z-Link"

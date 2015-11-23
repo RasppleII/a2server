@@ -62,4 +62,6 @@
                  appleii.ivanx.com/a2server for development purposes
        Nov 2015: Merged Ivan's 1.2.5 release, removed support for Ubuntu for
                  now (see RasppleII/a2server#11), patched ProDOS 8 in boot
-                 files for current year table
+                 files for current year table, merged Ivan's 1.2.6 which does
+		 a better Spectrum installation, make sure unzip is installed,
+		 install unar from a package if it exists.

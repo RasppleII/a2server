@@ -115,6 +115,13 @@ else
     echo "A2SERVER: The Unarchiver has already been installed."
 fi
 
+if ! command -v unzip >/dev/null; then
+    echo "A2SERVER: Installing unzip..."
+    sudo apt-get -y install unzip
+else
+    echo "A2SERVER: unzip has already been installed."
+fi
+
 sudo wget -q -O /usr/local/bin/afpsync "${scriptURL}scripts/tools/afpsync.txt"
 sudo chmod ugo+x /usr/local/bin/afpsync
 sudo wget -q -O /usr/local/bin/afptype "${scriptURL}scripts/tools/afptype.txt"
