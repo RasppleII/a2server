@@ -29,7 +29,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupWindowsSharing ]]; then
             fi
 
             sudo apt-get -y install samba
-            [[ -f /usr/bin/smbpasswd ]] || sudo apt-get -y install samba-common-bin
+            command -v smbpasswd >/dev/null || sudo apt-get -y install samba-common-bin
             sudo apt-get clean
         fi
 
