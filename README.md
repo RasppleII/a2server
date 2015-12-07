@@ -21,9 +21,9 @@ set the shell variable A2SERVER_SCRIPT_URL to the base URL of this repository
 on your server.  The base-URL should be slash-terminated.  You can then run
 the following snippet:
 
-```bash
+~~~ bash
 wget a2server-setup ${A2SERVER_SCRIPT_URL}setup/; source a2server-setup
-```
+~~~
 
 You should probably export A2SERVER_SCRIPT_URL in your .bashrc or whatever
 file configures your development environment.  Also be advised that as of
