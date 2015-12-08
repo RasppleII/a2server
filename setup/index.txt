@@ -9,7 +9,7 @@
 # to download and execute, type:
 # wget appleii.ivanx.com/a2server/setup; source setup
 
-a2serverVersion="130"
+a2serverVersion="127"
 
 # Ensure URL we'll use ends in a /
 case "$A2SERVER_SCRIPT_URL" in
@@ -223,6 +223,7 @@ if (( $doSetup )); then
         kernelMajorRelease=$(cut -d '.' -f 1 <<< $kernelRelease)
         kernelMinorRelease=$(cut -d '.' -f 2 <<< $kernelRelease | sed 's/\(^[0-9]*\)[^0-9].*$/\1/')
 
+        echo
         # all done, see if AppleTalk is available and notify either way
         if [[ $(ps aux | grep [a]talkd) ]]; then
             echo "You now have a fully functional file server for Apple II clients."
@@ -249,7 +250,7 @@ if (( $doSetup )); then
             fi
             rm /tmp/rpiUpdate
             echo
-        elif [[ $kernelMajorRelease -eq 3 && $kernelMinorRelease -ge 12 ]]; then
+        elif [[ $kernelMajorRelease -eq 3 && $kernelMinorRelease -ge 12 && $kernelMinorRelease -le 15 ]]; then
             echo "A2SERVER is now configured, but Apple II clients cannot connect"
             echo "because of a kernel-crashing bug in Linux kernel 3.12 through 3.15."
             echo "You have kernel version $kernelMajorRelease.$kernelMinorRelease."
