@@ -14,11 +14,14 @@ isRpi=
 [[ -f /usr/bin/raspi-config ]] && isRpi=1
 
 isDebian=
-[[ ( -f /etc/debian_version ) && ( $(cut -c 1-2 < /etc/debian_version) == "7." ) && ( $(uname -m) == "i686" ) ]] && isDebian=1
+[[ ( -f /etc/debian_version ) && ( $(cut -c 1 < /etc/debian_version) -ge "7" ) && ( $(uname -m) == "i686" ) ]] && isDebian=1
+
+isJessie=
+[[ ( -f /etc/debian_version ) && ( $(cut -c 1-2 < /etc/debian_version) == "8." ) ]] && isJessie=1
 
 echo "A2SERVER: Installing A2SERVER tools..."
 
-if [[ ! -f /usr/local/bin/nulib2 ]]; then
+if ! command -v nulib2 > /dev/null; then
 
     echo "A2SERVER: Installing nulib2..."
 
@@ -29,7 +32,7 @@ if [[ ! -f /usr/local/bin/nulib2 ]]; then
         wget -qO- "http://appleii.ivanx.com/a2server/files/nulib2-debian7_x86.tgz" | sudo tar Pzx
     fi
 
-    if [[ ! -f /usr/local/bin/nulib2 ]]; then
+    if ! command -v nulib2 > /dev/null; then
 
         if [[ ! -f /tmp/a2server-packageReposUpdated ]]; then
             # prepare for installing packages
@@ -65,7 +68,7 @@ fi
 # download and install The Unarchiver, for expanding Apple disk images
 # http://wakaba.c3.cx/s/apps/unarchiver.html
 
-if ! command -v unar >/dev/null; then
+if ! command -v unar > /dev/null; then
 
     echo "A2SERVER: Installing The Unarchiver..."
 
@@ -75,16 +78,17 @@ if ! command -v unar >/dev/null; then
         touch /tmp/a2server-packageReposUpdated
     fi
 
-    if apt-cache show unar &>/dev/null; then
-        # Debian package exists >= jessie.
-        sudo apt-get -y install unar
-    else
-        # Legacy binary tarballs for wheezy.
+    if [[ $isJessie ]]; then
+        sudo apt-get install -y unar
+        sudo apt-get clean
+    fi
+    
+    if ! command -v unar > /dev/null; then
         if [[ $isRpi || $isDebian ]]; then
             sudo apt-get -y install libgnustep-base1.22
             sudo apt-get clean
             if [[ $isRpi ]]; then
-                wget -qO- "http://appleii.ivanx.com/a2server/files/unar-rpi.tgz" | sudo tar Pzx
+                wget -qO- "http://appleii.ivanx.com/a2server/files/unar-rpi_wheezy.tgz" | sudo tar Pzx
             elif [[ $isDebian ]]; then
                 wget -qO- "http://appleii.ivanx.com/a2server/files/unar-debian7_x86.tgz" | sudo tar Pzx
             fi
@@ -117,7 +121,7 @@ fi
 
 if ! command -v unzip >/dev/null; then
     echo "A2SERVER: Installing unzip..."
-    sudo apt-get -y install unzip
+sudo apt-get -y install unzip
 else
     echo "A2SERVER: unzip has already been installed."
 fi
@@ -140,9 +144,9 @@ echo "source /usr/local/etc/a2server-aliases" | sudo tee -a /etc/bash.bashrc > /
 
 motd="/etc/motd"
 if [[ ! $(grep A2SERVER $motd) ]]; then
-    echo | sudo tee -a $motd > /dev/null
-    echo "Type 'system-shutdown' to turn off A2SERVER." | sudo tee -a $motd > /dev/null
-    echo "Type 'a2server-setup' to configure network boot." | sudo tee -a $motd > /dev/null
-    echo "Type 'a2server-help' for a list of other commands." | sudo tee -a $motd > /dev/null
-    echo | sudo tee -a $motd > /dev/null
+ 	echo | sudo tee -a $motd > /dev/null
+	echo "Type 'system-shutdown' to turn off A2SERVER." | sudo tee -a $motd > /dev/null
+	echo "Type 'a2server-setup' to configure network boot." | sudo tee -a $motd > /dev/null
+	echo "Type 'a2server-help' for a list of other commands." | sudo tee -a $motd > /dev/null
+	echo | sudo tee -a $motd > /dev/null
 fi
