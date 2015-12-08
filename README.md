@@ -13,16 +13,20 @@ relatively modern piece of it.  As such they should be preserved as they are.
 
 ## Developer note
 
-To use the scripts on a server other than Ivan's, you need to do two things.
-First, the server needs to be modified to serve setup/index.txt and
-update/index.txt the same way they would serve index.html.  How you do that is
-beyond the scope of this repository for the moment.  Secondly, you'll want to
-set the shell variable A2SERVER_SCRIPT_URL to the base URL of this repository
+To use the scripts on a server other than Ivan's, you'll want to export
+the shell variable A2SERVER_SCRIPT_URL to the base URL of this repository
 on your server.  The base-URL should be slash-terminated.  You can then run
 the following snippet:
 
 ```bash
-wget a2server-setup ${A2SERVER_SCRIPT_URL}setup/; source a2server-setup
+wget -O a2server-setup ${A2SERVER_SCRIPT_URL}setup/index.txt; source a2server-setup
+```
+
+A simple method installing from a local folder is to change to that sudirectory
+and run the following. Then export A2SERVER_SCRIPT_URL to "http://localhost:8000/"
+
+```bash
+python -m SimpleHTTPServer
 ```
 
 You should probably export A2SERVER_SCRIPT_URL in your .bashrc or whatever
