@@ -1,7 +1,7 @@
 #! /bin/bash
 # vim: set tabstop=4 shiftwidth=4 expandtab filetype=sh:
 
-currentVersion=125
+currentVersion=127
 
 if [[ -f /usr/local/etc/A2SERVER-version ]]; then
     installedVersion=$(cat /usr/local/etc/A2SERVER-version)
