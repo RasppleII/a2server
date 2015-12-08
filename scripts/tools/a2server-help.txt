@@ -69,8 +69,6 @@ samba-stop: stop Windows file sharing until reboot
 samba-start: start Windows file sharing
 samba-restart: stop and restart Windows file sharing
 
-gsfiles-share: disable the GSFILES shared volume
-gsfiles-unshare: enable the GSFILES shared volume
 a2files-share: disable the A2FILES shared volume
 a2files-unshare: enable the A2FILES shared volume
 
