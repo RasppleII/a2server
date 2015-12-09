@@ -1,12 +1,26 @@
 #! /bin/bash
 # vim: set tabstop=4 shiftwidth=4 expandtab filetype=sh:
 
-currentVersion=127
+currentVersion="1.2.7"
 
 if [[ -f /usr/local/etc/A2SERVER-version ]]; then
     installedVersion=$(cat /usr/local/etc/A2SERVER-version)
 else
     installedVersion=100
+fi
+
+if [[ -f /usr/local/etc/A2SERVER-version ]]; then
+    installedVersion=$(cat /usr/local/etc/A2SERVER-version)
+    if [[ "$installedVersion" != *.*.* ]]; then
+        if [[ "$installedVersion" == [0-9][0-9][0-9] ]]; then
+            installedVersion="${installedVersion:0:1}.${installedVersion:1:1}.${installedVersion:2:1}"
+        else
+            # Whatever it is, it's not a recognized version
+            installedVersion="1.0.0"
+        fi
+    fi
+else
+    installedVersion="1.0.0"
 fi
 
 # Ensure URL we'll use ends in a /
@@ -27,8 +41,8 @@ echo
 echo "Update history:"
 wget -qO- "${scriptURL}update/versionhistory.txt"
 echo
-echo "installed version: ${installedVersion:0:1}.${installedVersion:1:1}.${installedVersion:2:1}"
-echo "current version: ${currentVersion:0:1}.${currentVersion:1:1}.${currentVersion:2:1}"
+echo "installed version: $installedVersion"
+echo "current version: $currentVersion"
 echo
 if [[ $autoAnswerYes ]]; then
     REPLY="y"

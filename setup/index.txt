@@ -9,7 +9,7 @@
 # to download and execute, type:
 # wget appleii.ivanx.com/a2server/setup; source setup
 
-a2serverVersion="127"
+a2serverVersion="1.2.7"
 
 # Ensure URL we'll use ends in a /
 case "$A2SERVER_SCRIPT_URL" in
@@ -24,8 +24,18 @@ isDebian=
 [[ ( -f /etc/debian_version ) && ( $(cut -c 1-2 < /etc/debian_version) == "7." ) && ( $(uname -m) == "i686" ) ]] && isDebian=1
 
 if [[ -f /usr/local/etc/A2SERVER-version ]]; then
+    installedVersion=$(cat /usr/local/etc/A2SERVER-version)
+    if [[ "$installedVersion" != *.*.* ]]; then
+        if [[ "$installedVersion" == [0-9][0-9][0-9] ]]; then
+            installedVersion="${installedVersion:0:1}.${installedVersion:1:1}.${installedVersion:2:1}"
+        else
+            # Whatever it is, it's not a recognized version
+            installedVersion="1.0.0"
+        fi
+    fi
     echo "A2SERVER version available: $a2serverVersion"
-    echo "A2SERVER version installed: $(cat /usr/local/etc/A2SERVER-version)"
+    echo "A2SERVER version installed: $installedVersion"
+    unset $installedVersion 2>/dev/null
 fi
 
 skipRepoUpdate=
@@ -211,10 +221,9 @@ if (( $doSetup )); then
         rm /tmp/7.console
         rm /tmp/a2server-packageReposUpdated &> /dev/null
 
-        if [[ ! -f /usr/local/etc/A2SERVER-version ]] \
-            || (( $(cat /usr/local/etc/A2SERVER-version) < "$a2serverVersion" )); then
-            echo "$a2serverVersion" | sudo tee /usr/local/etc/A2SERVER-version &> /dev/null
-        fi
+        # Running the scripts always installs this version, even if it's older than
+        # what was installed, so this file should be overwritten regardless.
+        echo "$a2serverVersion" | sudo tee /usr/local/etc/A2SERVER-version &> /dev/null
 
         source /usr/local/etc/a2server-aliases
 
