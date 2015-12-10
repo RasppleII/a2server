@@ -18,16 +18,13 @@ the shell variable A2SERVER_SCRIPT_URL to the base URL of this repository
 on your server.  The base-URL should be slash-terminated.  You can then run
 the following snippet:
 
-```bash
+~~~bash
 wget -O a2server-setup ${A2SERVER_SCRIPT_URL}setup/index.txt; source a2server-setup
-```
+~~~
 
-A simple method installing from a local folder is to change to that sudirectory
-and run the following. Then export A2SERVER_SCRIPT_URL to "http://localhost:8000/"
-
-```bash
-python -m SimpleHTTPServer
-```
+A simple method for installing from a local subdirectory is to 'cd' to it and
+then type 'python -m SimpleHTTPServer'. Then export A2SERVER_SCRIPT_URL to
+"http://localhost:8000/" or use the IP address of the host machine on your LAN.
 
 You should probably export A2SERVER_SCRIPT_URL in your .bashrc or whatever
 file configures your development environment.  Also be advised that as of
