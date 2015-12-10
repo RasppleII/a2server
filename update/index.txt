@@ -1,19 +1,19 @@
 #! /bin/bash
 # vim: set tabstop=4 shiftwidth=4 expandtab filetype=sh:
 
-currentVersion=125
+# Ensure URL we'll use ends in a /
+case "$A2SERVER_SCRIPT_URL" in
+	*/) scriptURL="$A2SERVER_SCRIPT_URL" ;;
+	*) scriptURL="${A2SERVER_SCRIPT_URL:-http://appleii.ivanx.com/a2server}/" ;;
+esac
+
+currentVersion=$(wget -qO- "${scriptURL}setup/index.txt" | grep '^a2serverVersion' | cut -d '"' -f 2)
 
 if [[ -f /usr/local/etc/A2SERVER-version ]]; then
     installedVersion=$(cat /usr/local/etc/A2SERVER-version)
 else
     installedVersion=100
 fi
-
-# Ensure URL we'll use ends in a /
-case "$A2SERVER_SCRIPT_URL" in
-	*/) scriptURL="$A2SERVER_SCRIPT_URL" ;;
-	*) scriptURL="${A2SERVER_SCRIPT_URL:-http://appleii.ivanx.com/a2server}/" ;;
-esac
 
 autoAnswerYes=
 for arg in $@; do
@@ -39,7 +39,7 @@ fi
 if [[ ${REPLY:0:1} == "y" || ${REPLY:0:1} == "Y" ]]; then
     sudo rm /usr/local/etc/A2SERVER-version &> /dev/null
     # sudo rm /usr/local/etc/netatalk/a2boot/* &> /dev/null
-    wget -q -O /tmp/setup "${scriptURL}setup"; source /tmp/setup "$@"
+    wget -q -O /tmp/setup "${scriptURL}setup/index.txt"; source /tmp/setup "$@"
 fi
 
 unset currentVersion 2> /dev/null

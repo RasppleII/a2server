@@ -50,6 +50,10 @@
 
 1.2.4: Jul 2015: offer to download A2CLOUD disk contents onto A2FILES volume
 
+1.2.4+:Oct 2015: support for using A2SERVER scripts from a location other than
+                 appleii.ivanx.com/a2server for development purposes
+                 [not released]
+
 1.2.5: Nov 2015: netboot install option for GS/OS 6.0.2/3
                  netboot always downloads GS/OS disk images even if present
                  provides error if a2setup doesn't have internet
@@ -58,10 +62,23 @@
                  download images from Apple, with Internet Archive as a backup
                  install HFS.FST during netboot install
 
-1.3.0: Oct 2015: support for using A2SERVER scripts from a location other than
-                 appleii.ivanx.com/a2server for development purposes
-       Nov 2015: Merged Ivan's 1.2.5 release, removed support for Ubuntu for
+1.2.5+:Nov 2015: Merged Ivan's 1.2.5 release, removed support for Ubuntu for
                  now (see RasppleII/a2server#11), patched ProDOS 8 in boot
-                 files for current year table, merged Ivan's 1.2.6 which does
-		 a better Spectrum installation, make sure unzip is installed,
-		 install unar from a package if it exists.
+                 files for current year table, install unar from a package if
+                 it exists.
+                 [not released]
+
+1.2.6: Nov 2015: full, ready to use install of Spectrum; install unzip
+                 [released briefly, then withdrawn]
+                 
+1.2.6+:Nov 2015: merged Ivan's 1.2.6
+                 [not released]
+
+1.2.7: Dec 2015: codebase unified; preliminary Jessie support; case insensitive
+                 file system for A2FILES; removes GSFILES if empty; DOS3.3.FST
+                 and TEACH are installed with netboot installation; minor bug
+                 fixes and tweaks
+                 [not released]
+
+128d1: Dec 2015: moved /media/A2SHARED to /srv/A2SERVER
+                 [not released]

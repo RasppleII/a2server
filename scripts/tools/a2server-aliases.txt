@@ -47,8 +47,8 @@ alias appletalk-on='sudo sed -i "s/ATALKD_RUN=no/ATALKD_RUN=yes/" /etc/default/n
 
 
 NETATALK="/usr/local/etc/netatalk"
-A2FILES="/media/A2SHARED/A2FILES"
-GSFILES="/media/A2SHARED/GSFILES"
+A2FILES="/srv/A2SERVER/A2FILES"
+GSFILES="/srv/A2SERVER/GSFILES"
 
 alias netboot-gsos="mkatinit -gs -d -f"
 alias netboot-gsos-guest="mkatinit -gs -d -f guest"
@@ -69,10 +69,8 @@ alias samba-stop='sudo /etc/init.d/samba stop'
 alias samba-start='sudo /etc/init.d/samba start'
 alias samba-restart='sudo /etc/init.d/samba restart'
 
-alias gsfiles-share="sudo sed -i 's/^\/media\/A2SHARED\/GSFILES\ GSFILES options:prodos/#share1/' /usr/local/etc/netatalk/AppleVolumes.default"
-alias gsfiles-unshare="sudo sed -i 's/^#share1/\/media\/A2SHARED\/GSFILES\ GSFILES options:prodos/' /usr/local/etc/netatalk/AppleVolumes.default; [[ -d /media/A2SHARED/GSFILES ]] || mkdir /media/A2SHARED/GSFILES"
-alias a2files-share="sudo sed -i 's/^\/media\/A2SHARED\/A2FILES\ A2FILES options:prodos\ casefold:toupper/#share2/' /usr/local/etc/netatalk/AppleVolumes.default"
-alias a2files-unshare="sudo sed -i 's/^#share2/\/media\/A2SHARED\/A2FILES\ A2FILES options:prodos\ casefold:toupper/' /usr/local/etc/netatalk/AppleVolumes.default; [[ -d /media/A2SHARED/A2FILES ]] || mkdir /media/A2SHARED/A2FILES"
+alias a2files-share="sudo sed -i 's/^#share2/\/srv\/A2SERVER\/A2FILES\ A2FILES options:prodos ea:ad/' /usr/local/etc/netatalk/AppleVolumes.default; [[ -d /srv/A2SERVER/A2FILES ]] || mkdir /srv/A2SERVER/A2FILES"
+alias a2files-unshare="sudo sed -i 's/^\/srv\/A2SERVER\/A2FILES.*$/#share2/' /usr/local/etc/netatalk/AppleVolumes.default"
 
 alias showalias="alias | cut -d= -f 1 | cut -d' ' -f2 | more"
 

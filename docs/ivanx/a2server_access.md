@@ -34,7 +34,7 @@ behavior like invisible files.
 
 Unix-type computers can also use `scp` to copy files to and from A2SERVER;
 Windows computers can also do so in the command window by using `pscp` in
-[PuTTY][1]. The shared volumes are within /media/A2SHARED.
+[PuTTY][1]. The shared volumes are within /srv/A2SERVER.
 
 If you need to set the ProDOS file type of a file you have copied to A2SERVER,
 [log in to A2SERVER](a2server_commands.md) and use `afptype`.

@@ -36,9 +36,9 @@ processPath () {
         else
             IFS=''
             result=$(sudo dbd -r $sharepath | grep encoding)
-            f=$(echo $result | wc -l)
-            [[ $(echo $result | wc -w) == 0 ]] && f=0
-            [[ f -eq 1 && $(echo $result | grep APPLEDESKTOP) && $(grep MTOULOWER $sharepath/.AppleDesktop/.volinfo) ]] && (( f-- ))
+            f=$(wc -l <<< $result)
+            [[ $(wc -w <<< $result) == 0 ]] && f=0
+            [[ $f -eq 1 && $(grep AppleDesktop <<< "$result") && $(grep MTOULOWER $sharepath/.AppleDesktop/.volinfo) ]] && (( f-- ))
             if (( f == 0 )); then
                 echo "AppleDouble files have been updated for volume $sharepath."
             else
@@ -103,7 +103,10 @@ else
     sudo true
     if [[ $1 ]]; then
         sharepath=$(readlink -m $1)
-        processPath
+        # behavior change in 1.3.0: now defaults to mixed case
+        #   on a volume when specifying a folder and -v
+        #   (as opposed to defaulting to casefold:toupper previously)
+        processPath 1
     else
         grep ^/media /usr/local/etc/netatalk/AppleVolumes.default | \
             while read line; do

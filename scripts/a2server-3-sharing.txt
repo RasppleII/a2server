@@ -4,13 +4,7 @@
 # A2SERVER -- a virtual machine for sharing files to Apple II clients
 # by Ivan X, ivan@ivanx.com
 
-# Installs Netatalk 2.2.4 for debian/raspbian (Wheezy)
-# last update: 3-Mar-15
-
-# The lastest version of this document, and the ready-to-use premade
-# virtual machine, will be at http://appleii.ivanx.com .
-
-# Please send corrections and comments to ivan@ivanx.com
+# Installs Netatalk 2.2.4 for debian/raspbian (Wheezy or Jessie)
 
 # Thanks to Steven Hirsch, Geoff Body, Peter Wong, Tony Diaz, and others
 # at comp.sys.apple2 for the work they've done and insight they've
@@ -29,31 +23,57 @@ esac
 isRpi=
 [[ -f /usr/bin/raspi-config ]] && isRpi=1
 
-isDebian=
-[[ ( -f /etc/debian_version ) && ( $(cut -c 1-2 < /etc/debian_version) == "7." ) && ( $(uname -m) == "i686" ) ]] && isDebian=1
+isDebian_x86=
+[[ ( -f /etc/debian_version ) && ( $(cut -c 1 < /etc/debian_version) -ge 7 ) && ( $(uname -m) == "i686" ) ]] && isDebian_x86=1
+
+isJessie=
+[[ ( -f /etc/debian_version ) && ( $(cut -c 1-2 < /etc/debian_version) == "8." ) ]] && isJessie=1
 
 # skip this if already done
-if [[ -f /usr/local/etc/A2SERVER-version ]] && (( $(cat /usr/local/etc/A2SERVER-version) >= 101 )); then
+if [[ -f /usr/local/etc/A2SERVER-version ]] && (( $(head -c 3 /usr/local/etc/A2SERVER-version) >= 101 )); then
 
     echo "A2SERVER: Netatalk is already installed."
-
+    
 else
 
     echo "A2SERVER: Installing Netatalk (this will take a while)..."
-
-    # stop Netatalk if running (during upgrade)
-    [[ $(ps --no-headers -C afpd) ]] && sudo /etc/init.d/netatalk stop
-
+    
+    # stop Netatalk and samba if running (during upgrade)
+    if [[ $(ps --no-headers -C afpd) ]]; then
+        sudo /etc/init.d/netatalk stop
+        sudo /etc/init.d/samba stop &> /dev/null
+    fi
+    
     if [[ ! -f /tmp/a2server-packageReposUpdated ]]; then
         # prepare for installing packages
         sudo apt-get -y update
         touch /tmp/a2server-packageReposUpdated
     fi
 
+    getOldPackage () { 
+        for url in $@; do
+            pkgFile=${url##*/}
+            pkgName=${pkgFile%%_*}
+            if ! dpkg -l $pkgName 2> /dev/null | grep -q '^ii'; then
+                wget -qO /tmp/${url##*/} "$url"
+                sudo dpkg -i /tmp/${url##*/}
+                sudo apt-get clean
+                rm /tmp/${url##*/}
+            fi
+        done
+    }
+
     compileFromSource=1
-    while [[ $isRpi || $isDebian ]]; do
+    urls=
+    while [[ $isRpi || $isDebian_x86 ]]; do
         # Install runtime libraries needed by Netatalk
-        if [[ $(apt-cache search '^libdb4.8$') ]]; then
+        if [[ $isJessie ]]; then
+            if [[ $isRpi ]]; then
+                getOldPackage "http://mirrordirector.raspbian.org/raspbian/pool/main/d/db/libdb5.1_5.1.29-5_armhf.deb"
+            elif [[ $isDebian_x86 ]]; then
+                getOldPackage "http://ftp.debian.org/debian/pool/main/d/db/libdb5.1_5.1.29-5_i386.deb"
+            fi
+        elif [[ $(apt-cache search '^libdb4.8$') ]]; then
             sudo apt-get -y install libdb4.8
         elif [[ $(apt-cache search '^libdb5.1$') ]]; then
             sudo apt-get -y install libdb5.1
@@ -67,20 +87,27 @@ else
         else
             break
         fi
-        if [[ $(apt-cache search '^libgcrypt11$') ]]; then
+        
+        if [[ $isJessie ]]; then
+            if [[ $isRpi ]]; then
+                getOldPackage "http://mirrordirector.raspbian.org/raspbian/pool/main/libg/libgcrypt11/libgcrypt11_1.5.0-5+deb7u3_armhf.deb"
+            elif [[ $isDebian_x86 ]]; then
+                getOldPackage "http://ftp.debian.org/debian/pool/main/libg/libgcrypt11/libgcrypt11_1.5.0-5+deb7u3_i386.deb"
+            fi
+        elif [[ $(apt-cache search '^libgcrypt11$') ]]; then
             sudo apt-get -y install libgcrypt11
         else
             break
         fi
-
+        
         # install Netatalk
         if [[ $isRpi ]]; then
-            { wget -qO- /tmp/netatalk.tgz "http://appleii.ivanx.com/a2server/files/netatalk224-rpi.tgz" | sudo tar Pzx; } 2> /dev/null
-        elif [[ $isDebian ]]; then
+            { wget -qO- /tmp/netatalk.tgz "http://appleii.ivanx.com/a2server/files/netatalk224-rpi_wheezy.tgz" | sudo tar Pzx; } 2> /dev/null
+        elif [[ $isDebian_x86 ]]; then
             { wget -qO- /tmp/netatalk.tgz "http://appleii.ivanx.com/a2server/files/netatalk224-debian7_x86.tgz" | sudo tar Pzx; } 2> /dev/null
         fi
         sudo mandb &> /dev/null
-
+        
         [[ -f /usr/local/sbin/atalkd ]] && compileFromSource=
 
         break
@@ -89,50 +116,68 @@ else
     if [[ $compileFromSource ]]; then
         # Install development libraries needed by Netatalk
         sudo apt-get -y install build-essential
-        if [[ $(apt-cache search '^libdb4.8-dev$') ]]; then
+        sudo apt-get -y install libssl-dev
+        if [[ $isJessie ]]; then
+            if [[ $isRpi ]]; then
+                getOldPackage "http://mirrordirector.raspbian.org/raspbian/pool/main/d/db/libdb5.1-dev_5.1.29-5_armhf.deb"
+            elif [[ $isDebian_x86 ]]; then
+                getOldPackage "http://ftp.us.debian.org/debian/pool/main/d/db/libdb5.1-dev_5.1.29-5_i386.deb"
+            fi
+        elif [[ $(apt-cache search '^libdb4.8-dev$') ]]; then
             sudo apt-get -y install libdb4.8-dev
         elif [[ $(apt-cache search '^libdb5.1-dev$') ]]; then
             sudo apt-get -y install libdb5.1-dev
         else
-            echo "A2SERVER: WARNING: unknown version of libdb-dev is being installed"
+            echo "A2SERVER: WARNING: unknown version of libdb-dev is being installed."
             sudo apt-get -y install libdb-dev
         fi
-        sudo apt-get -y install libssl-dev
-        sudo apt-get -y install libgcrypt11-dev
+        if [[ $isJessie ]]; then
+            sudo apt-get -y install libgpg-error-dev
+            if [[ $isRpi ]]; then
+                getOldPackage "http://mirrordirector.raspbian.org/raspbian/pool/main/libg/libgcrypt11/libgcrypt11-dev_1.5.0-5+deb7u3_armhf.deb"
+            elif [[ $isDebian_x86 ]]; then
+                getOldPackage "http://ftp.debian.org/debian/pool/main/libg/libgcrypt11/libgcrypt11-dev_1.5.0-5+deb7u3_i386.deb"
+            fi
+        elif [[ $(apt-cache search '^libgcrypt11-dev$') ]]; then
+            sudo apt-get -y install libgcrypt11-dev
+        else
+            echo "A2SERVER: WARNING: unknown version of libgcrypt-dev is being installed."
+            sudo apt-get -y install $(apt-cache search '^libgcrypt.*dev$' | sort -r | head -1 | cut -d ' ' -f 1)
+        fi
         sudo apt-get clean
-
+        
         # get Netatalk
         rm -rf /tmp/netatalk &> /dev/null
         mkdir /tmp/netatalk
         cd /tmp/netatalk
-
+        
         wget -q "http://downloads.sourceforge.net/project/netatalk/netatalk/2.2.4/netatalk-2.2.4.tar.gz"
         tar zxf netatalk-2.2.4.tar.gz
         cd netatalk-2.2.4
-
+        
         # Patch the source so file dates are preserved during a GS/OS folder copy,
         #   and the AsanteTalk bridge consistently starts up in AppleTalk Phase 2
         #   and the Dayna bridge doesn't crash GS/OS
         # props to Steven Hirsch for these
         sed -i ':a;N;$!ba;s/case FILPBIT_ATTR :\n *change_mdate = 1;\n/case FILPBIT_ATTR :\n/g' etc/afpd/file.c
         sed -i 's/rtmp->rt_iface == iface/rtmp->rt_iface != iface/g' etc/atalkd/main.c
-
+    
         # prepare to build Netatalk
         ./configure --enable-debian --enable-ddp --enable-a2boot
-
+    
         # uninstall Netatalk if already installed
         [[ -f /usr/local/sbin/afpd ]] && sudo make uninstall
-
+        
         # compile and install Netatalk
         make
         sudo make install
-
+        
         # to remove the Netatalk source code (optional), type:
         cd
         rm -rf /tmp/netatalk
-    fi
+    fi    
 fi
-
+    
 # --- Configuring Netatalk
 
 echo "A2SERVER: Configuring Netatalk..."
@@ -175,10 +220,10 @@ if [[ ! $(grep '^- -ddp.*uams_randnum.so' /usr/local/etc/netatalk/afpd.conf) ]];
     # disable DHX (DHCAST128) on Raspberry Pi, which refuses uams if the config string is too long
     [[ -f /usr/bin/raspi-config ]] && dhx="" || dhx="uams_dhx.so,"
     echo -n -e \
-        "- -ddp -tcp -uamlist uams_guest.so,uams_clrtxt.so,uams_randnum.so" \
-        | sudo tee -a /usr/local/etc/netatalk/afpd.conf > /dev/null
+    "- -ddp -tcp -uamlist uams_guest.so,uams_clrtxt.so,uams_randnum.so" \
+    | sudo tee -a /usr/local/etc/netatalk/afpd.conf > /dev/null
     echo -e ",${dhx}uams_dhx2.so" \
-        | sudo tee -a /usr/local/etc/netatalk/afpd.conf > /dev/null
+    | sudo tee -a /usr/local/etc/netatalk/afpd.conf > /dev/null
 fi
 
 # replace home folder share and end of file mark with share placeholders
@@ -194,57 +239,151 @@ if [[ ! $(grep ^eth0 /usr/local/etc/netatalk/atalkd.conf) && ! $(grep ^wlan0 /us
     # needs -router and -zone to prevent GS/OS AppleShare CDEV crash when used
     # with Dayna or Asante bridges
     echo -e 'eth0 -router -phase 2 -net 1 -zone "A2SERVER"' \
-        | sudo tee -a /usr/local/etc/netatalk/atalkd.conf > /dev/null
+    | sudo tee -a /usr/local/etc/netatalk/atalkd.conf > /dev/null
 fi
 
 # Raspberry Pi
 if [[ $isRpi ]]; then
-    # blink LED upon netatalk startup so you know when to attach power to an AsanteTalk bridge
+    # blink LED upon netatalk startup
     if [[ ! $(grep 'led0' /etc/init.d/netatalk) ]]; then
         sudo sed -i ':a;N;$!ba;s/fi\n}/fi\n\n    # blink LED on Raspberry Pi\n    ([[ -e \/sys\/class\/leds\/ACT ]] \&\& led=ACT || led=led0; echo none > \/sys\/class\/leds\/$led\/trigger; for i in {1..20}; do echo 1 > \/sys\/class\/leds\/$led\/brightness; sleep 0.25; echo 0 > \/sys\/class\/leds\/$led\/brightness; sleep 0.25; done; echo mmc0 > \/sys\/class\/leds\/$led\/trigger) \&\n}/' /etc/init.d/netatalk
     fi
-
-    # set console port login to 4800 bps for usage with Apple II (using RPi console cable)
-    sudo sed -i 's/ttyAMA0 115200/ttyAMA0 4800/' /etc/inittab
-
-    # enable serial console login with USB-serial adapter
-    # 10-4-13: creates unwanted console messages if no adapter present,
-    #   and physical port isn't predictable with more than one adapter present, so
-    #   has been superseded by scanttyUSB supplied by A2CLOUD install
-    #if [[ ! $(grep 'ttyUSB0 19200' /etc/inittab) ]]; then
-    #    echo -e "\n\n#for USB-to-serial adapter with Prolific PL2303 chipset\nT1:23:respawn:/sbin/getty -L ttyUSB0 19200 vt100" | sudo tee -a /etc/inittab > /dev/null
-    #fi
 fi
 
+# 1.3.0: we are no longer setting up new GSFILES
 # set up GSFILES share (for GS data files, not GSOS system)
 # classic Mac OS file names are allowed (31 chars, mixed case, everything but colons)
-sudo sed -i \
-    's/^#share1/\/media\/A2SHARED\/GSFILES\ GSFILES ea:ad/' \
-    /usr/local/etc/netatalk/AppleVolumes.default
-[[ -d /media/A2SHARED/GSFILES ]] || mkdir -p /media/A2SHARED/GSFILES
+#sudo sed -i \
+#    's/^#share1/\/media\/A2SHARED\/GSFILES\ GSFILES ea:ad/' \
+#    /usr/local/etc/netatalk/AppleVolumes.default
 
-# set up A2FILES share (for ProDOS 8 files, and GS/OS system)
+# 1.3.0: if GSFILES is being shared, make directory if not there
+if grep -q '^/srv/A2SERVER/GSFILES' /usr/local/etc/netatalk/AppleVolumes.default; then
+    [[ -d /srv/A2SERVER/GSFILES ]] || mkdir -p /srv/A2SERVER/GSFILES;
+fi
+
+# prior to 1.3.0:
 # file names must be ProDOS 8 compliant (all caps, 15 chars, letters/numbers/periods only)
 # lowercase filenames will be converted to upper automatically
 # need for GS/OS system because it may refer to files by either upper or lower
-sudo sed -i \
-    's/^#share2/\/media\/A2SHARED\/A2FILES\ A2FILES options:prodos\ casefold:toupper ea:ad/' \
-    /usr/local/etc/netatalk/AppleVolumes.default
-[[ -d /media/A2SHARED/A2FILES ]] || mkdir -p /media/A2SHARED/A2FILES
-if [[ ! -d /media/A2SHARED/A2FILES/.AppleDesktop ]]; then
-    cd /media/A2SHARED/A2FILES
-    mkdir .AppleDesktop
-    ln -s .AppleDesktop .APPLEDESKTOP
+
+# 1.3.0+:
+# see if shared already uses ciopfs (case-insensitive file system), and convert if not
+# restore known GS/OS file paths to mixed case
+# set up ciopfs (case insensitive file system) for share
+if [[ -d /srv/A2SERVER/A2FILES && ! -d /srv/A2SERVER/.a2files ]]; then
+    echo "A2SERVER: Converting A2FILES to support mixed case..."
+    sudo /etc/init.d/netatalk stop &> /dev/null
+    sudo /etc/init.d/samba stop &> /dev/null
+    if ! command -v getfattr &> /dev/null; then
+        sudo apt-get -y install attr &> /dev/null
+        sudo apt-get clean
+    fi
+    rm /srv/A2SERVER/A2FILES/.APPLEDESKTOP 2> /dev/null
+    mkdir -p /tmp/netboot
+    a2FilesList="$(wget -qO- http://ivanx.com/a2server/files/A2FILES-list.txt)"
+    find /srv/A2SERVER/A2FILES -name '*' | tail -n +2 | tac | while read -d $'\n' thisFile; do
+        mixedCase="${thisFile##*/}"
+        gsosPath=$(grep -i "^${thisFile}$" <<< "$a2FilesList")
+        [[ $gsosPath ]] && mixedCase="${gsosPath##*/}"
+        sudo setfattr -n "user.filename" -v "$mixedCase" "$thisFile"
+        if [[ ${thisFile##*/} != $mixedCase ]]; then
+            echo -e "  renaming $thisFile to ${mixedCase}\n"
+        else
+            echo -e "  processing $thisFile\n"
+        fi
+        sudo mv "$thisFile" "${thisFile%/*}"/"$(tr [:upper:] [:lower:] <<< $mixedCase)" 2> /dev/null
+    done
+    mv /srv/A2SERVER/A2FILES /srv/A2SERVER/.a2files
+    mkdir /srv/A2SERVER/A2FILES
+    sudo sed -i 's/casefold:toupper //' /usr/local/etc/netatalk/AppleVolumes.default
+    sudo sed -i 's/^VOLCASEFOLD:.*/VOLCASEFOLD:/' /srv/A2SERVER/.a2files/.appledesktop/.volinfo
 fi
 
-# set up ADTDISKS share (ADTPro disk image folder, if A2CLOUD is installed)
+# 1.3.0: remove GSFILES if empty
+if grep -q '^/srv/A2SERVER/GSFILES' /usr/local/etc/netatalk/AppleVolumes.default; then
+    gsFilesContents=
+    if [[ -d /srv/A2SERVER/GSFILES ]]; then
+        gsFilesContents="$(find /srv/A2SERVER/GSFILES -not -path '*/\.*' | grep -v '^/srv/A2SERVER/GSFILES$' | grep -v '^/srv/A2SERVER/GSFILES/Network Trash Folder$' | grep -v '^/srv/A2SERVER/GSFILES/Temporary Items$')"
+        if [[ ! $gsFilesContents ]]; then
+            echo "A2SERVER: Removing empty GSFILES shared volume..."
+            sudo /etc/init.d/netatalk stop &> /dev/null
+            sudo /etc/init.d/samba stop &> /dev/null
+            sudo sed -i 's|^/srv/A2SERVER/GSFILES.*$|#share1|' /usr/local/etc/netatalk/AppleVolumes.default
+            sudo rm -r /srv/A2SERVER/GSFILES
+        else
+            echo "A2SERVER: GSFILES shared volume has files, leaving as is."
+        fi
+    fi
+fi
+
+# set up A2FILES case-insensitive share (for ProDOS 8 files, and GS/OS system)
+sudo sed -i \
+    's/^#share2/\/media\/A2SHARED\/A2FILES\ A2FILES options:prodos\ ea:ad/' \
+/usr/local/etc/netatalk/AppleVolumes.default
+[[ -d /srv/A2SERVER/A2FILES ]] || mkdir -p /srv/A2SERVER/A2FILES
+[[ -d /srv/A2SERVER/.a2files ]] || mkdir -p /srv/A2SERVER/.a2files
+
+# set up ciopfs
+if ! command -v ciopfs > /dev/null; then
+    echo "A2SERVER: Installing ciopfs (case insensitive file system)..."
+    cd /tmp
+    sudo apt-get -y install fuse libglib2.0-0 libattr1 libfuse2
+    if [[ $isRpi ]]; then
+        wget -qO- "http://appleii.ivanx.com/a2server/files/ciopfs-rpi.tgz" | sudo tar Pzx
+    elif [[ $isDebian_x86 ]]; then
+        wget -qO- "http://appleii.ivanx.com/a2server/files/ciopfs-debian7_x86.tgz" | sudo tar Pzx
+    fi
+    if [[ -f /etc/fuse.conf ]] && sudo grep -q user_allow_other /etc/fuse.conf; then
+        sudo sed -i 's/#user_allow_other/user_allow_other/' /etc/fuse.conf
+    else
+        echo "user_allow_other" | sudo tee /etc/fuse.conf > /dev/null
+    fi
+
+    if ! command -v ciopfs > /dev/null; then
+        if [[ ! -f /tmp/a2server-packageReposUpdated ]]; then
+            # prepare for installing packages
+            sudo apt-get -y update
+            touch /tmp/a2server-packageReposUpdated
+        fi
+        sudo apt-get -y install build-essential
+        sudo apt-get -y install libfuse-dev libglib2.0-dev libattr1-dev
+        sudo apt-get -y clean
+        cd /tmp
+        rm -rf /tmp/ciopfs &> /dev/null
+        mkdir /tmp/ciopfs
+        cd /tmp/ciopfs
+        wget -q -O ciopfs-0.4.tar.gz http://www.brain-dump.org/projects/ciopfs/ciopfs-0.4.tar.gz
+        tar zxf ciopfs-0.4.tar.gz
+        cd ciopfs*
+        make
+        sudo mv ciopfs /usr/local/bin
+        cd
+        rm -rf /tmp/ciopfs
+    fi
+    if ! grep -q '^ciopfs' /etc/fstab; then
+        echo "ciopfs#/srv/A2SERVER/.a2files /srv/A2SERVER/A2FILES fuse allow_other 0 0" | sudo tee -a /etc/fstab > /dev/null
+    fi
+    if ! mount | grep '^ciopfs.*A2FILES'; then
+        sudo ciopfs /srv/A2SERVER/.a2files /srv/A2SERVER/A2FILES -o allow_other
+    fi
+else
+    echo "A2SERVER: ciopfs (case insensitive file system) has already been installed."
+fi
+
+if [[ ! -d /srv/A2SERVER/A2FILES/.AppleDesktop ]]; then
+    cd /srv/A2SERVER/A2FILES
+    mkdir .AppleDesktop
+fi
+
+# set up ADTDISKS share (ADTPro disk image folder, if A2CLOUD is installed)    
 # classic Mac OS file names are allowed (31 chars, mixed case, everything but colons)
 if [[ -d /usr/local/adtpro/disks ]]; then # A2CLOUD/ADTPro installed
-    if [[ ! -d /media/A2SHARED/ADTDISKS ]]; then
-        ln -s /usr/local/adtpro/disks /media/A2SHARED/ADTDISKS
+    if [[ ! -d /srv/A2SERVER/ADTDISKS ]]; then
+        ln -s /usr/local/adtpro/disks /srv/A2SERVER/ADTDISKS
     fi
     if [[ ! $(grep ADTDISKS /usr/local/etc/netatalk/AppleVolumes.default) ]]; then
-        sudo sed -i 's@^# End of File@/media/A2SHARED/ADTDISKS ADTDISKS ea:ad\n\n# End of File@' /usr/local/etc/netatalk/AppleVolumes.default
+        sudo sed -i 's@^# End of File@/srv/A2SERVER/ADTDISKS ADTDISKS ea:ad\n\n# End of File@' /usr/local/etc/netatalk/AppleVolumes.default
     fi
 fi
 
@@ -264,12 +403,12 @@ if [[ -f /usr/local/etc/netatalk/afppasswd ]]; then
 else
 
     echo
-    echo "A2SERVER: Setting up AFP password 'apple2' for Apple II and Mac clients."
+    echo "A2SERVER: Setting up AFP password 'apple2' for Apple II and Mac clients..."
     # echo "A2SERVER: Enter 'apple2' or another password of up to eight characters."
-    echo
+    echo    
     # set registered user login using RandNum authentication
     sudo afppasswd -c
-    sudo sed -i 's/^pi.*$/pi:6170706C65320000:****************:********/' /usr/local/etc/netatalk/afppasswd
+    sudo sed -i "s/^\(${USER}\).*$/\1:6170706C65320000:****************:********/" /usr/local/etc/netatalk/afppasswd
     # while [[ ! $(sudo afppasswd -a $USER) ]]; do
     #     true
     # done
@@ -294,12 +433,12 @@ if [[ $kernelMajorRelease -eq 3 && $kernelMinorRelease -ge 12 && $kernelMinorRel
             if [[ $(sha1sum /lib/modules/$kernelRelease/kernel/net/appletalk/appletalk.ko | cut -f 1 -d ' ') != "ecb239fc084c36de93f6926e7749b80f6024f269" ]]; then
                 # stop Netatalk
                 sudo /etc/init.d/netatalk stop &> /dev/null
-                echo "A2SERVER: Deleting defective AppleTalk kernel module."
+                echo "A2SERVER: Deleting defective AppleTalk kernel module..."
                 sudo rmmod appletalk 2> /dev/null
                 sudo rm -r /lib/modules/$kernelRelease/kernel/net/appletalk
                 # disable single-user mode on Pi (other Linux can use Recovery boot)
                 if [[ $isRpi && $(grep ' single' /boot/cmdline.txt 2> /dev/null) ]]; then
-                    echo "A2SERVER: Disabling single-user mode for next boot."
+                    echo "A2SERVER: Disabling single-user mode for next boot..."
                     sudo sed -i 's/ single//' /boot/cmdline.txt
                     touch /tmp/singleUser # so note to restart can display following install
                 fi
@@ -323,8 +462,8 @@ echo "A2SERVER: Netatalk is installed, configured, and running."
 echo
 
 # if atalkd isn't running (no AppleTalk), and this is a Rasbperry Pi:
-if [[ ( ! $(ps aux | grep [a]talkd) ) && ( $isRpi ) ]]; then
-
+if [[ ( ! $(ps aux | grep [a]talkd) ) && ( $isRpi ) ]]; then    
+    
     # if AppleTalk module exists, try to load it
     if [[ -f /lib/modules/$kernelRelease/kernel/net/appletalk/appletalk.ko ]]; then # module present, but not loaded?
         sudo depmod
@@ -362,17 +501,8 @@ if [[ ( ! $(ps aux | grep [a]talkd) ) && ( $isRpi ) ]]; then
         rm /tmp/rpiUpdate 2> /dev/null
         if [[ ! $(ps aux | grep [a]talkd) ]]; then
             # use specific rpi-update commit (at https://github.com/Hexxeh/rpi-firmware/)
-            # from when AppleTalk was added/fixed, so we have a consistent firmware that
+            # from when AppleTalk was fixed, so we have a consistent firmware that
             # we're loading until the next proper release of Raspbian that includes it
-            #
-            # # 10-26-13: when AppleTalk was added to Raspbian:
-            # sudo rpi-update 9530adbe31fe6b8e05b3bd5cfadfc90f067f5362
-            # sudo modprobe appletalk 2> /dev/null
-            # if [[ $(lsmod | grep appletalk) ]]; then
-            #     # if it loaded, restart netatalk
-            #     sudo sed -i "s/ATALKD_RUN=no/ATALKD_RUN=yes/" /etc/default/netatalk; sudo /etc/init.d/netatalk restart
-            # fi
-            #
             # 07-23-14: when AppleTalk was fixed after kernel panics in Raspbian 2014-06-20 (kernel 3.12.22+)
             sudo rm /boot/.firmware_revision
             sudo rpi-update cfd9a203590737f9536de70a1e01db25a3e8e069

@@ -62,7 +62,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupWindowsSharing ]]; then
                 echo "A2SERVER: $sharename is already set up for Windows file sharing."
             else
                 echo "[$sharename]" | sudo tee -a /etc/samba/smb.conf > /dev/null
-                echo "    path = /media/A2SHARED/$sharename" | sudo tee -a /etc/samba/smb.conf > /dev/null
+                echo "    path = /srv/A2SERVER/$sharename" | sudo tee -a /etc/samba/smb.conf > /dev/null
                 echo "    browsable = yes" | sudo tee -a /etc/samba/smb.conf > /dev/null
                 echo "    guest ok = yes" | sudo tee -a /etc/samba/smb.conf > /dev/null
                 echo "    read only = no" | sudo tee -a /etc/samba/smb.conf > /dev/null

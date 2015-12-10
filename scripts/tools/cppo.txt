@@ -4,16 +4,17 @@
 """cppo: Copy or catalog one or all files from a ProDOS raw disk image.
 
 copy all files:
-    cppo [-ad|-e] imagefile target_directory
+    cppo [-uc] [-ad|-e] imagefile target_directory
 copy one file:
-    cppo [-ad|-e] imagefile /FULL/PRODOS/FILE/PATH target_path
+    cppo [-uc] [-ad|-e] imagefile /FULL/PRODOS/FILE/PATH target_path
 catalog image:
-    cppo -cat imagefile
+    cppo [-uc] -cat imagefile
 
 -ad : Create AppleDouble header files and preserve resource forks.
 -e  : Append ProDOS type and auxtype to filenames, and copy resource
       forks, for adding to ShrinkIt archives with Nulib2
       using its -e option.
+-uc : Copy GS/OS mixed case filenames as uppercase.
 
 Wildcard matching/globbing (*) is not supported.
 No verification or validation of the disk image is performed.
@@ -71,6 +72,7 @@ g.imageFile = None
 g.AD = 0
 g.EX = 0
 g.DIR = 0
+g.UC = 0
 g.silent = 0
 
 # functions
@@ -129,12 +131,29 @@ def getFileName(arg1, arg2):
     firstByte = readcharDec(g.imageData, start)
     entryType = (firstByte//16)
     nameLength = (firstByte - entryType*16)
-    return readchars(g.imageData, start+1, nameLength)
+    fileName = readchars(g.imageData, start+1, nameLength)
+    caseMask = getCaseMask(arg1, arg2)
+    if (not g.UC and caseMask != None):
+        for i in range(0, len(fileName)):
+            if (caseMask[i] == "1"):
+                fileName = (fileName[:i] +
+                            fileName[i].lower() + 
+                            fileName[(i+1):])
+    return fileName
+
+def getCaseMask(arg1, arg2):
+    start = getStartPos(arg1, arg2)
+    caseMaskDec = (readcharDec(g.imageData, start+28) +
+                   readcharDec(g.imageData, start+29)*256)
+    if (caseMaskDec < 32768):
+        return None
+    else:
+        return to_bin(caseMaskDec - 32768).zfill(15)
 
 def getFileType(arg1, arg2):
     start = getStartPos(arg1, arg2)
     return readcharHex(g.imageData, start+16)
-
+    
 def getKeyPointer(arg1, arg2):
     start = getStartPos(arg1, arg2)
     return (readcharDec(g.imageData, start+17) +
@@ -184,12 +203,29 @@ def getModifiedDate(arg1, arg2):
 def getVolumeName():
     return getWorkingDirName(2)
 
-def getWorkingDirName(arg1):
+def getWorkingDirName(arg1, arg2=None):
+    # arg1:block, arg2:casemask (optional)
     start = ( arg1 * 512 )
     firstByte = readcharDec(g.imageData, start+4)
     entryType = (firstByte//16)
     nameLength = (firstByte - entryType*16)
-    return readchars(g.imageData, start+5, nameLength)
+    workingDirName = readchars(g.imageData, start+5, nameLength)
+    if (entryType == 15): # volume directory, get casemask from header
+        caseMaskDec = (readcharDec(g.imageData, start+26) +
+                       readcharDec(g.imageData, start+27)*256)
+        if (caseMaskDec < 32768):
+            caseMask = None
+        else:
+            caseMask = to_bin(caseMaskDec - 32768).zfill(15)
+    else: # subdirectory, get casemask from arg2 (not available in header)
+        caseMask = arg2
+    if (not g.UC and caseMask != None):
+        for i in range(0, len(workingDirName)):
+            if (caseMask[i] == "1"):
+                workingDirName = (workingDirName[:i] +
+                                  workingDirName[i].lower() + 
+                                  workingDirName[(i+1):])
+    return workingDirName
 
 def getDirEntryCount(arg1):
     start = ( arg1 * 512 )
@@ -242,6 +278,9 @@ def copyBlock(arg1, arg2):
 
 def processDir(arg1, arg2=None, arg3=None, arg4=None, arg5=None):
     # arg1: dirBlock
+    # for key block (with directory header):
+    #    arg2: casemask (optional), arg3:None, arg4:None, arg5:None
+    # for secondary directory blocks (non-key block):
     # arg2/3/4/5: for non-key chunks: entryCount, entry#,
     #   workingDirName, processedEntryCount
 
@@ -250,7 +289,7 @@ def processDir(arg1, arg2=None, arg3=None, arg4=None, arg5=None):
     pe = None
     workingDirName = None
 
-    if arg2:
+    if arg3:
         entryCount = arg2
         e = arg3
         workingDirName = arg4
@@ -259,7 +298,7 @@ def processDir(arg1, arg2=None, arg3=None, arg4=None, arg5=None):
         e = 0
         pe = 0
         entryCount = getDirEntryCount(arg1)
-        workingDirName = getWorkingDirName(arg1).decode("L1")
+        workingDirName = getWorkingDirName(arg1, arg2).decode("L1")
         g.DIRPATH = (g.DIRPATH + "/" + workingDirName)
         if g.PDOSPATH_INDEX:
             if (g.PDOSPATH_INDEX == 1):
@@ -307,7 +346,7 @@ def processEntry(arg1, arg2):
             if g.PDOSPATH_SEGMENT:
                 g.PDOSPATH_INDEX += 1
                 g.PDOSPATH_SEGMENT = g.PDOSPATH[g.PDOSPATH_INDEX]
-            processDir(getKeyPointer(arg1, arg2))
+            processDir(getKeyPointer(arg1, arg2), getCaseMask(arg1, arg2))
             g.DIRPATH = g.DIRPATH.rsplit("/", 1)[0]
             if not g.PDOSPATH_INDEX:
                 g.targetDir = g.targetDir.rsplit("/", 1)[0]
@@ -366,7 +405,7 @@ def processEntry(arg1, arg2):
             if g.PDOSPATH_SEGMENT:
                 syncExit()
             g.targetName = None
-
+    
     #else:
         #print(g.activeFileName + " doesn't match " + g.PDOSPATH_SEGMENT)
 
@@ -507,7 +546,7 @@ def binToDec(arg1):
 # arg: binary string up to 8 bits
 # out: decimal value
     return to_dec([arg1])
-
+    
 def binToHex(arg1):
 # converts single-byte binary string (8 bits) value to hex
 # warning: no error checking
@@ -701,10 +740,10 @@ def to_bytes(val):
     else:
         raise Exception(
           "to_bytes() requires hex-ustr, int/long, or [bin-ustr]")
-
+    
 def shift(items):
     """Shift list items to left, losing the first item.
-
+    
     in : list
     out: list
     """
@@ -712,7 +751,7 @@ def shift(items):
         items[i] = items[i+1]
     del items[-1]
     return items
-
+    
 def s(string):
     """Perform local variable substution, e.g. 'total: {num} items'"""
     # http://stackoverflow.com/questions/2960772/
@@ -805,7 +844,11 @@ if (len(args) == 1):
     usage()
 
 if (args[1] == "-s"):
-    g.silent=1
+    g.silent = 1
+    args = args[1:] #shift
+
+if (args[1] == "-uc"):
+    g.UC = 1
     args = args[1:] #shift
 
 if (args[1] == "-ad"):
@@ -835,7 +878,7 @@ if not os.path.isfile(g.imageFile):
 g.imageData = loadFile(g.imageFile)
 
 if (len(args) == 4):
-    g.PDOSPATH = args[2].upper()
+    g.PDOSPATH = args[2]
     targetPath = args[3]
     if os.path.isdir(targetPath):
         g.targetDir = targetPath
@@ -881,3 +924,4 @@ else:
     processDir(2)
     if not g.DIR:
         syncExit()
+

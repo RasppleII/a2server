@@ -9,7 +9,7 @@
 # to download and execute, type:
 # wget appleii.ivanx.com/a2server/setup; source setup
 
-a2serverVersion="130"
+a2serverVersion="128d1"
 
 # Ensure URL we'll use ends in a /
 case "$A2SERVER_SCRIPT_URL" in
@@ -83,7 +83,7 @@ if [[ $updateRasppleII ]]; then
     [[ $0 == "-bash" ]] && return 0 || exit 0
 fi
 
-if { [[ -f /usr/local/etc/A2SERVER-version ]] && (( $(cat /usr/local/etc/A2SERVER-version) < 110 )); }; then
+if { [[ -f /usr/local/etc/A2SERVER-version ]] && (( $(head -c 3 /usr/local/etc/A2SERVER-version) < 110 )); }; then
     echo
     echo "WARNING: The current A2SERVER installer scripts haven't been tested for"
     echo "updating the earlier version of A2SERVER that you have. A fresh install"
@@ -212,7 +212,7 @@ if (( $doSetup )); then
         rm /tmp/a2server-packageReposUpdated &> /dev/null
 
         if [[ ! -f /usr/local/etc/A2SERVER-version ]] \
-            || (( $(cat /usr/local/etc/A2SERVER-version) < "$a2serverVersion" )); then
+            || (( $(head -c 3 /usr/local/etc/A2SERVER-version) < ${a2serverVersion:0:3} )); then
             echo "$a2serverVersion" | sudo tee /usr/local/etc/A2SERVER-version &> /dev/null
         fi
 
@@ -223,6 +223,7 @@ if (( $doSetup )); then
         kernelMajorRelease=$(cut -d '.' -f 1 <<< $kernelRelease)
         kernelMinorRelease=$(cut -d '.' -f 2 <<< $kernelRelease | sed 's/\(^[0-9]*\)[^0-9].*$/\1/')
 
+        echo
         # all done, see if AppleTalk is available and notify either way
         if [[ $(ps aux | grep [a]talkd) ]]; then
             echo "You now have a fully functional file server for Apple II clients."
@@ -249,7 +250,7 @@ if (( $doSetup )); then
             fi
             rm /tmp/rpiUpdate
             echo
-        elif [[ $kernelMajorRelease -eq 3 && $kernelMinorRelease -ge 12 ]]; then
+        elif [[ $kernelMajorRelease -eq 3 && $kernelMinorRelease -ge 12 && $kernelMinorRelease -le 15 ]]; then
             echo "A2SERVER is now configured, but Apple II clients cannot connect"
             echo "because of a kernel-crashing bug in Linux kernel 3.12 through 3.15."
             echo "You have kernel version $kernelMajorRelease.$kernelMinorRelease."

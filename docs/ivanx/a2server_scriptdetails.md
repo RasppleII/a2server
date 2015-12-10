@@ -21,7 +21,7 @@ themselves):
 
 [Storage setup](scripts/a2server-1-storage.txt) (runs during initial setup, skipped on subsequent runs)
 
-* Make the /media/A2SHARED directory
+* Make the /srv/A2SERVER directory
 
 
 [A2SERVER tools install](scripts/a2server-2-tools.txt) (always runs)
