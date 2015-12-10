@@ -3,18 +3,29 @@
 
 # --- Setting up the share volume
 
+# 1.3.0: move /media/A2SHARED (pre-1.3.0) to /srv/A2SERVER
+if [[ -d /media/A2SHARED ]]; then
+    echo "A2SERVER: Moving /media/A2SHARED to /srv/A2SERVER..."
+    sudo /etc/init.d/netatalk stop &> /dev/null
+    sudo /etc/init.d/samba stop &> /dev/null
+    [[ ! -d /srv ]] && sudo mkdir -p /srv
+    sudo mv /media/A2SHARED /srv/A2SERVER
+    sudo sed -i 's|/media/A2SHARED|/srv/A2SERVER|g' /usr/local/etc/netatalk/AppleVolumes.default
+    [[ -f /etc/samba/smbd.conf ]] && sudo sed -i 's|/media/A2SHARED|/srv/A2SERVER|g' /etc/samba/smbd.conf
+    
+fi
 
 # skip if we're already set up
-if [[ -d /media/A2SHARED ]]; then
+if [[ -d /srv/A2SERVER ]]; then
 
-    echo "A2SERVER: Shared disk is already prepared for use."
+    echo "A2SERVER: Shared volume is already prepared for use."
 
 else
 
-    echo "A2SERVER: Preparing the shared files disk..."
+    echo "A2SERVER: Preparing the shared files volume..."
 
-    sudo mkdir /media/A2SHARED
+    sudo mkdir /srv/A2SERVER
 
-    sudo chown $USER:$USER /media/A2SHARED
+    sudo chown $USER:$USER /srv/A2SERVER
 
 fi

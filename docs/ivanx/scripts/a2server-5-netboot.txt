@@ -6,15 +6,15 @@
 # program (for Apple IIe users, and IIgs users in ProDOS network mode).
 # It also can download and install GS/OS for a network boot configuration.
 
-gsosDir="/media/A2SHARED/A2FILES"
+gsosDir="/srv/A2SERVER/A2FILES"
 imagesDir=$gsosDir/GSOS.INSTALLER/IMAGES
 imageToolsDir=$gsosDir/GSOS.INSTALLER/IMAGE.TOOLS
 netInstallDir=$gsosDir/GSOS.INSTALLER/NET.INSTALL
 
-p8Dir="/media/A2SHARED/A2FILES"
+p8Dir="/srv/A2SERVER/A2FILES"
 diskToolsP8Dir=$p8Dir/DISK.TOOLS.P8
 
-commDir="/media/A2SHARED/A2FILES/COMM"
+commDir="/srv/A2SERVER/A2FILES/COMM"
 spectrumDir=$commDir/SPECTRUM
 protermDir=$commDir/PROTERM
 zlinkDir=$commDir/Z.LINK
@@ -116,7 +116,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
         mkatinit -gs -d -f     # GS/OS registered user and Guest starts up with SYSTEM/FINDER
         mkatinit -d -f guest   # ProDOS 8 Guest starts up with BASIC.SYSTEM (no registered user)
     
-        if [[ -f "/media/A2SHARED/A2FILES/SYSTEM/START.GS.OS" ]]; then
+        if [[ -f "/srv/A2SERVER/A2FILES/SYSTEM/START.GS.OS" ]]; then
             echo "A2SERVER: GS/OS has already been downloaded and installed."
             gsosInstall=1
         else

@@ -213,7 +213,7 @@ fi
 sudo sed -i \
 's/^#share1/\/media\/A2SHARED\/GSFILES\ GSFILES ea:ad/' \
 /usr/local/etc/netatalk/AppleVolumes.default
-[[ -d /media/A2SHARED/GSFILES ]] || mkdir -p /media/A2SHARED/GSFILES
+[[ -d /srv/A2SERVER/GSFILES ]] || mkdir -p /srv/A2SERVER/GSFILES
 
 # set up A2FILES share (for ProDOS 8 files, and GS/OS system)
 # file names must be ProDOS 8 compliant (all caps, 15 chars, letters/numbers/periods only)
@@ -222,9 +222,9 @@ sudo sed -i \
 sudo sed -i \
 's/^#share2/\/media\/A2SHARED\/A2FILES\ A2FILES options:prodos\ casefold:toupper ea:ad/' \
 /usr/local/etc/netatalk/AppleVolumes.default
-[[ -d /media/A2SHARED/A2FILES ]] || mkdir -p /media/A2SHARED/A2FILES
-if [[ ! -d /media/A2SHARED/A2FILES/.AppleDesktop ]]; then
-    cd /media/A2SHARED/A2FILES
+[[ -d /srv/A2SERVER/A2FILES ]] || mkdir -p /srv/A2SERVER/A2FILES
+if [[ ! -d /srv/A2SERVER/A2FILES/.AppleDesktop ]]; then
+    cd /srv/A2SERVER/A2FILES
     mkdir .AppleDesktop
     ln -s .AppleDesktop .APPLEDESKTOP
 fi
@@ -232,11 +232,11 @@ fi
 # set up ADTDISKS share (ADTPro disk image folder, if A2CLOUD is installed)    
 # classic Mac OS file names are allowed (31 chars, mixed case, everything but colons)
 if [[ -d /usr/local/adtpro/disks ]]; then # A2CLOUD/ADTPro installed
-    if [[ ! -d /media/A2SHARED/ADTDISKS ]]; then
-        ln -s /usr/local/adtpro/disks /media/A2SHARED/ADTDISKS
+    if [[ ! -d /srv/A2SERVER/ADTDISKS ]]; then
+        ln -s /usr/local/adtpro/disks /srv/A2SERVER/ADTDISKS
     fi
     if [[ ! $(grep ADTDISKS /usr/local/etc/netatalk/AppleVolumes.default) ]]; then
-        sudo sed -i 's@^# End of File@/media/A2SHARED/ADTDISKS ADTDISKS ea:ad\n\n# End of File@' /usr/local/etc/netatalk/AppleVolumes.default
+        sudo sed -i 's@^# End of File@/srv/A2SERVER/ADTDISKS ADTDISKS ea:ad\n\n# End of File@' /usr/local/etc/netatalk/AppleVolumes.default
     fi
 fi
 

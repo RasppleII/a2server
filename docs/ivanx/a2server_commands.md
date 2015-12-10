@@ -26,7 +26,7 @@ The default username is either "pi" for Raspberry Pi, and otherwise
 standard installation of Raspbian; you can use the
 [installer script](a2server_installer.md) to install A2SERVER.)
 
-Shared volumes can be found at /media/A2SHARED. Netatalk configuration files
+Shared volumes can be found at /srv/A2SERVER. Netatalk configuration files
 are in /usr/local/etc/netatalk.
 
 Once logged in, you can enter the following commands.

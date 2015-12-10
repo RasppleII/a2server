@@ -79,3 +79,6 @@
                  and TEACH are installed with netboot installation; minor bug
                  fixes and tweaks
                  [not released]
+
+128d1: Dec 2015: moved /media/A2SHARED to /srv/A2SERVER
+                 [not released]

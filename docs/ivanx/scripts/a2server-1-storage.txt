@@ -4,7 +4,7 @@
 
 
 # skip if we're already set up
-if [[ -d /media/A2SHARED ]]; then
+if [[ -d /srv/A2SERVER ]]; then
 
     echo "A2SERVER: Shared disk is already prepared for use."
     
@@ -12,8 +12,8 @@ else
     
     echo "A2SERVER: Preparing the shared files disk..."
     
-    sudo mkdir /media/A2SHARED
+    sudo mkdir /srv/A2SERVER
     
-    sudo chown $USER:$USER /media/A2SHARED
+    sudo chown $USER:$USER /srv/A2SERVER
 
 fi

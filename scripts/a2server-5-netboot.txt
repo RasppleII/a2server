@@ -13,15 +13,15 @@ case "$A2SERVER_SCRIPT_URL" in
 	*) scriptURL="${A2SERVER_SCRIPT_URL:-http://ivanx.com/a2server}/" ;;
 esac
 
-gsosDir="/media/A2SHARED/A2FILES"
+gsosDir="/srv/A2SERVER/A2FILES"
 imagesDir=$gsosDir/GSOS.Installer/Images
 imageToolsDir=$gsosDir/GSOS.Installer/Image.Tools
 netInstallDir=$gsosDir/GSOS.Installer/Net.Install
 
-p8Dir="/media/A2SHARED/A2FILES"
+p8Dir="/srv/A2SERVER/A2FILES"
 diskToolsP8Dir=$p8Dir/Disk.Tools.P8
 
-commDir="/media/A2SHARED/A2FILES/Comm"
+commDir="/srv/A2SERVER/A2FILES/Comm"
 spectrumDir=$commDir/Spectrum
 protermDir=$commDir/ProTERM
 zlinkDir=$commDir/Z.Link
