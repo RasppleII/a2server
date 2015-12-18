@@ -23,8 +23,9 @@ wget -O a2server-setup ${A2SERVER_SCRIPT_URL}setup/index.txt; source a2server-se
 ~~~
 
 A simple method for installing from a local subdirectory is to `cd` to it and
-then type `python -m SimpleHTTPServer`. Then export A2SERVER_SCRIPT_URL to
-"http://localhost:8000/" or use the IP address of the host machine on your LAN.
+then type `python -m SimpleHTTPServer`. Then
+`export A2SERVER_SCRIPT_URL="http://localhost:8000/"`
+or use the IP address of the host machine on your LAN instead of localhost.
 
 You should probably export A2SERVER_SCRIPT_URL in your .bashrc or whatever
 file configures your development environment.  Also be advised that as of

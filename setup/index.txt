@@ -9,7 +9,7 @@
 # to download and execute, type:
 # wget appleii.ivanx.com/a2server/setup; source setup
 
-a2serverVersion="128d1"
+a2serverVersion="128d2"
 
 # Ensure URL we'll use ends in a /
 case "$A2SERVER_SCRIPT_URL" in
@@ -216,7 +216,7 @@ if (( $doSetup )); then
             echo "$a2serverVersion" | sudo tee /usr/local/etc/A2SERVER-version &> /dev/null
         fi
 
-        source /usr/local/etc/a2server-aliases
+        source /usr/local/etc/a2serverrc
 
         # get Kernel release (e.g. 3.6.11+) and version (e.g. #557)
         kernelRelease=$(uname -r)

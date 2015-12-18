@@ -333,7 +333,8 @@ def processEntry(arg1, arg2):
     g.activeFileName = getFileName(arg1 ,arg2).decode("L1")
     g.activeFileSize = getFileLength(arg1, arg2)
 
-    if ((not g.PDOSPATH_INDEX) or (g.activeFileName == g.PDOSPATH_SEGMENT)):
+    if ((not g.PDOSPATH_INDEX) or
+        (g.activeFileName.upper() == g.PDOSPATH_SEGMENT.upper())):
 
         if (getStorageType(arg1, arg2) == 13): # if ProDOS directory
             if not g.PDOSPATH_INDEX:
