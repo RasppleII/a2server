@@ -9,7 +9,7 @@
 # to download and execute, type:
 # wget appleii.ivanx.com/a2server/setup; source setup
 
-a2serverVersion="128d2"
+a2serverVersion="128d3"
 
 # Ensure URL we'll use ends in a /
 case "$A2SERVER_SCRIPT_URL" in
@@ -266,9 +266,18 @@ if (( $doSetup )); then
             echo "by typing 'appletalk-on'."
             echo
         fi
+        
+        if [[ -f /tmp/noMacIP ]]; then
+            echo
+            echo "MacIP connections may be unavailable. If you know how, try"
+            echo "recompiling the AppleTalk kernel module with IPDDP options disabled."
+            echo
+            rm /tmp/noMacIP
+        fi
 
         if [[ -f /tmp/singleUser ]]; then
             if [[ ! $autoAnswerYes ]]; then
+                echo
                 echo "Your Raspberry Pi was started in single-user mode in order to"
                 echo -n "fix a problem. You should restart to operate normally. Restart now? "
                 read
@@ -279,6 +288,7 @@ if (( $doSetup )); then
                 echo "A2SERVER: Preparing to restart..."
                 while :; do sleep 60; done
             fi
+            rm /tmp/singleUser
             echo
         fi
 
