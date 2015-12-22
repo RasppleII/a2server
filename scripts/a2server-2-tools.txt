@@ -127,6 +127,11 @@ fi
 
 if ! command -v unzip >/dev/null; then
     echo "A2SERVER: Installing unzip..."
+    if [[ ! -f /tmp/a2server-packageReposUpdated ]]; then
+        # prepare for installing packages
+        sudo apt-get -y update
+        touch /tmp/a2server-packageReposUpdated
+    fi
 
     # Dependencies: unzip
     sudo apt-get -y install unzip
@@ -146,9 +151,14 @@ sudo wget -q -O /usr/local/bin/cppo "${scriptURL}scripts/tools/cppo.txt"
 sudo chmod ugo+x /usr/local/bin/cppo
 sudo wget -q -O /usr/local/etc/a2server-help.txt "${scriptURL}scripts/tools/a2server-help.txt"
 sudo wget -q -O /usr/local/etc/a2server-aliases "${scriptURL}scripts/tools/a2server-aliases.txt"
+sudo wget -q -O /usr/local/etc/a2serverrc "${scriptURL}scripts/tools/a2serverrc.txt"
 
-grep a2server-aliases /etc/bash.bashrc > /dev/null || \
-echo "source /usr/local/etc/a2server-aliases" | sudo tee -a /etc/bash.bashrc > /dev/null
+# 1.3.0: a2serverrc is now called from /etc/bash.bashrc,
+#   which in turn calls a2server-aliases
+grep 'a2server-aliases' /etc/bash.bashrc > /dev/null && \
+sudo sed -i 's/a2server-aliases/a2serverrc/' /etc/bash.bashrc
+grep 'a2serverrc' /etc/bash.bashrc > /dev/null || \
+echo "source /usr/local/etc/a2serverrc" | sudo tee -a /etc/bash.bashrc > /dev/null
 
 motd="/etc/motd"
 if [[ ! $(grep A2SERVER $motd) ]]; then

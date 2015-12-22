@@ -48,7 +48,13 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupWindowsSharing ]]; then
         sudo sed -i 's/^   workgroup = .*$/   workgroup = '$workgroup'/' /etc/samba/smb.conf 2> /dev/null
         sudo sed -i 's/^#   security = user/   security = user/' /etc/samba/smb.conf 2> /dev/null
 
-        grep ^/media /usr/local/etc/netatalk/AppleVolumes.default | cut -d" " -f2 \
+        # remove GSFILES if no longer serving it
+        if ! grep ^/srv/A2SERVER/GSFILES /usr/local/etc/netatalk/AppleVolumes.default; then
+            sudo sed -i ':a;N;$!ba;s#\n\[GSFILES\].*\[#\n[#' /etc/samba/smb.conf
+            sudo sed -i ':a;N;$!ba;s#\n\[GSFILES\].*$#\n#' /etc/samba/smb.conf
+        fi
+
+        grep ^/srv/A2SERVER /usr/local/etc/netatalk/AppleVolumes.default | cut -d" " -f2 \
             | while read sharename; do
             if [[ $(grep $sharename /etc/samba/smb.conf) ]]; then
                 echo "A2SERVER: $sharename is already set up for Windows file sharing."

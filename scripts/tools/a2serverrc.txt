@@ -1,0 +1,4 @@
+#! /bin/bash
+# vim: set tabstop=4 shiftwidth=4 expandtab filetype=sh:
+
+source /usr/local/etc/a2server-aliases

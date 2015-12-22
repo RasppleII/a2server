@@ -24,7 +24,7 @@ else
 
     echo "A2SERVER: Preparing the shared files volume..."
 
-    sudo mkdir /srv/A2SERVER
+    sudo mkdir -p /srv/A2SERVER
 
     sudo chown $USER:$USER /srv/A2SERVER
 

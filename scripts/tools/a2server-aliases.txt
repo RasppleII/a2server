@@ -24,8 +24,8 @@ alias showmac-wifi='ifconfig wlan0 | grep "HWaddr" | cut -dH -f2 | cut -c7-23'
 alias ifreset='sudo rm /etc/udev/rules.d/70-persistent-net.rules; echo Interfaces removed. You should system-restart now.'
 
 alias netatalk-stop="sudo /etc/init.d/netatalk stop; bonjour-off"
-alias netatalk-start="sudo /etc/init.d/netatalk start; bonjour-on"
-alias netatalk-restart="sudo /etc/init.d/netatalk restart; bonjour-on"
+alias netatalk-start="sudo /etc/init.d/netatalk start; bonjour-on; grep -q 'ATALKD_RUN=yes' /etc/default/netatalk"
+alias netatalk-restart="sudo /etc/init.d/netatalk restart; bonjour-on;  grep -q 'ATALKD_RUN=yes' /etc/default/netatalk"
 alias netatalk-off='sudo /etc/init.d/netatalk stop; bonjour-off; sudo update-rc.d -f netatalk remove &> /dev/null'
 alias netatalk-on='sudo update-rc.d netatalk defaults &> /dev/null; bonjour-on; sudo /etc/init.d/netatalk restart'
 
@@ -42,7 +42,7 @@ alias netatalk-wifi='sudo sed -i 's/^eth0/wlan0/' /usr/local/etc/netatalk/atalkd
 
 
 
-alias appletalk-off='sudo sed -i "s/ATALKD_RUN=yes/ATALKD_RUN=no/" /etc/default/netatalk; sudo /etc/init.d/netatalk restart'
+alias appletalk-off='sudo sed -i "s/ATALKD_RUN=yes/ATALKD_RUN=no/" /etc/default/netatalk; sudo killall macipgw > /dev/null; /etc/init.d/netatalk restart'
 alias appletalk-on='sudo sed -i "s/ATALKD_RUN=no/ATALKD_RUN=yes/" /etc/default/netatalk; sudo /etc/init.d/netatalk restart'
 
 

@@ -11,7 +11,7 @@
 #
 # -v will silently create a .volinfo file if none exists.
 # If a path is specified, only that volume is synced; otherwise, all
-# all paths in /media which appear in
+# all paths in /srv/A2SERVER which appear in
 # /usr/local/etc/netatalk/AppleVolumes.default are synced.
 
 processPath () {
@@ -108,7 +108,7 @@ else
         #   (as opposed to defaulting to casefold:toupper previously)
         processPath 1
     else
-        grep ^/media /usr/local/etc/netatalk/AppleVolumes.default | \
+        grep ^/srv/A2SERVER /usr/local/etc/netatalk/AppleVolumes.default | \
             while read line; do
             [[ $(echo $line | grep toupper) ]]; nocasefold=$?
             sharepath=$(echo $line | cut -d" " -f1)

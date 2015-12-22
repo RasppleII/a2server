@@ -49,7 +49,7 @@ else
     if [[ $1 ]]; then
         sharepath=$(readlink -m $1)
     else
-        sharepath=$(grep ^/media /usr/local/etc/netatalk/AppleVolumes.default | tail -1 | cut -d" " -f1)
+        sharepath=$(grep ^/srv/A2SERVER /usr/local/etc/netatalk/AppleVolumes.default | tail -1 | cut -d" " -f1)
     fi
 
     volinfo=$sharepath/.AppleDesktop/.volinfo

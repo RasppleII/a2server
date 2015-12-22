@@ -40,7 +40,7 @@ else
     
     # stop Netatalk and samba if running (during upgrade)
     if [[ $(ps --no-headers -C afpd) ]]; then
-        sudo /etc/init.d/netatalk stop
+        sudo /etc/init.d/netatalk stop &> /dev/null
         sudo /etc/init.d/samba stop &> /dev/null
     fi
     
@@ -186,6 +186,34 @@ else
         rm -rf /tmp/netatalk
     fi    
 fi
+
+# --- Install MacIPgw
+if ! command -v macipgw > /dev/null; then
+    echo "A2SERVER: Installing TCP over AppleTalk (MacIP)..."
+    
+    if [[ $isRpi ]]; then
+        wget -qO- "http://appleii.ivanx.com/a2server/files/macipgw-rpi.tgz" | sudo tar Pzx    
+    elif [[ $isDebian_x86 ]]; then
+        wget -qO- "http://appleii.ivanx.com/a2server/files/macipgw-debian7_x86.tgz" | sudo tar Pzx
+    fi
+    
+    if ! command -v macipgw > /dev/null; then
+        wd="$PWD"
+        sudo apt-get -y install build-essential
+        rm -rf /tmp/macipgw &> /dev/null
+        mkdir /tmp/macipgw
+        cd /tmp/macipgw
+        wget -qO macipgw-master.zip "https://github.com/zero2sixd/macipgw/archive/master.zip"
+        unzip macipgw-master.zip
+        cd macipgw-master
+        make
+        sudo make install
+        cd "$wd"
+        rm -rf /tmp/macipgw
+    fi
+else
+    echo "A2SERVER: TCP over AppleTalk (MacIP) has already been installed."
+fi
     
 # --- Configuring Netatalk
 
@@ -204,7 +232,13 @@ sudo sed -i 's/bin\/sh/bin\/bash/' /etc/init.d/netatalk
 sudo sed -i 's/#ATALKD_RUN=no/ATALKD_RUN=yes/' /etc/default/netatalk
 sudo sed -i 's/#ATALK_BGROUND=no/ATALK_BGROUND=yes/' /etc/default/netatalk
 if [[ ! $(grep 'kernelRelease' /etc/init.d/netatalk) ]]; then
-    sudo sed -i 's@\(\tif \[ x\"$ATALKD_RUN\)@\n\t# check for valid AppleTalk kernel module\n\t[[ $ATALKD_RUN == "yes" ]] \&\& { kernelRelease=$(uname -r); kernelMajorRelease=$(cut -d "." -f 1  <<< $kernelRelease); kernelMinorRelease=$(cut -d "." -f 2  <<< $kernelRelease | sed '"'"'s/\\(^[0-9]*\\)[^0-9].*$/\\1/'"'"'); kernelPatchRelease=$(cut -d "." -f 3- <<< $kernelRelease | sed '"'"'s/\\(^[0-9]*\\)[^0-9].*$/\\1/'"'"'); [[ ( $kernelMajorRelease -eq 3 \&\& $kernelMinorRelease -ge 12 \&\& $kernelMinorRelease -le 15 ) \&\& ( ! ( -f /usr/bin/raspi-config \&\& $kernelMinorRelease -eq 12 \&\& $kernelPatchRelease -ge 25 ) ) \&\& ( ( ! -f /lib/modules/$kernelRelease/kernel/net/appletalk/appletalk.ko ) || $(sha1sum /lib/modules/$kernelRelease/kernel/net/appletalk/appletalk.ko | cut -f 1 -d " ") != "ecb239fc084c36de93f6926e7749b80f6024f269" ) ]] \&\& { ATALKD_RUN=no; echo "[AppleTalk networking is not available.]" 1>\&2; } }\n\n\1@' /etc/init.d/netatalk
+    sudo sed -i 's@\(\tif \[ x\"$ATALKD_RUN\)@\n\t# check for valid AppleTalk kernel module\n\t[[ $ATALKD_RUN == "yes" ]] \&\& { kernelRelease=$(uname -r); kernelMajor=$(cut -d "." -f 1  <<< $kernelRelease); kernelMinor=$(cut -d "." -f 2  <<< $kernelRelease | sed '"'"'s/\\(^[0-9]*\\)[^0-9].*$/\\1/'"'"'); kernelPatch=$(cut -d "." -f 3- <<< $kernelRelease | sed '"'"'s/\\(^[0-9]*\\)[^0-9].*$/\\1/'"'"'); [[ ( $kernelMajor -eq 3 \&\& $kernelMinor -ge 12 \&\& $kernelMinor -le 15 ) \&\& ( ! ( -f /usr/bin/raspi-config \&\& $kernelMinor -eq 12 \&\& $kernelPatch -ge 25 ) ) \&\& ( ( ! -f /lib/modules/$kernelRelease/kernel/net/appletalk/appletalk.ko ) || $(sha1sum /lib/modules/$kernelRelease/kernel/net/appletalk/appletalk.ko | cut -f 1 -d " ") != "ecb239fc084c36de93f6926e7749b80f6024f269" ) ]] \&\& { ATALKD_RUN=no; echo "[AppleTalk networking is not available.]" 1>\&2; } }\n\n\1@' /etc/init.d/netatalk
+fi
+
+# enable MacIPgw support after launching atalkd
+if ! grep -q -i 'macipgw' /etc/init.d/netatalk; then
+    sudo sed -i ':a;N;$!ba;s@\(echo -n " atalkd"\)\(.*# prepare\)@\1\n\n    # start MacIPgw (TCP over AppleTalk) service\n    ps aux | grep -q "[m]acipgw" \&\& sudo killall macipgw 2> /dev/null\n    atalkd_interface=$(grep "^[^ #]" /etc/netatalk/atalkd.conf | tail -1 | cut -d " " -f 1)\n    sysctl -w net.ipv4.ip_forward=1 > /dev/null\n    macipgw -n 8.8.8.8 192.168.151.0 255.255.255.0\n    /sbin/iptables -t nat -A POSTROUTING -o ${atalkd_interface} -j MASQUERADE\n    /sbin/iptables -A FORWARD -i ${atalkd_interface} -o tun0 -m state --state RELATED,ESTABLISHED -j ACCEPT\n    /sbin/iptables -A FORWARD -i tun1 -o ${atalkd_interface} -j ACCEPT\n\n    echo -n " macipgw"\n\2@' /etc/init.d/netatalk
+    sudo sed -i 's@\(start-stop-daemon --stop --quiet --oknodo --exec /usr/local/sbin/atalkd.*$\)@\1\n                    echo -n " macipgw"\n            sudo killall macipgw 2> /dev/null@' /etc/init.d/netatalk
 fi
 
 # enable network boot support in netatalk
@@ -329,7 +363,7 @@ fi
 
 # set up A2FILES case-insensitive share (for ProDOS 8 files, and GS/OS system)
 sudo sed -i \
-    's/^#share2/\/media\/A2SHARED\/A2FILES\ A2FILES options:prodos\ ea:ad/' \
+    's/^#share2/\/srv\/A2SERVER\/A2FILES\ A2FILES options:prodos\ ea:ad/' \
 /usr/local/etc/netatalk/AppleVolumes.default
 [[ -d /srv/A2SERVER/A2FILES ]] || mkdir -p /srv/A2SERVER/A2FILES
 [[ -d /srv/A2SERVER/.a2files ]] || mkdir -p /srv/A2SERVER/.a2files
@@ -436,14 +470,15 @@ fi
 
 # get Kernel release (e.g. 3.6.11+) and version (e.g. #557)
 kernelRelease=$(uname -r)
-kernelMajorRelease=$(cut -d '.' -f 1  <<< $kernelRelease)
-kernelMinorRelease=$(cut -d '.' -f 2  <<< $kernelRelease | sed 's/\(^[0-9]*\)[^0-9].*$/\1/')
-kernelPatchRelease=$(cut -d '.' -f 3- <<< $kernelRelease | sed 's/\(^[0-9]*\)[^0-9].*$/\1/')
+kernelMajor=$(cut -d '.' -f 1  <<< $kernelRelease)
+kernelMinor=$(cut -d '.' -f 2  <<< $kernelRelease | sed 's/\(^[0-9]*\)[^0-9].*$/\1/')
+kernelPatch=$(cut -d '.' -f 3- <<< $kernelRelease | sed 's/\(^[0-9]*\)[^0-9].*$/\1/')
+kernelMajorMinor=$(cut -d '.' -f 1-2 <<< $kernelRelease)
 
 # if on kernel 3.12 through 3.15, check if we need to delete AppleTalk module to prevent kernel panics
-if [[ $kernelMajorRelease -eq 3 && $kernelMinorRelease -ge 12 && $kernelMinorRelease -le 15 ]]; then
+if [[ $kernelMajor -eq 3 && $kernelMinor -ge 12 && $kernelMinor -le 15 ]]; then
     # if not RPi, or RPi without ivanx-fixed AppleTalk module, delete the module
-    if [[ ! ( $isRpi && $kernelMinorRelease -eq 12 && $kernelPatchRelease -ge 25 ) ]]; then
+    if [[ ! ( $isRpi && $kernelMinor -eq 12 && $kernelPatch -ge 25 ) ]]; then
         if [[ -f /lib/modules/$kernelRelease/kernel/net/appletalk/appletalk.ko ]]; then
             if [[ $(sha1sum /lib/modules/$kernelRelease/kernel/net/appletalk/appletalk.ko | cut -f 1 -d ' ') != "ecb239fc084c36de93f6926e7749b80f6024f269" ]]; then
                 # stop Netatalk
@@ -459,6 +494,96 @@ if [[ $kernelMajorRelease -eq 3 && $kernelMinorRelease -ge 12 && $kernelMinorRel
                 fi
             fi
         fi
+    fi
+fi
+
+# if IPDDP module exists (e.g. Debian, but not Raspbian),
+#   AppleTalk kernel module can't work with MacIP
+if [[ -f "/lib/modules/$kernelRelease/kernel/drivers/net/appletalk/ipddp.ko" ]]; then
+    sudo /etc/init.d/netatalk stop &> /dev/null
+    sudo rmmod ipddp 2> /dev/null
+    sudo rmmod appletalk 2> /dev/null
+    echo "A2SERVER: Attempting to replace AppleTalk kernel module for MacIP use..."
+
+    sudo mv /lib/modules/$kernelRelease/kernel/net/appletalk/appletalk.ko /tmp
+
+    if [[ $isDebian_x86 ]]; then
+        echo "A2SERVER: Attempting to fetch AppleTalk kernel module for Debian x86..."
+        wget -qO /tmp/appletalk.tgz http://appleii.ivanx.com/a2server/files/appletalk-$kernelRelease-debian_x86.tgz
+        if [[ $? -eq 0 ]]; then
+            # if we found a prebuilt one on a2server site, install it and load it
+            sudo tar Pxf /tmp/appletalk.tgz
+            sudo depmod
+            sudo modprobe appletalk
+            if [[ $(lsmod | grep appletalk) ]]; then
+                # if it loaded, restart netatalk
+                sudo sed -i "s/ATALKD_RUN=no/ATALKD_RUN=yes/" /etc/default/netatalk; sudo /etc/init.d/netatalk restart &> /dev/null
+            else
+                # if we didn't load it successfully, remove it
+                sudo rm /lib/modules/$kernelRelease/kernel/net/appletalk/appletalk.ko 2> /dev/null
+            fi
+        fi
+    fi
+
+    if ! lsmod | grep -q appletalk; then
+        # we don't have a prebuilt AppleTalk module, try to build from source
+        if [[ ! -f /tmp/a2server-packageReposUpdated ]]; then
+            # prepare for installing packages
+            sudo apt-get -y update
+            touch /tmp/a2server-packageReposUpdated
+        fi
+
+        # kernel module compile adapted from from: http://askubuntu.com/a/338403/288003
+        for i in 1; do
+            echo "A2SERVER: Attempting to build AppleTalk kernel module..."
+            [[ -f /boot/config-$kernelRelease ]] || break
+            sudo apt-get -y install linux-headers-$kernelRelease linux-source-$kernelMajorMinor || break
+            sudo apt-get -y install build-essential
+            cd /usr/src
+            kernelSrc=$(find linux-source-${kernelMajorMinor}*)
+            if [[ ${kernelSrc##*.} == "xz" ]]; then
+                xzcat $kernelSrc | sudo tar x
+            elif [[ ${kernelSrc##*.} == "bz2" ]]; then
+                sudo tar jxf $kernelSrc
+            elif [[ ${kernelSrc##*.} == "gz" || ${kernelSrc##*.} == "tgz" ]]; then
+                sudo tar zxf $kernelSrc
+            fi
+            cd linux-source-$kernelMajorMinor
+            sudo make mrproper
+            sudo cp ../linux-headers-$kernelRelease/Module.symvers .
+            yes '' | sudo make oldconfig
+            sudo sed -i 's:^.*IPDDP.*$:# CONFIG_IPDDP is not set:gI' .config # disable IPDDP in kernel config
+            sudo sed -i '$!N; /^\(# CONFIG_IPDDP is not set\)\n\1$/!P; D' .config # delete repeated entries
+            sudo make prepare
+            sudo make modules_prepare
+            sudo make SUBDIRS=scripts/mod
+            sudo make SUBDIRS=net/appletalk modules
+            sudo cp net/appletalk/appletalk.ko /lib/modules/$kernelRelease/kernel/net/appletalk
+            sudo depmod
+            sudo modprobe appletalk
+            sudo rm -r /lib/modules/$kernelRelease/kernel/drivers/net/appletalk/ipddp.ko
+            sudo rmdir /lib/modules/$kernelRelease/kernel/drivers/net/appletalk 2> /dev/null
+
+            # clean up
+            cd
+            sudo rm /usr/src/$kernelSrc
+            sudo rm -r /usr/src/linux-source-$kernelMajorMinor
+            sudo apt-get -y purge linux-source-$kernelMajorMinor
+        done
+    fi
+
+    if [[ $(lsmod | grep appletalk) ]]; then
+        # if it loaded, make permanent and restart netatalk
+        sudo rm /lib/modules/$kernelRelease/kernel/drivers/net/appletalk/ipddp.ko 2> /dev/null
+        sudo sed -i 's:^.*IPDDP.*$:# CONFIG_IPDDP is not set:gI' /boot/config-$kernelRelease
+        sudo sed -i '$!N; /^\(# CONFIG_IPDDP is not set\)\n\1$/!P; D' /boot/config-$kernelRelease
+        sudo sed -i "s/ATALKD_RUN=no/ATALKD_RUN=yes/" /etc/default/netatalk; sudo /etc/init.d/netatalk restart &> /dev/null
+    else
+        # if we didn't load it successfully, put back the one that was there
+        echo "A2SERVER: Unable to replace AppleTalk module, replacing original."
+        sudo mv /tmp/appletalk.ko /lib/modules/$kernelRelease/kernel/net/appletalk 2> /dev/null
+        sudo depmod
+        touch /tmp/noMacIP # to notify at end of install
     fi
 fi
 
