@@ -28,6 +28,8 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupWindowsSharing ]]; then
                 touch /tmp/a2server-packageReposUpdated
             fi
 
+            # Dependency: samba for Windows/modern Macs
+            # FIXME: Figure out when smbpasswd moved and adjust this as necessary
             sudo apt-get -y install samba
             command -v smbpasswd >/dev/null || sudo apt-get -y install samba-common-bin
             sudo apt-get clean

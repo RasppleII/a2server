@@ -40,9 +40,10 @@ if ! command -v nulib2 > /dev/null; then
             touch /tmp/a2server-packageReposUpdated
         fi
 
-        sudo apt-get -y install build-essential
-        sudo apt-get -y install zlib1g-dev
+        # Dependencies: build-dep for nulib
+        sudo apt-get -y install build-essential zlib1g-dev
         sudo apt-get -y clean
+
         cd /tmp
         rm -rf /tmp/nulib &> /dev/null
         mkdir /tmp/nulib
@@ -78,6 +79,7 @@ if ! command -v unar > /dev/null; then
         touch /tmp/a2server-packageReposUpdated
     fi
 
+    # jessie and later: Just use the unar package
     if [[ $isJessie ]]; then
         sudo apt-get install -y unar
         sudo apt-get clean
@@ -85,8 +87,11 @@ if ! command -v unar > /dev/null; then
     
     if ! command -v unar > /dev/null; then
         if [[ $isRpi || $isDebian ]]; then
+
+            # Dependencies: for unar
             sudo apt-get -y install libgnustep-base1.22
             sudo apt-get clean
+
             if [[ $isRpi ]]; then
                 wget -qO- "http://appleii.ivanx.com/a2server/files/unar-rpi_wheezy.tgz" | sudo tar Pzx
             elif [[ $isDebian ]]; then
@@ -96,10 +101,11 @@ if ! command -v unar > /dev/null; then
 
         # If all else fails, compile from source.
         if ! command -v unar >/dev/null; then
-            sudo apt-get -y install build-essential
-            sudo apt-get -y install libgnustep-base-dev libz-dev libbz2-dev
-            sudo apt-get -y install libssl-dev libicu-dev unzip
+
+            # Dependencies: build-deps for unar
+            sudo apt-get -y install build-essential libgnustep-base-dev libz-dev libbz2-dev libssl-dev libicu-dev unzip
             sudo apt-get clean
+
             rm -rf /tmp/unar &> /dev/null
             mkdir /tmp/unar
             cd /tmp/unar
@@ -121,7 +127,9 @@ fi
 
 if ! command -v unzip >/dev/null; then
     echo "A2SERVER: Installing unzip..."
-sudo apt-get -y install unzip
+
+    # Dependencies: unzip
+    sudo apt-get -y install unzip
 else
     echo "A2SERVER: unzip has already been installed."
 fi

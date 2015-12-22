@@ -74,15 +74,19 @@ else
                 getOldPackage "http://ftp.debian.org/debian/pool/main/d/db/libdb5.1_5.1.29-5_i386.deb"
             fi
         elif [[ $(apt-cache search '^libdb4.8$') ]]; then
+            # FIXME: Obsolete?
             sudo apt-get -y install libdb4.8
         elif [[ $(apt-cache search '^libdb5.1$') ]]; then
+            # Dependencies: netatalk 2.2.4
             sudo apt-get -y install libdb5.1
         else
             break
         fi
         if [[ $(apt-cache search '^libssl1.0.0$') ]]; then
+            # Dependencies: netatalk 2.2.4
             sudo apt-get -y install libssl1.0.0
         elif [[ $(apt-cache search '^libssl0.9.8$') ]]; then
+            # FIXME: Obsolete?
             sudo apt-get -y install libssl0.9.8
         else
             break
@@ -95,6 +99,7 @@ else
                 getOldPackage "http://ftp.debian.org/debian/pool/main/libg/libgcrypt11/libgcrypt11_1.5.0-5+deb7u3_i386.deb"
             fi
         elif [[ $(apt-cache search '^libgcrypt11$') ]]; then
+            # Dependencies: netatalk 2.2.4
             sudo apt-get -y install libgcrypt11
         else
             break
@@ -114,9 +119,8 @@ else
     done
 
     if [[ $compileFromSource ]]; then
-        # Install development libraries needed by Netatalk
-        sudo apt-get -y install build-essential
-        sudo apt-get -y install libssl-dev
+        # Dependencies: build-deps for netatalk 2.2.4
+        sudo apt-get -y install build-essential libssl-dev
         if [[ $isJessie ]]; then
             if [[ $isRpi ]]; then
                 getOldPackage "http://mirrordirector.raspbian.org/raspbian/pool/main/d/db/libdb5.1-dev_5.1.29-5_armhf.deb"
@@ -124,11 +128,14 @@ else
                 getOldPackage "http://ftp.us.debian.org/debian/pool/main/d/db/libdb5.1-dev_5.1.29-5_i386.deb"
             fi
         elif [[ $(apt-cache search '^libdb4.8-dev$') ]]; then
+            # FIXME: Obsolete?
             sudo apt-get -y install libdb4.8-dev
         elif [[ $(apt-cache search '^libdb5.1-dev$') ]]; then
+            # Dependencies: build-deps for netatalk 2.2.4
             sudo apt-get -y install libdb5.1-dev
         else
             echo "A2SERVER: WARNING: unknown version of libdb-dev is being installed."
+            # Dependencies: build-deps for netatalk 2.2.4
             sudo apt-get -y install libdb-dev
         fi
         if [[ $isJessie ]]; then
@@ -139,9 +146,11 @@ else
                 getOldPackage "http://ftp.debian.org/debian/pool/main/libg/libgcrypt11/libgcrypt11-dev_1.5.0-5+deb7u3_i386.deb"
             fi
         elif [[ $(apt-cache search '^libgcrypt11-dev$') ]]; then
+            # Dependencies: build-deps for netatalk 2.2.4
             sudo apt-get -y install libgcrypt11-dev
         else
             echo "A2SERVER: WARNING: unknown version of libgcrypt-dev is being installed."
+            # Dependencies: build-deps for netatalk 2.2.4
             sudo apt-get -y install $(apt-cache search '^libgcrypt.*dev$' | sort -r | head -1 | cut -d ' ' -f 1)
         fi
         sudo apt-get clean
@@ -276,6 +285,7 @@ if [[ -d /srv/A2SERVER/A2FILES && ! -d /srv/A2SERVER/.a2files ]]; then
     sudo /etc/init.d/netatalk stop &> /dev/null
     sudo /etc/init.d/samba stop &> /dev/null
     if ! command -v getfattr &> /dev/null; then
+        # Dependency: for ciopfs conversion (setfattr)
         sudo apt-get -y install attr &> /dev/null
         sudo apt-get clean
     fi
@@ -328,7 +338,10 @@ sudo sed -i \
 if ! command -v ciopfs > /dev/null; then
     echo "A2SERVER: Installing ciopfs (case insensitive file system)..."
     cd /tmp
+
+    # Dependency: For ciopfs
     sudo apt-get -y install fuse libglib2.0-0 libattr1 libfuse2
+
     if [[ $isRpi ]]; then
         wget -qO- "http://appleii.ivanx.com/a2server/files/ciopfs-rpi.tgz" | sudo tar Pzx
     elif [[ $isDebian_x86 ]]; then
@@ -346,9 +359,11 @@ if ! command -v ciopfs > /dev/null; then
             sudo apt-get -y update
             touch /tmp/a2server-packageReposUpdated
         fi
-        sudo apt-get -y install build-essential
-        sudo apt-get -y install libfuse-dev libglib2.0-dev libattr1-dev
+
+        # Dependency: build-dep for ciopfs
+        sudo apt-get -y install build-essential libfuse-dev libglib2.0-dev libattr1-dev
         sudo apt-get -y clean
+
         cd /tmp
         rm -rf /tmp/ciopfs &> /dev/null
         mkdir /tmp/ciopfs
@@ -544,7 +559,10 @@ if [[ ! $(dpkg -l avahi-daemon 2> /dev/null | grep ^ii) || ! $(dpkg -l libnss-md
         sudo apt-get -y update
         touch /tmp/a2server-packageReposUpdated
     fi
+
+    # Dependency: Bonjour for netatalk
     sudo apt-get -y install avahi-daemon libnss-mdns &> /dev/null
+
 fi
 sudo sed -i 's/^\(hosts.*\)$/\1 mdns/' /etc/nsswitch.conf
 if [[ ! -f /etc/avahi/services/afpd.service && ! -f /etc/avahi/services/afpd.service_disabled ]]; then
