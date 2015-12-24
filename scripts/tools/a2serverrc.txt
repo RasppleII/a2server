@@ -1,4 +1,6 @@
 #! /bin/bash
 # vim: set tabstop=4 shiftwidth=4 expandtab filetype=sh:
 
+export A2SERVER_SCRIPT_URL="${A2SERVER_SCRIPT_URL:-http://ivanx.com/a2server/}"
+export A2SERVER_BINARY_URL="${A2SERVER_BINARY_URL:-http://ivanx.com/a2server/files/}"
 source /usr/local/etc/a2server-aliases

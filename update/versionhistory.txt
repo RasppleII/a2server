@@ -51,7 +51,7 @@
 1.2.4: Jul 2015: offer to download A2CLOUD disk contents onto A2FILES volume
 
 1.2.4+:Oct 2015: support for using A2SERVER scripts from a location other than
-                 appleii.ivanx.com/a2server for development purposes
+                 ivanx.com/a2server for development purposes
                  [not released]
 
 1.2.5: Nov 2015: netboot install option for GS/OS 6.0.2/3
@@ -80,5 +80,12 @@
                  fixes and tweaks
                  [not released]
 
-128d1: Dec 2015: moved /media/A2SHARED to /srv/A2SERVER
+1.2.8: Dec 2015: moved /media/A2SHARED to /srv/A2SERVER
+                 macipgw installed
+                 files subdirectory reorganized
+                 64-bit Debian binaries
+                 A2SERVER_SCRIPT_URL now works everywhere
+                 A2SERVER_BINARY_URL can now be specified
+                 self-hosted binaries fallback, or preferred with A2SERVER_NO_EXTERNAL
+                 better information at start and end of install
                  [not released]

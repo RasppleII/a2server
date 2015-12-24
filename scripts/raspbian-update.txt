@@ -1,0 +1,233 @@
+#!/bin/bash
+
+# raspbian-update
+# updates Raspbian to latest version, including NOOBS if installed
+
+[[ -f /usr/bin/raspi-config ]] && isRpi=1 || isRpi=
+
+if [[ ! $isRpi ]]; then
+    echo "This ain't a Raspberry Pi."
+    [[ $0 == "-bash" ]] && return 1 || exit 1
+fi
+
+skipRepoUpdate=
+autoYes=
+updateA2Cloud=
+updateA2Server=
+while [[ $1 ]]; do
+    if [[ $1 == "-r" ]]; then
+        shift
+        skipRepoUpdate="-r"
+    elif [[ $1 == "-y" ]]; then
+        shift
+        autoYes="-y"
+    elif [[ $1 == "-n" ]]; then
+        shift
+        noobsOnly="-n"
+    elif [[ $1 == "a2cloud" ]]; then
+        shift
+        updateA2Cloud=1
+    elif [[ $1 == "a2server" ]]; then
+        shift
+        updateA2Server=1
+    elif [[ $1 ]]; then
+        echo "options:"
+        echo "-y: auto-answer yes to all prompts and don't prompt for restart"
+        echo "-r: don't update package repositories"
+        echo "-n: update NOOBS only; don't update Raspbian"
+        echo "a2cloud : update A2CLOUD when complete"
+        echo "a2server: update A2SERVER when complete"
+        [[ $0 == "-bash" ]] && return 1 || exit 1
+    fi
+done
+
+noobs=
+readarray -t partitions < <(sudo fdisk -l | grep '^/dev')
+if [[ \
+  ${partitions[0]:0:14} == "/dev/mmcblk0p1" && ${partitions[0]:57:2} == " e" &&
+  ${partitions[1]:0:14} == "/dev/mmcblk0p2" && ${partitions[1]:57:2} == "85" &&
+  ${partitions[2]:0:14} == "/dev/mmcblk0p3" && ${partitions[2]:57:2} == "83" &&
+  ${partitions[3]:0:14} == "/dev/mmcblk0p5" && ${partitions[3]:57:2} == " c" &&
+  ${partitions[4]:0:14} == "/dev/mmcblk0p6" && ${partitions[4]:57:2} == "83" ]]; then    
+    noobs=" and the NOOBS install manager"
+fi
+
+if [[ ! $autoYes ]]; then
+    echo
+    echo "You are about to update your SD card to the latest version of the"
+    echo "Raspbian operating system${noobs}."
+    echo
+    echo "This may take an hour or more, and will require restarting when complete."
+    echo "You might want a backup before continuing in case it doesn't go as planned."
+    echo
+    echo -n "Update Raspbian? "
+    read
+    if [[ ${REPLY:0:1} != "Y" && ${REPLY:0:1} != "y" ]]; then
+        [[ $0 == "-bash" ]] && return 2 || exit 2
+    fi
+fi
+
+origDir="$PWD"
+cd /tmp
+
+if [[ ! $skipRepoUpdate ]]; then
+    echo "Updating package repositories..."
+    sudo apt-get -y update > /dev/null
+else
+    echo "Not updating package repositories..."
+    echo
+fi
+
+if [[ ! $noobsOnly ]]; then
+    { cd /tmp; sudo apt-get -y autoremove; sudo apt-get -y autoclean; sudo apt-get -y clean; } > /dev/null
+    freeSpace=$(df / | tail -1 | awk '{ print $4 }')
+    if (( $freeSpace < 400000 )); then
+        if dpkg -l | grep -q wolfram-engine; then    
+            if [[ ! $autoYes ]]; then
+                echo "In order to create enough space on your SD card to upgrade,"
+                echo "the Wolfram Language and Mathematica software packages must be removed."
+                echo "If you don't know what these are, this won't affect you at all."
+                echo
+                echo -n "Remove Wolfram software? "
+                read
+                if [[ ${REPLY:0:1} != "Y" && ${REPLY:0:1} != "y" ]]; then
+                    [[ $0 == "-bash" ]] && return 2 || exit 2
+                fi
+                sudo rm /opt/Wolfram/WolframEngine/10.0/SystemFiles/Java/Linux-ARM 2> /dev/null
+                sudo apt-get -y purge wolfram-engine
+            else
+                echo "Removing Wolfram software due to space constraints..."
+                sudo rm /opt/Wolfram/WolframEngine/10.0/SystemFiles/Java/Linux-ARM 2> /dev/null
+                sudo apt-get -y purge wolfram-engine
+            fi
+        else
+            echo "You don't have enough free space on your SD card to upgrade."
+            echo "Sorry, man. Delete some stuff or get a bigger card."
+            [[ $0 == "-bash" ]] && return 1 || exit 1
+        fi
+    fi
+
+    { cd /tmp; sudo apt-get -y autoremove; sudo apt-get -y autoclean; sudo apt-get -y clean; } > /dev/null
+    dpkg -l | grep -q a2pi && sudo apt-get -y --force-yes install a2pi
+    dpkg -l | grep -q apple2user && sudo apt-get -y --force-yes install apple2user gsport
+    if dpkg -l | grep -q wolfram-engine; then
+        sudo rm /opt/Wolfram/WolframEngine/10.0/SystemFiles/Java/Linux-ARM 2> /dev/null
+        if [[ $freeSpace -lt 750000 && $(apt-get -s install wolfram-engine | grep upgraded) ]]; then
+            sudo apt-get -y purge wolfram-engine
+            { cd /tmp; sudo apt-get -y autoremove; sudo apt-get -y autoclean; sudo apt-get -y clean; } > /dev/null
+        fi
+        sudo apt-get -y install wolfram-engine
+        { cd /tmp; sudo apt-get -y autoremove; sudo apt-get -y autoclean; sudo apt-get -y clean; } > /dev/null
+    fi
+    sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" upgrade
+    { cd /tmp; sudo apt-get -y autoremove; sudo apt-get -y autoclean; sudo apt-get -y clean; } > /dev/null
+    sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" dist-upgrade
+    { cd /tmp; sudo apt-get -y autoremove; sudo apt-get -y autoclean; sudo apt-get -y clean; } > /dev/null
+    sudo apt-get -y install raspberrypi-ui-mods
+    { cd /tmp; sudo apt-get -y autoremove; sudo apt-get -y autoclean; sudo apt-get -y clean; } > /dev/null
+fi
+
+if [[ $noobs ]]; then
+    echo "Updating NOOBS..."
+
+    # update Partition 3
+    mkdir -p /tmp/p3
+    sudo mount /dev/mmcblk0p3 /tmp/p3
+    sudo rm -rf /tmp/p3/os/* 2> /dev/null
+    if grep -q 'Raspple II' /tmp/p3/installed_os.json; then
+        echo "Downloading Raspple II lite..."
+        noobsUrl="ivanx.com/rasppleii/files/RasppleII_lite.zip"
+        noobsOSurl="ivanx.com/rasppleii/noobs-os"
+        distDir="Raspple_II"
+        sudo mkdir -p /tmp/p3/os/$distDir
+        sudo sed -i 's:/Raspbian:/Raspple_II:' /tmp/p3/installed_os.json
+        sudo wget -qO /tmp/p3/icon.png $noobsOSurl/Raspple_II.png
+        { wget -qO- $noobsOSurl/slidesAB.tar | sudo tar -C /tmp/p3/os/$distDir -x; } &> /dev/null
+    else
+        echo "Downloading NOOBS lite..."
+        noobsRoot="downloads.raspberrypi.org/NOOBS_lite/images/"
+        noobsDir=$(wget -qO- $noobsRoot | grep '^<tr><td' | tail -1 | grep -P -o 'href=".*?"' | cut -c 6- | tr -d '"')
+        noobsUrl=$noobsRoot$noobsDir$(wget -qO- $noobsRoot$noobsDir | grep -P -o 'href=".*.zip"' | cut -c 6- | tr -d '"')
+        noobsOSurl="downloads.raspberrypi.org/raspbian"
+        distDir="Raspbian"
+        sudo mkdir -p /tmp/p3/os/$distDir
+        sudo wget -qO /tmp/p3/icon.png $noobsOSurl/Raspbian.png
+        { wget -qO- $noobsOSurl/marketing.tar | sudo tar -C /tmp/p3/os/$distDir -x; } &> /dev/null
+    fi
+    sudo rm -rf /tmp/p3/cache 2> /dev/null
+    releaseDate=$(wget -qO- $noobsOSurl/os.json | grep 'release_date' | cut -f 4 -d '"')
+    sudo sed -i 's/"release_date".*$/"release_date" : "'$releaseDate'"/' /tmp/p3/installed_os.json
+    sudo sed -i 's/keyboard_layout=gb/keyboard_layout=us/' /tmp/p3/noobs.conf
+    sudo sed -i 's:/mnt/:/settings/:' /tmp/p3/installed_os.json
+    sudo sed -i 's@"icon".*,@"icon" : "/settings/os/'$distDir'/icon.png",@' /tmp/p3/installed_os.json
+    sudo cp /tmp/p3/icon.png /tmp/p3/os/$distDir
+    sudo wget -qO /tmp/p3/os/$distDir/os.json $noobsOSurl/os.json
+    sudo wget -qO /tmp/p3/os/$distDir/partition_setup.sh $noobsOSurl/partition_setup.sh
+    sudo wget -qO /tmp/p3/os/$distDir/partitions.json $noobsOSurl/partitions.json
+    sudo umount /tmp/p3
+    rmdir /tmp/p3
+
+    # update Partition 1
+    mkdir -p /tmp/p1
+    sudo mount /dev/mmcblk0p1 /tmp/p1
+    wget -qO /tmp/noobs_lite.zip $noobsUrl
+    sudo rm -rf /tmp/p1/*
+    sudo unzip -d /tmp/p1 /tmp/noobs_lite.zip
+    sudo sed -i 's/^runinstaller //' /tmp/p1/recovery.cmdline
+    sudo sed -i 's/silentinstall//' /tmp/p1/recovery.cmdline
+    grep -q 'keyboard=us' /tmp/p1/recovery.cmdline || sudo sed -i '1 s/^\(.*\)$/\1 keyboard=us/' /tmp/p1/recovery.cmdline
+    grep -q 'disablesafemode' /tmp/p1/recovery.cmdline || sudo sed -i '1 s/^\(.*\)$/\1 disablesafemode/' /tmp/p1/recovery.cmdline
+    sudo umount /tmp/p1
+    rmdir /tmp/p1
+        
+    sudo sed -i 's/\(Raspple II release.*[^u]$\)/\1u/' /etc/issue
+fi
+
+echo
+echo "*** Raspbian update completed. ***"
+echo
+
+cd /tmp
+
+if [[ $updateA2Cloud ]]; then
+    wget -qO /tmp/a2cloud-setup ivanx.com/a2cloud/setup/
+    source /tmp/a2cloud-setup -y -r noSetGroups
+    if acmd -g /usr/share/gsport/disks/GSport\ Internet\ Starter\ Kit.2mg SYSTEM/FONTS/SIS.4.10 &> /dev/null; then
+        wget -qO /tmp/ua2.txt ivanx.com/rasppleii/files/a/ua2.txt
+        source /tmp/ua2.txt
+    fi
+    echo
+    echo "*** A2CLOUD update completed. ***"
+    echo
+fi
+
+cd /tmp
+
+if [[ $updateA2Server ]]; then
+    wget -q -O /tmp/a2server-setup ivanx.com/a2server/setup/
+    if ps aux | grep -q [s]mbd; then
+        source /tmp/a2server-setup -y -r -w
+    else
+        source /tmp/a2server-setup -y -r
+    fi
+    echo
+    echo "*** A2SERVER update completed. ***"
+    echo
+fi
+
+cd "$origDir"
+
+if [[ ! $autoYes ]]; then
+    echo
+    echo
+    echo "Your system has been updated and needs to reboot to use its new software."
+    echo
+    echo -n "Reboot now (recommended)? "
+    read
+    if [[ ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
+        sudo shutdown -r now
+    fi
+else
+    echo "*** raspbian-update completed. ***"
+    sudo shutdown -r now
+fi

@@ -12,6 +12,12 @@ case "$A2SERVER_SCRIPT_URL" in
 	*/) scriptURL="$A2SERVER_SCRIPT_URL" ;;
 	*) scriptURL="${A2SERVER_SCRIPT_URL:-http://ivanx.com/a2server}/" ;;
 esac
+case "$A2SERVER_BINARY_URL" in
+	*/) binaryURL="$A2SERVER_BINARY_URL" ;;
+	*) binaryURL="${A2SERVER_BINARY_URL:-http://ivanx.com/a2server/files}/" ;;
+esac
+useExternalURL=1
+[[ $A2SERVER_NO_EXTERNAL ]] && useExternalURL=
 
 gsosDir="/srv/A2SERVER/A2FILES"
 imagesDir=$gsosDir/GSOS.Installer/Images
@@ -72,11 +78,18 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
             echo "A2SERVER: Downloading Apple II Boot Blocks..."
             cd /tmp/netboot
             
-            wget --max-redirect 0 -qO Disk_7_of_7-Apple_II_Setup.sea.bin ${gsosURL}Disk_7_of_7-Apple_II_Setup.sea.bin
-            if (( $? != 0 )); then
-                wget -qO Disk_7_of_7-Apple_II_Setup.sea.bin ${gsosBackupURL}Disk_7_of_7-Apple_II_Setup.sea.bin
+            if [[ $useExternalURL ]]; then
+                wget --max-redirect 0 -qO Disk_7_of_7-Apple_II_Setup.sea.bin ${gsosURL}Disk_7_of_7-Apple_II_Setup.sea.bin
+                unar -k skip Disk_7_of_7-Apple_II_Setup.sea.bin &> /dev/null
+                if (( $? != 0 )); then
+                    wget -qO Disk_7_of_7-Apple_II_Setup.sea.bin ${gsosBackupURL}Disk_7_of_7-Apple_II_Setup.sea.bin
+                    unar -k skip Disk_7_of_7-Apple_II_Setup.sea.bin &> /dev/null
+                fi
             fi
-            unar -k skip Disk_7_of_7-Apple_II_Setup.sea.bin &> /dev/null
+            if [[ ! -f 'Disk 7 of 7-Apple II Setup.sea' ]]; then
+                wget -qO Disk_7_of_7-Apple_II_Setup.sea.bin ${binaryURL}external/appleii/gsos601/Disk_7_of_7-Apple_II_Setup.sea.bin
+                unar -k skip Disk_7_of_7-Apple_II_Setup.sea.bin &> /dev/null
+            fi
             truncate -s 819284 'Disk 7 of 7-Apple II Setup.sea'
             dd if='Disk 7 of 7-Apple II Setup.sea' of=APPLE2SETUP.HDV bs=84 skip=1 2> /dev/null
                 
@@ -234,21 +247,38 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                 afpsync -v $gsosDir > /dev/null
     
                 for diskname in ${diskNames[@]}; do
-                    outfile="$imagesDir/$diskname"
+                    outfile="$imagesDir/$diskname.po"
                     (( activeDisk++ ))
                     echo "A2SERVER: Disk ${activeDisk} of ${#diskNames[@]}: $diskname"
                     if (( $gsosInstall == 1 )); then
-                        wget --max-redirect 0 -qO "Disk_${activeDisk}_of_7-$diskname.sea.bin" "${gsosURL}Disk_${activeDisk}_of_7-$diskname.sea.bin"
-                        if (( $? != 0 )); then
-                            wget -qO "Disk_${activeDisk}_of_7-$diskname.sea.bin" "${gsosBackupURL}Disk_${activeDisk}_of_7-$diskname.sea.bin"
+                        if [[ $useExternalURL ]]; then
+                            wget --max-redirect 0 -qO "Disk_${activeDisk}_of_7-${diskname}.sea.bin" "${gsosURL}Disk_${activeDisk}_of_7-${diskname}.sea.bin"
+                            unar -k skip "Disk_${activeDisk}_of_7-${diskname}.sea.bin" &> /dev/null
+                            if [[ ! -f "Disk ${activeDisk} of 7-${diskname}.sea" ]]; then
+                                wget -qO "Disk_${activeDisk}_of_7-${diskname}.sea.bin" "${gsosBackupURL}Disk_${activeDisk}_of_7-${diskname}.sea.bin"
+                                unar -k skip "Disk_${activeDisk}_of_7-${diskname}.sea.bin" &> /dev/null
+                            fi
                         fi
-                        unar -k skip "Disk_${activeDisk}_of_7-$diskname.sea.bin" &> /dev/null
+                        if [[ ! -f "Disk ${activeDisk} of 7-${diskname}.sea" ]]; then
+                            wget -qO "Disk_${activeDisk}_of_7-${diskname}.sea.bin" "${binaryURL}external/appleii/gsos601/Disk_${activeDisk}_of_7-${diskname}.sea.bin"
+                            unar -k skip "Disk_${activeDisk}_of_7-${diskname}.sea.bin" &> /dev/null
+                        fi
                         truncate -s 819284 "Disk ${activeDisk} of 7-${diskname}.sea"
                         dd if="Disk ${activeDisk} of 7-${diskname}.sea" of=${outfile} bs=84 skip=1 &> /dev/null
                     elif (( $gsosInstall == 2 )); then
-                        wget -qO $outfile "$gsosURL/IIGS%20System%206.0.2%20-%20Disk%20${activeDisk}%20${diskWebNames[$activeDisk-1]}.po"
+                        if [[ $useExternalURL ]]; then
+                            wget -qO $outfile "$gsosURL/IIGS%20System%206.0.2%20-%20Disk%20${activeDisk}%20${diskWebNames[$activeDisk-1]}.po"
+                        fi
+                        if [[ $? -ne 0 || ! -f $outfile ]]; then
+                            wget -qO $outfile "${binaryURL}external/appleii/gsos602/$diskname.po"
+                        fi
                     elif (( $gsosInstall == 3 )); then
-                        wget -qO $outfile "$gsosURL/$diskname.po"
+                        if [[ $useExternalURL ]]; then
+                            wget -qO $outfile "$gsosURL/$diskname.po"
+                        fi
+                        if [[ $? -ne 0 || ! -f $outfile ]]; then
+                            wget -qO $outfile "${binaryURL}external/appleii/gsos603/$diskname.po"
+                        fi
                     fi
                     cppo -s -ad $outfile $netInstallDir 2> /dev/null
                 done
@@ -358,8 +388,14 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
             else
                 echo
                 cd /tmp/netboot
-                wget -qO Asimov.shk http://www.ninjaforce.com/downloads/Asimov.shk
-                nulib2 -x -s Asimov.shk > /dev/null
+                if [[ $useExternalURL ]]; then
+                    wget -qO Asimov.shk http://www.ninjaforce.com/downloads/Asimov.shk
+                    nulib2 -x -s Asimov.shk &> /dev/null
+                fi
+                if [[ ! -d Asimov ]]; then
+                    wget -qO Asimov.shk ${binaryURL}external/appleii/Asimov.shk
+                    nulib2 -x -s Asimov.shk &> /dev/null
+                fi
                 cp -p Asimov/Asimov $imageToolsDir/Asimov
                 afpsync -v $gsosDir > /dev/null
                 cat Asimov/Asimov_rsrc_ >> $imageToolsDir/.AppleDouble/Asimov
@@ -372,14 +408,22 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                 echo " is already installed."
             else
                 echo
-                cd /tmp/netboot
-                wget -qO gshk.sea http://web.archive.org/web/20131031160750/http://nulib.com/library/gshk11.sea
-                #wget -qO gshk.sea http://www.nulib.com/library/gshk11.sea
-                nulib2 -x -s gshk.sea > /dev/null
+                mkdir -p /tmp/netboot/gshk
+                cd /tmp/netboot/gshk
+                if [[ $useExternalURL ]]; then
+                    wget -qO gshk11.sea http://web.archive.org/web/20131031160750/http://nulib.com/library/gshk11.sea
+                    #wget -qO gshk11.sea http://www.nulib.com/library/gshk11.sea
+                    nulib2 -x -s gshk11.sea &> /dev/null
+                fi
+                if [[ ! -f GSHK ]]; then
+                    wget -qO gshk11.sea ${binaryURL}external/appleii/gshk11.sea
+                    nulib2 -x -s gshk11.sea &> /dev/null
+                fi
                 cp -p GSHK $imageToolsDir/GSHK
                 afpsync -v $gsosDir > /dev/null
                 cat GSHK_rsrc_ >> $imageToolsDir/.AppleDouble/GSHK
                 afptype -p S16 -a DB07 -q $imageToolsDir/GSHK
+                cd /tmp/netboot
             fi
     
             echo -n "MountIt 1.4"    
@@ -389,7 +433,12 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
             else
                 echo
                 cd /tmp/netboot
-                wget -q -O MOUNTIT.SHK http://www.brutaldeluxe.fr/products/apple2gs/MOUNTIT.SHK
+                if [[ $useExternalURL ]]; then
+                    wget -q -O MOUNTIT.SHK http://www.brutaldeluxe.fr/products/apple2gs/MOUNTIT.SHK
+                fi
+                if [[ $? -ne 0 || ! -f MOUNTIT.SHK ]]; then
+                    wget -qO MOUNTIT.SHK ${binaryURL}external/appleii/MOUNTIT.SHK
+                fi
                 cp -p MOUNTIT.SHK $imageToolsDir/MOUNTIT.SHK
                 afpsync -v $gsosDir > /dev/null
                 afptype -p SHK -q $imageToolsDir/MOUNTIT.SHK
@@ -415,9 +464,14 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
             else
                 echo
                 cd /tmp/netboot
-                wget -qO shrinkit.sdk http://web.archive.org/web/20131031160750/http://www.nulib.com/library/shrinkit.sdk
-                [[ ! -f shrinkit.sdk ]] && wget -qO shrinkit.sdk "http://appleii.ivanx.com/a2server/files/shrinkit.sdk"
-                nulib2 -xs shrinkit.sdk > /dev/null
+                if [[ $useExternalURL ]]; then
+                    wget -qO shrinkit.sdk http://web.archive.org/web/20131031160750/http://www.nulib.com/library/shrinkit.sdk
+                    nulib2 -x -s shrinkit.sdk &> /dev/null
+                fi
+                if [[ ! -f SHRINKIT ]]; then
+                    wget -qO shrinkit.sdk ${binaryURL}external/appleii/shrinkit.sdk
+                    nulib2 -x -s shrinkit.sdk &> /dev/null
+                fi
                 cppo -s -ad SHRINKIT /SHRINKIT/SHRINKIT $diskToolsP8Dir 2> /dev/null
                 afpsync -v $sharepath > /dev/null
             fi
@@ -429,8 +483,14 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
             else
                 echo
                 cd /tmp/netboot
-                wget -q -O dsk2file.shk http://www.dwheeler.com/6502/oneelkruns/dsk2file.zip
-                nulib2 -x -s dsk2file.shk > /dev/null
+                if [[ $useExternalURL ]]; then
+                    wget -q -O dsk2file.shk http://www.dwheeler.com/6502/oneelkruns/dsk2file.zip
+                    nulib2 -x -s dsk2file.shk &> /dev/null
+                fi
+                if [[ ! -f DSK2FILE58 ]]; then
+                    wget -qO dsk2file.shk ${binaryURL}external/appleii/dsk2file.shk
+                    nulib2 -x -s dsk2file.shk &> /dev/null
+                fi
                 cp -p DSK2FILE58 $diskToolsP8Dir/DSK2FILE
                 afpsync -v $sharepath > /dev/null
                 afptype -p SYS -q $diskToolsP8Dir/DSK2FILE
@@ -442,11 +502,17 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
             else
                 echo
                 cd /tmp/netboot
-                wget --max-redirect 0 -qO Apple_II_System_Disk_3.2.sea.bin http://download.info.apple.com/Apple_Support_Area/Apple_Software_Updates/English-North_American/Apple_II/Apple_II_Supplemental/Apple_II_System_Disk_3.2.sea.bin
-                if (( $? != 0 )); then
-                    wget -qO Apple_II_System_Disk_3.2.sea.bin http://archive.org/download/download.info.apple.com.2012.11/download.info.apple.com.2012.11.zip/download.info.apple.com%2FApple_Support_Area%2FApple_Software_Updates%2FEnglish-North_American%2FApple_II%2FApple_II_Supplemental%2FApple_II_System_Disk_3.2.sea.bin
+                if [[ $useExternalURL ]]; then
+                    wget --max-redirect 0 -qO Apple_II_System_Disk_3.2.sea.bin http://download.info.apple.com/Apple_Support_Area/Apple_Software_Updates/English-North_American/Apple_II/Apple_II_Supplemental/Apple_II_System_Disk_3.2.sea.bin
+                    if (( $? != 0 )); then
+                        wget -qO Apple_II_System_Disk_3.2.sea.bin http://archive.org/download/download.info.apple.com.2012.11/download.info.apple.com.2012.11.zip/download.info.apple.com%2FApple_Support_Area%2FApple_Software_Updates%2FEnglish-North_American%2FApple_II%2FApple_II_Supplemental%2FApple_II_System_Disk_3.2.sea.bin
+                        unar -k skip Apple_II_System_Disk_3.2.sea.bin &> /dev/null
+                    fi
                 fi
-                unar -k skip Apple_II_System_Disk_3.2.sea.bin &> /dev/null
+                if [[ ! -f 'Apple II System Disk 3.2.sea' ]]; then
+                    wget -qO Apple_II_System_Disk_3.2.sea.bin ${binaryURL}external/appleii/Apple_II_System_Disk_3.2.sea.bin
+                    unar -k skip Apple_II_System_Disk_3.2.sea.bin &> /dev/null
+                fi
                 truncate -s 819284 'Apple II System Disk 3.2.sea'
                 dd if='Apple II System Disk 3.2.sea' of=A2SYSDISK32.HDV bs=84 skip=1 2> /dev/null
                 cppo -s -ad A2SYSDISK32.HDV /UTILITIES/SYSUTIL.SYSTEM $diskToolsP8Dir/SYSUTIL 2> /dev/null
@@ -478,22 +544,33 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
             else
                 mkdir -p $spectrumDir
                 echo
-                mkdir -p /tmp/netboot
-                cd /tmp/netboot
+                mkdir -p /tmp/netboot/spectrum
+                cd /tmp/netboot/spectrum
                 if [[ ! -f $gsosDir/SYSTEM/START.GS.OS ]]; then
                 #if true; then
                     # provide disk images for MountIt if no GS/OS present
-                    wget -qO- http://www.speccie.co.uk/speccie/software/spectrum.2mg | dd bs=64 skip=1 of=$spectrumDir/SPECTRUM.HDV 2> /dev/null
-                    wget -qO- http://www.speccie.co.uk/speccie/software/spectrum_extras.2mg | dd bs=64 skip=1 of=$spectrumDir/EXTRAS.HDV 2> /dev/null
-                    wget -qO- http://www.speccie.co.uk/speccie/software/spectrum_sounds.2mg | dd bs=64 skip=1 of=$spectrumDir/SOUNDS.HDV 2> /dev/null
-                    wget -qO- http://www.speccie.co.uk/speccie/software/spectrum_manuals.2mg | dd bs=64 skip=1 of=$spectrumDir/MANUALS.HDV 2> /dev/null
-                    echo -n "These Spectrum installer disk image files can be converted to floppy disks with Asimov or DSK2FILE, or mounted directly with MountIt. If using MountIt, mount bouth SPECTRUM.HDV and EXTRAS.HDV before running the installer." > $spectrumDir/SPECTRUM.README
+                    for filename in spectrum.2mg spectrum_extras.2mg spectrum_sounds.2mg spectrum_manuals.2mg; do
+                        if [[ $useExternalURL ]]; then
+                            wget -qO $filename http://www.speccie.co.uk/speccie/software/$filename
+                        fi
+                        if [[ $? -ne 0 || ! -f $filename ]]; then
+                            wget -qO $filename ${binaryURL}external/appleii/spectrum/$filename
+                        fi
+                        dd bs=64 skip=1 if=$filename of=$spectrumDir/${filename,,}.HDV 2> /dev/null
+                    done
+                    echo -n "The Spectrum installer disk image files can be converted to floppy disks with Asimov or DSK2FILE, or mounted directly with MountIt. If using MountIt, mount bouth SPECTRUM.HDV and EXTRAS.HDV before running the installer." > $spectrumDir/SPECTRUM.README
                     afpsync -v $gsosDir > /dev/null
                     afptype -p TXT -q $spectrumDir/SPECTRUM.README
                 else
                     # install Spectrum into GS/OS
-                    wget -qO spectrum_gold_2mg.zip http://www.speccie.co.uk/speccie/software/spectrum_gold_2mg.zip
-                    unzip -p spectrum_gold_2mg.zip | dd bs=64 skip=1 of=Spectrum.Gold.HDV 2> /dev/null
+                    if [[ $useExternalURL ]]; then
+                        wget -qO spectrum_gold_2mg.zip http://www.speccie.co.uk/speccie/software/spectrum_gold_2mg.zip
+                        unzip -p spectrum_gold_2mg.zip 2> /dev/null | dd bs=64 skip=1 of=Spectrum.Gold.HDV 2> /dev/null
+                    fi
+                    if [[ ! -f Spectrum.Gold.2mg ]]; then
+                        wget -qO spectrum_gold_2mg.zip ${binaryURL}external/appleii/spectrum/spectrum_gold_2mg.zip
+                        unzip -p spectrum_gold_2mg.zip 2> /dev/null | dd bs=64 skip=1 of=Spectrum.Gold.HDV 2> /dev/null
+                    fi
                     cppo -s -ad Spectrum.Gold.HDV .
                     userFolder=$(tr [:lower:] [:upper:] <<< $USER)
                     for thisFolder in \
@@ -532,7 +609,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                 mkdir -p $zlinkDir/.AppleDouble
                 echo
                 cd /tmp/netboot
-                wget -qO A2CLOUD.HDV "http://ivanx.com/a2server/files/A2CLOUD.HDV"
+                wget -qO A2CLOUD.HDV "${binaryURL}A2CLOUD.HDV"
                 cppo -ad A2CLOUD.HDV . > /dev/null
                 cd A2CLOUD
                 mv *PT3* *PROTERM* $protermDir
@@ -561,8 +638,6 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
             
         # clean up
         cd
-        [[ -d /tmp/netboot ]] && rm -rf /tmp/netboot
-        [[ -d ~/GNUstep ]] && rm -rf ~/GNUstep
     
         # rock and roll!
         echo
@@ -572,7 +647,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
             echo "GS/OS network boot (for registered user and Guest) and"
         fi
         echo "ProDOS 8 network boot (for Guest only) is now configured."
-        echo "See http://appleii.ivanx.com/a2server for info using it." 
+        echo "See http://ivanx.com/a2server for info using it." 
     
     fi
 
@@ -585,7 +660,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
     if [[ $autoAnswerYes || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
         # Farallon bridge patch for GS/OS courtesy of Geoff Body
         echo "A2SERVER: Downloading Farallon bridge patch..."
-        wget -O /tmp/FARALLON.PO "http://appleii.ivanx.com/a2server/files/FARALLON.B1.PO" &> /dev/null
+        wget -O /tmp/FARALLON.PO "${binaryURL}FARALLON.B1.PO" &> /dev/null
         if [[ -d $gsosDir/SYSTEM/SYSTEM.SETUP ]]; then
             cppo -s -ad /tmp/FARALLON.PO /ATALKPATCH/ATALKIRQ $gsosDir/SYSTEM/SYSTEM.SETUP &> /dev/null
             echo

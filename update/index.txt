@@ -4,7 +4,7 @@
 # Ensure URL we'll use ends in a /
 case "$A2SERVER_SCRIPT_URL" in
 	*/) scriptURL="$A2SERVER_SCRIPT_URL" ;;
-	*) scriptURL="${A2SERVER_SCRIPT_URL:-http://appleii.ivanx.com/a2server}/" ;;
+	*) scriptURL="${A2SERVER_SCRIPT_URL:-http://ivanx.com/a2server}/" ;;
 esac
 
 currentVersion=$(wget -qO- "${scriptURL}setup/index.txt" | grep '^a2serverVersion' | cut -d '"' -f 2)

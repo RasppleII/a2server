@@ -4,29 +4,40 @@
 # A2SERVER master setup script, last update 17-Nov-15
 # it downloads and executes several scripts related to the setup of
 # netatalk configured for Apple II use on Debian or Raspbian.
-# more info is at http://appleii.ivanx.com/a2server
+# more info is at http://ivanx.com/a2server
 
 # to download and execute, type:
-# wget appleii.ivanx.com/a2server/setup; source setup
+# wget ivanx.com/a2server/setup; source setup
 
-a2serverVersion="128d3"
+a2serverVersion="128"
 
 # Ensure URL we'll use ends in a /
 case "$A2SERVER_SCRIPT_URL" in
 	*/) scriptURL="$A2SERVER_SCRIPT_URL" ;;
-	*) scriptURL="${A2SERVER_SCRIPT_URL:-http://appleii.ivanx.com/a2server}/" ;;
+	*) scriptURL="${A2SERVER_SCRIPT_URL:-http://ivanx.com/a2server}/" ;;
 esac
+case "$A2SERVER_BINARY_URL" in
+	*/) binaryURL="$A2SERVER_BINARY_URL" ;;
+	*) binaryURL="${A2SERVER_BINARY_URL:-http://ivanx.com/a2server/files}/" ;;
+esac
+useExternalURL=1
+[[ $A2SERVER_NO_EXTERNAL ]] && useExternalURL=
 
 isRpi=
 [[ -f /usr/bin/raspi-config ]] && isRpi=1
 
 isDebian=
-[[ ( -f /etc/debian_version ) && ( $(cut -c 1-2 < /etc/debian_version) == "7." ) && ( $(uname -m) == "i686" ) ]] && isDebian=1
+lsb_release -a 2> /dev/null | grep -q 'Distributor ID:.Debian' && [[ ( -f /etc/debian_version ) && ( $(cut -c 1 < /etc/debian_version) -ge "7" ) ]] && isDebian=1
 
 if [[ -f /usr/local/etc/A2SERVER-version ]]; then
     echo "A2SERVER version available: $a2serverVersion"
     echo "A2SERVER version installed: $(cat /usr/local/etc/A2SERVER-version)"
 fi
+
+echo
+[[ $scriptURL != *"ivanx.com"* ]] && echo "Using script URL: $scriptURL"
+[[ $binaryURL != *"ivanx.com"* ]] && echo "Using binary URL: $binaryURL"
+[[ ! $useExternalURL ]] && echo -e "Not using external URLs. Payloads must be in:\n  ${binaryURL}external\n  (See A2SERVER developer page for more information.)"
 
 skipRepoUpdate=
 autoAnswerYes=
@@ -78,7 +89,7 @@ done
 
 if [[ $updateRasppleII ]]; then
     echo "A2SERVER: Updating Raspple II (takes up to an hour)..."
-    wget -qO /tmp/raspbian-update "http://appleii.ivanx.com/a2server/files/raspbian-update.txt"
+    wget -qO /tmp/raspbian-update "${A2SERVER_SCRIPT_URL}scripts/raspbian-update.txt"
     source /tmp/raspbian-update a2cloud a2server $autoAnswerYes $skipRepoUpdate
     [[ $0 == "-bash" ]] && return 0 || exit 0
 fi
@@ -100,19 +111,33 @@ if [[ $isRpi ]]; then #supported Raspbian? (16-Feb-15, 20-Jun-14, 09-Jan-14, etc
     fwsupported="-8aca5762- -462f3e3f476f7b6- -c32bc633039cd9- -9d34d0475f9-
             -d4f5315cfac4e- -6f4a90c8cb8817f- -5dd9b4962e- -17c8799375-
             -960832a6c2590635216c296b6ee0bebf67b21d50-"
-    [[ "$fwsupported" == *-$fwhash-* ]] && unsupportedOS=0
-    [[ ($fwhash == "8aca5762") || ($fwhash == "462f3e3f476f7b6") || ($fwhash == "c32bc633039cd9") || ($fwhash == "9d34d0475f9") || ($fwhash == "d4f5315cfac4e") || ($fwhash == "6f4a90c8cb8817f") || ($fwhash == "5dd9b4962e") || ($fwhash == "17c8799375") ]] && unsupportedOS=0
-elif [[ "$(lsb_release -rs 2> /dev/null)" == "7.3" || "$(lsb_release -rs 2> /dev/null)" == "7.6" || "$(lsb_release -rs 2> /dev/null)" == "7.8" ]]; then # tested Debian?
-    unsupportedOS=0
+    [[ "$fwsupported" == *-$fwhash-* ]] && unsupportedOS=
+    # [[ ($fwhash == "8aca5762") || ($fwhash == "462f3e3f476f7b6") || ($fwhash == "c32bc633039cd9") || ($fwhash == "9d34d0475f9") || ($fwhash == "d4f5315cfac4e") || ($fwhash == "6f4a90c8cb8817f") || ($fwhash == "5dd9b4962e") || ($fwhash == "17c8799375") ]] && unsupportedOS=
+elif [[ $isDebian ]]; then # supported Debian?
+     debianVersion=$(cat /etc/debian_version)
+     debianSupported="-8.2- -7.9- -7.8- -7.6- -7.3-"
+     [[ $debianSupported == *-$debianVersion-* ]] && unsupportedOS=
 fi
 
-if (( unsupportedOS )); then
+if [[ $unsupportedOS && $isRpi ]]; then
     echo
-    echo "WARNING: A2SERVER and its installer scripts have not been tested on this"
-    echo "operating system version. Continuing is probably fine, but might not be."
+    echo "A2SERVER and its installer scripts have been tested on Raspbian Wheezy and"
+    echo "Jessie, though not this specific firmware version ($fwhash). Just FYI."
+    unsupportedOS=
+elif [[ $unsupportedOS && $isDebian ]]; then
+    echo
+    echo "A2SERVER and its installer scripts have been tested on Debian 7 and 8,"
+    echo "though not this specific point release ($debianVersion). Just FYI."
+    unsupportedOS=
+fi
+
+if [[ $unsupportedOS ]]; then
+    echo
+    echo "WARNING: A2SERVER and its installer scripts have only been tested on"
+    echo "Debian and Raspbian. Continuing is probably fine, but might not be."
     echo "Worst case could make your operating system no longer work properly,"
     echo "or cause data to be lost."
-    echo "More information is at http://appleii.ivanx.com/a2server."
+    echo "More information is at http://ivanx.com/a2server."
 fi
 
 doSetup=1
@@ -132,7 +157,7 @@ if (( $doSetup )); then
 
     echo
     echo "a2server-setup modifies files and performs actions as the root user."
-    echo "For details, visit http://appleii.ivanx.com/a2server."
+    echo "For details, visit http://ivanx.com/a2server."
     echo
     if [[ ! $autoAnswerYes ]]; then
         echo -n "Continue? "
@@ -230,7 +255,19 @@ if (( $doSetup )); then
             echo "On an Apple IIe, it should be accessible via \"Log In\" on the"
             echo "Workstation Card software. For IIgs users, it should be accessible"
             echo "via the AppleShare control panel."
-            echo
+            if [[ -f /srv/A2SERVER/A2FILES/System/Start.GS.OS ]]; then
+                echo                
+                echo "You can network boot GS/OS. On a ROM 01 IIgs, set slot 1 or 2, and slot 7,"
+                echo 'to AppleTalk, and Startup Slot to 7 or "Scan". On a ROM 3 IIgs, set'
+                echo "slot 1 or 2, and startup slot, to AppleTalk."
+            fi
+            if [[ -f /srv/A2SERVER/A2FILES/BASIC.System ]]; then
+                echo
+                echo "You can network boot ProDOS 8. On an Apple IIe, put your Workstation Card"
+                echo "in a slot above your disk controller card, or type PR#X with open-apple"
+                echo "held down, with X being the slot of your Workstation Card."
+                echo 'On a IIgs, press "8" during the initial procession of periods.'
+            fi
             echo
             echo "A2SERVER setup is complete! Go connect from your Apple II!"
             echo

@@ -2,17 +2,17 @@
 # vim: set tabstop=4 shiftwidth=4 expandtab filetype=sh:
 
 alias a2server-help="more /usr/local/etc/a2server-help.txt"
-alias a2server-setup="wget -q -O /tmp/a2server-setup ${A2SERVER_SCRIPT_URL:-http://appleii.ivanx.com/a2server}$([[ "$A2SERVER_SCRIPT_URL" == */ ]] || echo -n "/")setup/ || { echo \"Can't download A2SERVER setup scripts. Do you has internet?\"; false; } && source /tmp/a2server-setup"
+alias a2server-setup="wget -q -O /tmp/a2server-setup ${A2SERVER_SCRIPT_URL}setup/index.txt || { echo \"Can't download A2SERVER setup scripts. Do you has internet?\"; false; } && source /tmp/a2server-setup"
 
 alias a2server-version="cat /usr/local/etc/A2SERVER-version"
-alias a2server-update="wget -q -O /tmp/a2server-update ${A2SERVER_SCRIPT_URL:-http://appleii.ivanx.com/a2server}$([[ "$A2SERVER_SCRIPT_URL" == */ ]] || echo -n "/")update/ || { echo \"Can't download A2SERVER setup scripts. Do you has internet?\"; false; } && source /tmp/a2server-update"
+alias a2server-update="wget -q -O /tmp/a2server-update ${A2SERVER_SCRIPT_URL}update/index.txt || { echo \"Can't download A2SERVER setup scripts. Do you has internet?\"; false; } && source /tmp/a2server-update"
 
 alias system-shutdown='sudo shutdown -h now'
 alias system-restart='sudo shutdown -r now'
 
 
 alias raspi-config='[[ -f /usr/bin/raspi-config ]] && sudo /usr/bin/raspi-config || echo "raspi-config not found. Are you using a Raspberry Pi with Raspbian?"'
-alias raspbian-update='wget -qO /tmp/raspbian-update ivanx.com/a2server/files/raspbian-update.txt; source /tmp/raspbian-update'
+alias raspbian-update='wget -qO /tmp/raspbian-update ${A2SERVER_SCRIPT_URL}scripts/raspbian-update.txt; source /tmp/raspbian-update'
 alias rasppleii-update='raspbian-update a2cloud a2server'
 
 alias welcome-message-edit='sudo nano /etc/motd'

@@ -7,14 +7,26 @@
 # Ensure URL we'll use ends in a /
 case "$A2SERVER_SCRIPT_URL" in
 	*/) scriptURL="$A2SERVER_SCRIPT_URL" ;;
-	*) scriptURL="${A2SERVER_SCRIPT_URL:-http://appleii.ivanx.com/a2server}/" ;;
+	*) scriptURL="${A2SERVER_SCRIPT_URL:-http://ivanx.com/a2server}/" ;;
 esac
+case "$A2SERVER_BINARY_URL" in
+	*/) binaryURL="$A2SERVER_BINARY_URL" ;;
+	*) binaryURL="${A2SERVER_BINARY_URL:-http://ivanx.com/a2server/files}/" ;;
+esac
+useExternalURL=1
+[[ $A2SERVER_NO_EXTERNAL ]] && useExternalURL=
 
-isRpi=
-[[ -f /usr/bin/raspi-config ]] && isRpi=1
-
-isDebian=
-[[ ( -f /etc/debian_version ) && ( $(cut -c 1 < /etc/debian_version) -ge "7" ) && ( $(uname -m) == "i686" ) ]] && isDebian=1
+arch=
+if [[ -f /usr/bin/raspi-config ]]; then
+    isRpi=1
+elif lsb_release -a 2> /dev/null | grep -q 'Distributor ID:.Debian' && [[ ( -f /etc/debian_version ) && ( $(cut -c 1 < /etc/debian_version) -ge "7" ) ]]; then
+    uname_m="$(uname -m)"
+    if [[ $uname_m == "i686" ]]; then
+        arch='debian_x86'
+    elif [[ $uname_m == "x86_64" ]]; then
+        arch='debian_x64'
+    fi
+fi
 
 isJessie=
 [[ ( -f /etc/debian_version ) && ( $(cut -c 1-2 < /etc/debian_version) == "8." ) ]] && isJessie=1
@@ -26,10 +38,8 @@ if ! command -v nulib2 > /dev/null; then
     echo "A2SERVER: Installing nulib2..."
 
     cd /tmp
-    if [[ $isRpi ]]; then
-        wget -qO- "http://appleii.ivanx.com/a2server/files/nulib2-rpi.tgz" | sudo tar Pzx
-    elif [[ $isDebian ]]; then
-        wget -qO- "http://appleii.ivanx.com/a2server/files/nulib2-debian7_x86.tgz" | sudo tar Pzx
+    if [[ $arch ]]; then
+        { wget -qO- "${binaryURL}precompiled/nulib2-${arch}.tgz" | sudo tar Pzx; } &> /dev/null
     fi
 
     if ! command -v nulib2 > /dev/null; then
@@ -48,8 +58,14 @@ if ! command -v nulib2 > /dev/null; then
         rm -rf /tmp/nulib &> /dev/null
         mkdir /tmp/nulib
         cd /tmp/nulib
-        wget -q -O nulib.tgz http://web.archive.org/web/20131031160750/http://www.nulib.com/downloads/nulibdist.tar.gz
-        tar zxf nulib.tgz
+        if [[ $useExternalURL ]]; then
+            wget -q -O nulibdist.tar.gz http://web.archive.org/web/20131031160750/http://www.nulib.com/downloads/nulibdist.tar.gz
+            tar zxf nulibdist.tar.gz &> /dev/null
+        fi
+        if [[ ! -d nulib2-220 ]]; then
+            wget -q -O nulibdist.tar.gz ${binaryURL}external/nulibdist.tar.gz
+            tar zxf nulibdist.tar.gz &> /dev/null
+        fi
         cd nufxlib*
         ./configure
         make
@@ -81,22 +97,16 @@ if ! command -v unar > /dev/null; then
 
     # jessie and later: Just use the unar package
     if [[ $isJessie ]]; then
-        sudo apt-get install -y unar
+        sudo apt-get -y install unar
         sudo apt-get clean
     fi
     
     if ! command -v unar > /dev/null; then
-        if [[ $isRpi || $isDebian ]]; then
-
+        if [[ $arch ]]; then
             # Dependencies: for unar
             sudo apt-get -y install libgnustep-base1.22
             sudo apt-get clean
-
-            if [[ $isRpi ]]; then
-                wget -qO- "http://appleii.ivanx.com/a2server/files/unar-rpi_wheezy.tgz" | sudo tar Pzx
-            elif [[ $isDebian ]]; then
-                wget -qO- "http://appleii.ivanx.com/a2server/files/unar-debian7_x86.tgz" | sudo tar Pzx
-            fi
+            { wget -qO- "${binaryURL}precompiled/unar-${arch}.tgz" | sudo tar Pzx; } &> /dev/null
         fi
 
         # If all else fails, compile from source.
@@ -109,9 +119,15 @@ if ! command -v unar > /dev/null; then
             rm -rf /tmp/unar &> /dev/null
             mkdir /tmp/unar
             cd /tmp/unar
-            wget -qO unar1.7_src.zip http://theunarchiver.googlecode.com/files/unar1.7_src.zip
-            unzip -o unar1.7_src.zip
-            cd The\ Unarchiver/XADMaster
+            if [[ $useExternalURL ]]; then
+                wget -O unar_1.8.zip https://github.com/incbee/Unarchiver/archive/unar-1.8.zip
+                unzip -o unar_1.8.zip &> /dev/null
+            fi
+            if [ ! -d *Unarchiver*/XADMaster ]; then # need single bracket for glob
+                wget -O unar_1.8.zip ${binaryURL}external/unar-1.8.zip
+                unzip -o unar_1.8.zip &> /dev/null
+            fi
+            cd *Unarchiver*/XADMaster
             make -f Makefile.linux
             sudo mv lsar unar /usr/local/bin
             cd ../Extra
@@ -135,6 +151,7 @@ if ! command -v unzip >/dev/null; then
 
     # Dependencies: unzip
     sudo apt-get -y install unzip
+    sudo apt-get clean
 else
     echo "A2SERVER: unzip has already been installed."
 fi
@@ -162,9 +179,9 @@ echo "source /usr/local/etc/a2serverrc" | sudo tee -a /etc/bash.bashrc > /dev/nu
 
 motd="/etc/motd"
 if [[ ! $(grep A2SERVER $motd) ]]; then
- 	echo | sudo tee -a $motd > /dev/null
-	echo "Type 'system-shutdown' to turn off A2SERVER." | sudo tee -a $motd > /dev/null
-	echo "Type 'a2server-setup' to configure network boot." | sudo tee -a $motd > /dev/null
-	echo "Type 'a2server-help' for a list of other commands." | sudo tee -a $motd > /dev/null
-	echo | sudo tee -a $motd > /dev/null
+    echo | sudo tee -a $motd > /dev/null
+    echo "Type 'system-shutdown' to turn off A2SERVER." | sudo tee -a $motd > /dev/null
+    echo "Type 'a2server-setup' to configure network boot." | sudo tee -a $motd > /dev/null
+    echo "Type 'a2server-help' for a list of other commands." | sudo tee -a $motd > /dev/null
+    echo | sudo tee -a $motd > /dev/null
 fi
