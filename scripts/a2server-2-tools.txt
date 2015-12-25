@@ -16,10 +16,13 @@ esac
 useExternalURL=1
 [[ $A2SERVER_NO_EXTERNAL ]] && useExternalURL=
 
+debianVersion=$(cat /etc/debian_version 2> /dev/null)
+isRpi=
 arch=
 if [[ -f /usr/bin/raspi-config ]]; then
     isRpi=1
-elif lsb_release -a 2> /dev/null | grep -q 'Distributor ID:.Debian' && [[ ( -f /etc/debian_version ) && ( $(cut -c 1 < /etc/debian_version) -ge "7" ) ]]; then
+    arch='rpi'
+elif lsb_release -a 2> /dev/null | grep -q 'Distributor ID:.Debian' && [[ $(cut -c 1 <<< $debianVersion) -ge "7" ]]; then
     uname_m="$(uname -m)"
     if [[ $uname_m == "i686" ]]; then
         arch='debian_x86'
@@ -28,8 +31,17 @@ elif lsb_release -a 2> /dev/null | grep -q 'Distributor ID:.Debian' && [[ ( -f /
     fi
 fi
 
-isJessie=
-[[ ( -f /etc/debian_version ) && ( $(cut -c 1-2 < /etc/debian_version) == "8." ) ]] && isJessie=1
+debianName=
+if [[ $debianVersion ]]; then
+    debianMajor=$(cut -c 1-2 <<< $debianVersion)
+    if [[ $debianMajor == "8." ]]; then
+        debianName="jessie"
+    elif [[ $debianMajor == "7." ]]; then
+        debianName="wheezy"
+    else
+        debianName="unknown"
+    fi
+fi
 
 echo "A2SERVER: Installing A2SERVER tools..."
 
@@ -63,7 +75,7 @@ if ! command -v nulib2 > /dev/null; then
             tar zxf nulibdist.tar.gz &> /dev/null
         fi
         if [[ ! -d nulib2-220 ]]; then
-            wget -q -O nulibdist.tar.gz ${binaryURL}external/nulibdist.tar.gz
+            wget -q -O nulibdist.tar.gz ${binaryURL}external/source/nulibdist.tar.gz
             tar zxf nulibdist.tar.gz &> /dev/null
         fi
         cd nufxlib*
@@ -96,7 +108,7 @@ if ! command -v unar > /dev/null; then
     fi
 
     # jessie and later: Just use the unar package
-    if [[ $isJessie ]]; then
+    if [[ $debianName == "jessie" ]]; then
         sudo apt-get -y install unar
         sudo apt-get clean
     fi
@@ -106,7 +118,7 @@ if ! command -v unar > /dev/null; then
             # Dependencies: for unar
             sudo apt-get -y install libgnustep-base1.22
             sudo apt-get clean
-            { wget -qO- "${binaryURL}precompiled/unar-${arch}.tgz" | sudo tar Pzx; } &> /dev/null
+            { wget -qO- "${binaryURL}precompiled/unar-${arch}_${debianName}.tgz" | sudo tar Pzx; } &> /dev/null
         fi
 
         # If all else fails, compile from source.
@@ -124,7 +136,7 @@ if ! command -v unar > /dev/null; then
                 unzip -o unar_1.8.zip &> /dev/null
             fi
             if [ ! -d *Unarchiver*/XADMaster ]; then # need single bracket for glob
-                wget -O unar_1.8.zip ${binaryURL}external/unar-1.8.zip
+                wget -O unar_1.8.zip ${binaryURL}external/source/unar-1.8.zip
                 unzip -o unar_1.8.zip &> /dev/null
             fi
             cd *Unarchiver*/XADMaster

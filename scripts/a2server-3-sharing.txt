@@ -26,12 +26,13 @@ esac
 useExternalURL=1
 [[ $A2SERVER_NO_EXTERNAL ]] && useExternalURL=
 
+debianVersion=$(cat /etc/debian_version 2> /dev/null)
 isRpi=
 arch=
 if [[ -f /usr/bin/raspi-config ]]; then
     isRpi=1
     arch='rpi'
-elif lsb_release -a 2> /dev/null | grep -q 'Distributor ID:.Debian' && [[ ( -f /etc/debian_version ) && ( $(cut -c 1 < /etc/debian_version) -ge "7" ) ]]; then
+elif lsb_release -a 2> /dev/null | grep -q 'Distributor ID:.Debian' && [[ $(cut -c 1 <<< $debianVersion) -ge "7" ]]; then
     uname_m="$(uname -m)"
     if [[ $uname_m == "i686" ]]; then
         arch='debian_x86'
@@ -40,8 +41,17 @@ elif lsb_release -a 2> /dev/null | grep -q 'Distributor ID:.Debian' && [[ ( -f /
     fi
 fi
 
-isJessie=
-[[ ( -f /etc/debian_version ) && ( $(cut -c 1-2 < /etc/debian_version) == "8." ) ]] && isJessie=1
+debianName=
+if [[ $debianVersion ]]; then
+    debianMajor=$(cut -c 1-2 <<< $debianVersion)
+    if [[ $debianMajor == "8." ]]; then
+        debianName="jessie"
+    elif [[ $debianMajor == "7." ]]; then
+        debianName="wheezy"
+    else
+        debianName="unknown"
+    fi
+fi
 
 # skip this if already done
 if [[ -f /usr/local/etc/A2SERVER-version ]] && (( $(head -c 3 /usr/local/etc/A2SERVER-version) >= 101 )); then
@@ -64,6 +74,7 @@ else
         touch /tmp/a2server-packageReposUpdated
     fi
 
+    # not being used as of 1.2.9, but it's available if full URL to .deb package is supplied
     getOldPackage () { 
         for url in $@; do
             pkgFile=${url##*/}
@@ -86,15 +97,10 @@ else
     urls=
     while [[ $arch ]]; do
         # Install runtime libraries needed by Netatalk
-        if [[ $isJessie ]]; then
-            if [[ $arch == "rpi" ]]; then
-                getOldPackage "http://mirrordirector.raspbian.org/raspbian/pool/main/d/db/libdb5.1_5.1.29-5_armhf.deb"
-            elif [[ $arch == "debian_x86" ]]; then
-                getOldPackage "http://ftp.debian.org/debian/pool/main/d/db/libdb5.1_5.1.29-5_i386.deb"
-            elif [[ $arch == "debian_x64" ]]; then
-                getOldPackage "http://ftp.debian.org/debian/pool/main/d/db/libdb5.1_5.1.29-5_amd64.deb"
-            fi
-        elif [[ $(apt-cache search '^libdb5.1$') ]]; then
+        if [[ $(apt-cache search '^libdb5.3$') ]]; then # Jessie
+            # Dependencies: netatalk 2.2.4
+            sudo apt-get -y install libdb5.3
+        elif [[ $(apt-cache search '^libdb5.1$') ]]; then # Wheezy
             # Dependencies: netatalk 2.2.4
             sudo apt-get -y install libdb5.1
         else
@@ -107,15 +113,10 @@ else
             break
         fi
         
-        if [[ $isJessie ]]; then
-            if [[ $arch == "rpi" ]]; then
-                getOldPackage "http://mirrordirector.raspbian.org/raspbian/pool/main/libg/libgcrypt11/libgcrypt11_1.5.0-5+deb7u3_armhf.deb"
-            elif [[ $arch == "debian_x86" ]]; then
-                getOldPackage "http://ftp.debian.org/debian/pool/main/libg/libgcrypt11/libgcrypt11_1.5.0-5+deb7u3_i386.deb"
-            elif [[ $arch == "debian_x64" ]]; then
-                getOldPackage "http://ftp.debian.org/debian/pool/main/libg/libgcrypt11/libgcrypt11_1.5.0-5+deb7u3_amd64.deb"
-            fi
-        elif [[ $(apt-cache search '^libgcrypt11$') ]]; then
+        if [[ $(apt-cache search '^libgcrypt20$') ]]; then # Jessie
+            # Dependencies: netatalk 2.2.4
+            sudo apt-get -y install libgcrypt20
+        elif [[ $(apt-cache search '^libgcrypt11$') ]]; then # Wheezy
             # Dependencies: netatalk 2.2.4
             sudo apt-get -y install libgcrypt11
         else
@@ -124,7 +125,7 @@ else
         
         # install Netatalk
         if [[ $arch ]]; then
-            { wget -qO- "${binaryURL}precompiled/netatalk224-${arch}.tgz" | sudo tar Pzx; } &> /dev/null
+            { wget -qO- "${binaryURL}precompiled/netatalk224-${arch}_${debianName}.tgz" | sudo tar Pzx; } &> /dev/null
         fi
         sudo mandb &> /dev/null
         
@@ -136,35 +137,18 @@ else
     if [[ $compileFromSource ]]; then
         # Dependencies: build-deps for netatalk 2.2.4
         sudo apt-get -y install build-essential libssl-dev
-        if [[ $arch ]]; then
-            if [[ $arch == "rpi" ]]; then
-                getOldPackage "http://mirrordirector.raspbian.org/raspbian/pool/main/d/db/libdb5.1-dev_5.1.29-5_armhf.deb"
-            elif [[ $arch == "debian_x86" ]]; then
-                getOldPackage "http://ftp.us.debian.org/debian/pool/main/d/db/libdb5.1-dev_5.1.29-5_i386.deb"
-            elif [[ $arch == "debian_x64" ]]; then
-                getOldPackage "http://ftp.us.debian.org/debian/pool/main/d/db/libdb5.1-dev_5.1.29-5_amd64.deb"
-            fi
-        elif [[ $(apt-cache search '^libdb5.1-dev$') ]]; then
+        if [[ $(apt-cache search '^libdb5.3-dev$') ]]; then # Jessie
+            # Dependencies: build-deps for netatalk 2.2.4
+            sudo apt-get -y install libdb5.3-dev
+        elif [[ $(apt-cache search '^libdb5.1-dev$') ]]; then # Wheezy
             # Dependencies: build-deps for netatalk 2.2.4
             sudo apt-get -y install libdb5.1-dev
-        elif [[ $(apt-cache search '^libdb4.8-dev$') ]]; then
-            # Dependencies: build-deps for netatalk 2.2.4
-            sudo apt-get -y install libdb4.8-dev
         else
             echo "A2SERVER: WARNING: unknown version of libdb-dev is being installed."
             # Dependencies: build-deps for netatalk 2.2.4
             sudo apt-get -y install libdb-dev
         fi
-        if [[ $isJessie ]]; then
-            sudo apt-get -y install libgpg-error-dev
-            if [[ $arch == "rpi" ]]; then
-                getOldPackage "http://mirrordirector.raspbian.org/raspbian/pool/main/libg/libgcrypt11/libgcrypt11-dev_1.5.0-5+deb7u3_armhf.deb"
-            elif [[ $arch == "debian_x86" ]]; then
-                getOldPackage "http://ftp.debian.org/debian/pool/main/libg/libgcrypt11/libgcrypt11-dev_1.5.0-5+deb7u3_i386.deb"
-            elif [[ $arch == "debian_x64" ]]; then
-                getOldPackage "http://ftp.debian.org/debian/pool/main/libg/libgcrypt11/libgcrypt11-dev_1.5.0-5+deb7u3_amd64.deb"
-            fi
-        elif [[ $(apt-cache search '^libgcrypt11-dev$') ]]; then
+        if [[ $(apt-cache search '^libgcrypt11-dev$') ]]; then # Jessie or Wheezy
             # Dependencies: build-deps for netatalk 2.2.4
             sudo apt-get -y install libgcrypt11-dev
         else
@@ -184,7 +168,7 @@ else
             tar zxf netatalk-2.2.4.tar.gz &> /dev/null
         fi
         if [[ ! -d netatalk-2.2.4 ]]; then
-            wget -O netatalk-2.2.4.tar.gz "${binaryURL}external/netatalk-2.2.4.tar.gz"
+            wget -O netatalk-2.2.4.tar.gz "${binaryURL}external/source/netatalk-2.2.4.tar.gz"
             tar zxf netatalk-2.2.4.tar.gz &> /dev/null
         fi
         cd netatalk-2.2.4
@@ -231,7 +215,7 @@ if ! command -v macipgw > /dev/null; then
             unzip macipgw-src.zip &> /dev/null
         fi
         if [[ ! -d macipgw-master ]]; then
-            wget -qO macipgw-src.zip "${binaryURL}external/macipgw-src.zip"
+            wget -qO macipgw-src.zip "${binaryURL}external/source/macipgw-src.zip"
             unzip macipgw-src.zip &> /dev/null
         fi
         cd macipgw-master
@@ -434,7 +418,7 @@ if ! command -v ciopfs > /dev/null; then
             tar zxf ciopfs-0.4.tar.gz &> /dev/null
         fi
         if [ ! -f ciopfs*/ciopfs.c ]; then # single brackets required for glob
-            wget -q -O ciopfs-0.4.tar.gz ${binaryURL}external/ciopfs-0.4.tar.gz
+            wget -q -O ciopfs-0.4.tar.gz ${binaryURL}external/source/ciopfs-0.4.tar.gz
             tar zxf ciopfs-0.4.tar.gz &> /dev/null
         fi
         cd ciopfs*
