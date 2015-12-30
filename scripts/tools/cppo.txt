@@ -1,12 +1,12 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 # vim: set tabstop=4 shiftwidth=4 expandtab filetype=python:
 
 """cppo: Copy or catalog one or all files from a ProDOS raw disk image.
 
 copy all files:
-    cppo [-uc] [-ad|-e] imagefile target_directory
+    cppo [-uc] [-shk] [-ad|-e] imagefile target_directory
 copy one file:
-    cppo [-uc] [-ad|-e] imagefile /FULL/PRODOS/FILE/PATH target_path
+    cppo [-uc] [-ad|-e] imagefile /FULL/PRODOS/PATH target_path
 catalog image:
     cppo [-uc] -cat imagefile
 
@@ -15,6 +15,7 @@ catalog image:
       forks, for adding to ShrinkIt archives with Nulib2
       using its -e option.
 -uc : Copy GS/OS mixed case filenames as uppercase.
+-shk: Use ShrinkIt archive instead of disk image; must be used with -ad.
 
 Wildcard matching/globbing (*) is not supported.
 No verification or validation of the disk image is performed.
@@ -39,6 +40,9 @@ import sys
 import os
 import time
 import datetime
+import shutil
+import errno
+import uuid
 
 # Intentially fails on pre-2.6 so user can see what's wrong
 b'ERROR: cppo requires Python 2.6 or later, including 3.x.'
@@ -73,6 +77,7 @@ g.AD = 0
 g.EX = 0
 g.DIR = 0
 g.UC = 0
+g.SHK = 0
 g.silent = 0
 
 # functions
@@ -137,8 +142,8 @@ def getFileName(arg1, arg2):
         for i in range(0, len(fileName)):
             if (caseMask[i] == "1"):
                 fileName = (fileName[:i] +
-                            fileName[i].lower() + 
-                            fileName[(i+1):])
+                            fileName[i:i+1].lower() + 
+                            fileName[i+1:])
     return fileName
 
 def getCaseMask(arg1, arg2):
@@ -223,8 +228,8 @@ def getWorkingDirName(arg1, arg2=None):
         for i in range(0, len(workingDirName)):
             if (caseMask[i] == "1"):
                 workingDirName = (workingDirName[:i] +
-                                  workingDirName[i].lower() + 
-                                  workingDirName[(i+1):])
+                                  workingDirName[i:i+1].lower() + 
+                                  workingDirName[i+1:])
     return workingDirName
 
 def getDirEntryCount(arg1):
@@ -236,6 +241,17 @@ def getDirNextChunkPointer(arg1):
     start = ( arg1 * 512 )
     return (readcharDec(g.imageData, start+2) +
             readcharDec(g.imageData, start+3)*256)
+
+def toProDOSName(name):
+    i=0
+    if (name[0:1] == '.'): # eliminate leading period
+        name = name[1:]
+    for c in name:
+        if (c != '.' and not c.isalnum()):
+            name = name[:i] + '.' + name[i+1:]
+        i+=1
+    name = name[0:15]
+    return name
 
 # -- script begins in earnest here
 
@@ -324,19 +340,29 @@ def processDir(arg1, arg2=None, arg3=None, arg4=None, arg5=None):
             break
 
 def processEntry(arg1, arg2):
+    # arg1=block number, or subdir name if g.SHK=1
+    # arg2=index number of entry in directory, or file name if g.SHK=1
+    # ShrinkIt mode (g.SHK=1) requires -e extended filenames
+
     '''
     print(getFileName(arg1, arg2), getStorageType(arg1, arg2),
           getFileType(arg1, arg2), getKeyPointer(arg1, arg2),
           getFileLength(arg1, arg2), getAuxType(arg1, arg2),
           getCreationDate(arg1, arg2), getModifiedDate(arg1, arg2))
     '''
-    g.activeFileName = getFileName(arg1 ,arg2).decode("L1")
-    g.activeFileSize = getFileLength(arg1, arg2)
+    shk_rfork = (1 if (g.SHK and (arg2[-1:] == "r")) else 0)
+    if not g.SHK:
+        g.activeFileName = getFileName(arg1 ,arg2).decode("L1")
+        g.activeFileSize = getFileLength(arg1, arg2)
+    else:
+        filePath = (os.path.join(arg1, arg2))
+        g.activeFileName = arg2.split('#')[0]
 
-    if ((not g.PDOSPATH_INDEX) or
-        (g.activeFileName.upper() == g.PDOSPATH_SEGMENT.upper())):
-
-        if (getStorageType(arg1, arg2) == 13): # if ProDOS directory
+    if (not g.PDOSPATH_INDEX or
+        g.activeFileName.upper() == g.PDOSPATH_SEGMENT.upper()):
+        
+        if (not g.SHK and
+            getStorageType(arg1, arg2) == 13): # if ProDOS directory
             if not g.PDOSPATH_INDEX:
                 g.targetDir = (g.targetDir + "/" + g.activeFileName)
             g.ADdir = (g.targetDir + "/.AppleDouble")
@@ -352,9 +378,10 @@ def processEntry(arg1, arg2):
             if not g.PDOSPATH_INDEX:
                 g.targetDir = g.targetDir.rsplit("/", 1)[0]
             g.ADdir = (g.targetDir + "/.AppleDouble")
-        else: # if ProDOS file
+        else: # if ProDOS file either from image or ShrinkIt archive
             if not g.PDOSPATH_INDEX:
-                print("   " + g.activeFileName)
+                print("   " + g.activeFileName +
+                     (" [resource fork]" if shk_rfork else ""))
             if g.DIR:
                 return
             if not g.targetName:
@@ -364,19 +391,32 @@ def processEntry(arg1, arg2):
                                getFileType(arg1, arg2).lower() +
                                getAuxType(arg1, arg2).lower())
             touch(g.targetDir + "/" + g.targetName)
-            if g.AD: makeADfile()
-            copyFile(arg1, arg2)
-            saveFile((g.targetDir + "/" + g.targetName), g.outFileData)
-            creationDate = getCreationDate(arg1, arg2)
-            modifiedDate = getModifiedDate(arg1, arg2)
-            if (creationDate is None and modifiedDate is not None):
+            if g.AD:
+                makeADfile()
+            if not g.SHK: # ProDOS image
+                copyFile(arg1, arg2)
+                saveFile((g.targetDir + "/" + g.targetName), g.outFileData)
+                creationDate = getCreationDate(arg1, arg2)
+                modifiedDate = getModifiedDate(arg1, arg2)
+                if (creationDate is None and modifiedDate is not None):
+                    creationDate = modifiedDate
+                elif (creationDate is not None and modifiedDate is None):
+                    modifiedDate = creationDate
+                elif (creationDate is None and modifiedDate is None):
+                    creationDate = (datetime.datetime.today() -
+                                    datetime.datetime(1970,1,1)).days*24*60*60
+                    modifiedDate = creationDate
+            else: # ShrinkIt archive
+                modifiedDate = int(time.mktime(
+                                   time.strptime(
+                                   time.ctime(
+                                   os.path.getmtime(filePath)))))
                 creationDate = modifiedDate
-            elif (creationDate is not None and modifiedDate is None):
-                modifiedDate = creationDate
-            elif (creationDate is None and modifiedDate is None):
-                creationDate = (datetime.datetime.today() -
-                                datetime.datetime(1970,1,1)).days*24*60*60
-                modifiedDate = creationDate
+                if not shk_rfork:
+                    shutil.move(filePath, (g.targetDir + "/" + g.targetName))
+                else: # shk_rfork:
+                    with open(filePath, 'rb') as infile:
+                        g.adFileData += infile.read()
             if g.AD: # AppleDouble
                 # set dates
                 ADfilePath = (g.ADdir + "/" + g.targetName)
@@ -390,8 +430,10 @@ def processEntry(arg1, arg2):
                 writechars(g.adFileData, 653, b'p')
                 writecharsHex(g.adFileData,
                               654,
-                              (getFileType(arg1, arg2) +
-                               getAuxType(arg1, arg2)))
+                              ((getFileType(arg1, arg2) +
+                               getAuxType(arg1, arg2)) if not g.SHK else
+                               (arg2.split('#')[1][0:2] +
+                               arg2.split('#')[1][2:6])))                                   
                 writechars(g.adFileData, 657, b'pdos')
                 saveFile(ADfilePath, g.adFileData)
             touch((g.targetDir + "/" + g.targetName), modifiedDate)
@@ -511,9 +553,9 @@ def syncExit():
     # saveFile(g.imageFile, g.imageData)
     sys.exit(0)
 
-def usage():
+def usage(exitcode=1):
     print(sys.modules[__name__].__doc__)
-    sys.exit(1)
+    sys.exit(exitcode)
 
 # --- ID bashbyter functions (adapted)
 
@@ -678,7 +720,10 @@ def writecharsHex(arg1, arg2, arg3):
 def slyce(val, start_pos=0, length=1, reverse=False):
     """returns slice of object (but not a slice object)
     allows specifying length, and 3.x "bytes" consistency"""
-    the_slyce = val[start_pos:start_pos+length]
+    if (start_pos < 0):
+        the_slyce = val[start_pos:]
+    else:
+        the_slyce = val[start_pos:start_pos+length]
     return (the_slyce[::-1] if reverse else the_slyce)
 
 def to_hex(val):
@@ -780,6 +825,7 @@ def get_object_names(cls, include_subclasses=True):
 
 def touch(filePath, modTime=None):
     # http://stackoverflow.com/questions/1158076/implement-touch-using-python
+    # print(filePath)
     import os
     if (os.name == "nt"):
         if filePath[-1] == ".": filePath += "-"
@@ -804,8 +850,9 @@ def makedirs(dirPath):
         dirPath = dirPath.replace("./", ".-/")
     try:
         os.makedirs(dirPath)
-    except FileExistsError:
-        pass
+    except OSError as e:
+        if (e.errno != errno.EEXIST):
+            raise
 
 def loadFile(filePath):
     import os
@@ -844,26 +891,36 @@ args = sys.argv
 if (len(args) == 1):
     usage()
 
-if (args[1] == "-s"):
-    g.silent = 1
-    args = args[1:] #shift
+while (slyce(args[1],0,1) == "-"):
+    if (args[1] == "-s"):
+        g.silent = 1
+        args = args[1:] #shift
+    
+    elif (args[1] == "-uc"):
+        g.UC = 1
+        args = args[1:] #shift
 
-if (args[1] == "-uc"):
-    g.UC = 1
-    args = args[1:] #shift
+    elif (args[1] == "-ad"):
+        if g.EX: usage()
+        g.AD = 1
+        args = args[1:] #shift
+    
+    elif (args[1] == "-shk"):
+        g.SHK = 1
+        args = args[1:] #shift
 
-if (args[1] == "-ad"):
-    g.AD = 1
-    args = args[1:] #shift
+    elif (args[1] == "-e"):
+        if g.AD: usage()
+        g.EX = 1
+        args = args[1:] #shift
+    
+    elif (args[1] == "-cat"):
+        if g.AD or g.EX: usage()
+        g.DIR = 1
+        args = args[1:] #shift
 
-if (args[1] == "-e"):
-    if g.AD: usage()
-    g.EX = 1
-    args = args[1:] #shift
-
-if (args[1] == "-cat"):
-    g.DIR = 1
-    args = args[1:]
+    else:
+        usage()
 
 if not ((g.DIR and len(args) >= 2) or (len(args) >= 3)):
     usage()
@@ -876,6 +933,62 @@ g.imageFile = args[1]
 if not os.path.isfile(g.imageFile):
     print("Source " + g.imageFile + " was not found.")
     sys.exit(2)
+
+# automatically set ShrinkIt mode if extension suggests it
+if (g.SHK or
+    g.imageFile[-3:].lower() == "shk" or
+    g.imageFile[-3:].lower() == "sdk" or
+    g.imageFile[-3:].lower() == "bxy"):
+    if not g.AD:
+        print("ShrinkIt archives must be used with -ad option.")
+        sys.exit(2)
+    elif (g.DIR or g.EX):
+        usage()
+    elif (len(args) == 4):
+        print("Only entire ShrinkIt archives can be extracted, not one file.")
+        usage(2)
+    elif (not os.path.isfile("/usr/local/bin/nulib2") and
+        not os.path.isfile("/usr/bin/nulib2") and
+        not os.path.isfile("nulib2")):
+        print("Nulib2 not found. Can't expand ShrinkIt archive.")
+        sys.exit(2)
+    else:
+        g.SHK = 1
+if g.SHK:
+    unshkdir = ("/tmp/cppo-" + str(uuid.uuid4()))
+    makedirs(unshkdir)
+    os.system("cd " + unshkdir + "; " +
+              "nulib2 -xse " + os.path.abspath(g.imageFile) + " > /dev/null")
+    fileNames = [name for name in os.listdir(unshkdir)
+                 if not name.startswith(".")]
+    if (len(fileNames) == 1 and os.path.isdir(unshkdir + "/" + fileNames[0])):
+        oneDir = True
+        volumeName=toProDOSName(fileNames[0])
+    else:
+        oneDir = False
+        volumeName = toProDOSName(os.path.basename(g.imageFile))
+        imageFileExt = os.path.splitext(g.imageFile)[1].upper()
+        if (volumeName[-4:].lower() == ".shk" or
+            volumeName[-4:].lower() == ".sdk" or
+            volumeName[-4:].lower() == ".bxy"):
+            volumeName = volumeName[0:-4]
+    # recursively process unshrunk archive hierarchy
+    for dirName, subdirList, fileList in os.walk(unshkdir):
+        subdirList.sort()
+        g.targetDir = (args[2] + (("/" + volumeName) if not oneDir else "") +
+                      ("/" if (dirName.count('/') > 2) else "") +
+                       "/".join(dirName.split('/')[3:])) # chop off tempdir
+        g.ADdir = (g.targetDir + "/.AppleDouble")
+        print("/".join(dirName.split('/')[3:]))
+        makedirs(g.targetDir)
+        makedirs(g.ADdir)
+        for fname in sorted(fileList):
+            processEntry(dirName, fname)
+    if (unshkdir.count('/') > 2):
+        unshkdir = "/".join(dirName.split('/')[0:3])
+    shutil.rmtree(unshkdir, True)
+    syncExit()
+            
 g.imageData = loadFile(g.imageFile)
 
 if (len(args) == 4):
