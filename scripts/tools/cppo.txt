@@ -380,9 +380,9 @@ def processEntry(arg1, arg2):
                 g.targetDir = g.targetDir.rsplit("/", 1)[0]
             g.ADdir = (g.targetDir + "/.AppleDouble")
         else: # if ProDOS file either from image or ShrinkIt archive
-            if not g.PDOSPATH_INDEX:
+            if not g.PDOSPATH_INDEX and not (g.DIR and shk_rfork):
                 print("   " + g.activeFileName +
-                     ((" [resource fork]" + 
+                     ((" [resource fork]" +
                      ("" if (g.AD or g.EX)
                          else " (ignoring, use -e or -ad to keep)"))
                      if shk_rfork else ""))
@@ -956,8 +956,6 @@ if (g.SHK or
     if (os.name == "nt"):
         print("ShrinkIt archives cannot be extracted on Windows.")
         sys.exit(2)
-    elif (g.DIR):
-        usage()
     elif (len(args) == 4):
         print("Only entire ShrinkIt archives can be extracted, not one file.")
         usage(2)
@@ -990,14 +988,16 @@ if g.SHK:
     # recursively process unshrunk archive hierarchy
     for dirName, subdirList, fileList in os.walk(unshkdir):
         subdirList.sort()
-        g.targetDir = (args[2] + ("" if oneDir else ("/" + volumeName)) +
-                      ("/" if (dirName.count('/') > 2) else "") +
-                       "/".join(dirName.split('/')[3:])) # chop off tempdir
-        g.ADdir = (g.targetDir + "/.AppleDouble")
-        print("/".join(dirName.split('/')[3:]) if oneDir else "\n"+volumeName)
-        makedirs(g.targetDir)
+        if not g.DIR:
+            g.targetDir = (args[2] + ("" if oneDir else ("/" + volumeName)) +
+                          ("/" if (dirName.count('/') > 2) else "") +
+                           "/".join(dirName.split('/')[3:])) # chop off tempdir
+            g.ADdir = (g.targetDir + "/.AppleDouble")
+        if not g.DIR:
+            makedirs(g.targetDir)
         if g.AD:
             makedirs(g.ADdir)
+        print("/".join(dirName.split('/')[3:]) if oneDir else "\n"+volumeName)
         for fname in sorted(fileList):
             processEntry(dirName, fname)
     shutil.rmtree(unshkdir, True)
@@ -1037,6 +1037,7 @@ if (len(args) == 4):
     g.ADdir = (g.targetDir + "/.AppleDouble")
     if not ((not g.AD) or os.path.isdir(g.ADdir)):
         mkdir(g.ADdir)
+    print()
     processDir(2)
     print("ProDOS file not found within image file.")
     sys.exit(2)
@@ -1049,6 +1050,7 @@ else:
             makedirs(g.targetDir)
         if not ((not g.AD) or os.path.isdir(g.ADdir)):
             makedirs(g.ADdir)
+    print()
     processDir(2)
     if not g.DIR:
         syncExit()
