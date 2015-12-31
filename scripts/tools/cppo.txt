@@ -6,7 +6,7 @@
 copy all files:
     cppo [-uc] [-shk] [-ad|-e] imagefile target_directory
 copy one file:
-    cppo [-uc] [-ad|-e] imagefile /FULL/PRODOS/PATH target_path
+    cppo [-uc] [-shk] [-ad|-e] imagefile /FULL/PRODOS/PATH target_path
 catalog image:
     cppo [-uc] -cat imagefile
 
@@ -15,7 +15,8 @@ catalog image:
       forks, for adding to ShrinkIt archives with Nulib2
       using its -e option.
 -uc : Copy GS/OS mixed case filenames as uppercase.
--shk: Use ShrinkIt archive instead of disk image; must be used with -ad.
+-shk: Use ShrinkIt archive instead of disk image; not available on Windows.
+      (Automatically set if file extension indicates a ShrinkIt archive.)
 
 Wildcard matching/globbing (*) is not supported.
 No verification or validation of the disk image is performed.
@@ -380,7 +381,7 @@ def processEntry(arg1, arg2):
                 g.targetDir = g.targetDir.rsplit("/", 1)[0]
             g.ADdir = (g.targetDir + "/.AppleDouble")
         else: # if ProDOS file either from image or ShrinkIt archive
-            if not g.PDOSPATH_INDEX and not (g.DIR and shk_rfork):
+            if not g.PDOSPATH_INDEX and not (g.DIR and shk_rfork and not g.EX and not g.AD):
                 print("   " + g.activeFileName +
                      ((" [resource fork]" +
                      ("" if (g.AD or g.EX)
@@ -938,10 +939,6 @@ while True: # breaks when there are no more arguments starting with dash
 
 if not ((g.DIR and len(args) >= 2) or (len(args) >= 3)):
     usage()
-if ((len(args) == 4) and
-    (slyce(args[2],0,1) != "/") and
-    (slyce(args[2],0,1) != ":")):
-    usage()
 
 g.imageFile = args[1]
 if not os.path.isfile(g.imageFile):
@@ -956,9 +953,6 @@ if (g.SHK or
     if (os.name == "nt"):
         print("ShrinkIt archives cannot be extracted on Windows.")
         sys.exit(2)
-    elif (len(args) == 4):
-        print("Only entire ShrinkIt archives can be extracted, not one file.")
-        usage(2)
     else:
         try:
             with open(os.devnull, "w") as fnull:
@@ -967,11 +961,27 @@ if (g.SHK or
         except Exception:
             print("Nulib2 is not available; not expanding ShrinkIt archive.")
             sys.exit(2)
+
+if (not g.SHK and
+    (len(args) == 4) and
+    (slyce(args[2],0,1) != "/") and
+    (slyce(args[2],0,1) != ":")):
+    usage()
+
 if g.SHK:
+    if not g.DIR:
+        targetDir = (args[3] if (len(args) == 4) else args[2])
     unshkdir = ("/tmp/cppo-" + str(uuid.uuid4()))
     makedirs(unshkdir)
-    os.system("cd " + unshkdir + "; " +
-              "nulib2 -xse " + os.path.abspath(g.imageFile) + " > /dev/null")
+    if not os.system("cd " + unshkdir + "; " +
+                     "nulib2 -xse " +
+                     os.path.abspath(g.imageFile) + " " +
+                     (args[2].replace('/', ':') if (len(args) == 4) else "") +
+                     " | grep -q 'no records match' > /dev/null"):
+        print(
+          "File not found in ShrinkIt archive. Try cppo -cat to get the path,")
+        print("  and omit any leading slash or colon.")
+        sys.exit(1)
     fileNames = [name for name in os.listdir(unshkdir)
                  if not name.startswith(".")]
     if (len(fileNames) == 1 and os.path.isdir(unshkdir + "/" + fileNames[0])):
@@ -989,15 +999,17 @@ if g.SHK:
     for dirName, subdirList, fileList in os.walk(unshkdir):
         subdirList.sort()
         if not g.DIR:
-            g.targetDir = (args[2] + ("" if oneDir else ("/" + volumeName)) +
+            g.targetDir = (targetDir + ("" if oneDir else ("/" + volumeName)) +
                           ("/" if (dirName.count('/') > 2) else "") +
                            "/".join(dirName.split('/')[3:])) # chop off tempdir
             g.ADdir = (g.targetDir + "/.AppleDouble")
         if not g.DIR:
             makedirs(g.targetDir)
-        if g.AD:
-            makedirs(g.ADdir)
-        print("/".join(dirName.split('/')[3:]) if oneDir else "\n"+volumeName)
+            if g.AD:
+                makedirs(g.ADdir)
+        if (len(args) < 4):
+            print(
+              "/".join(dirName.split('/')[3:]) if oneDir else "\n"+volumeName)
         for fname in sorted(fileList):
             processEntry(dirName, fname)
     shutil.rmtree(unshkdir, True)
