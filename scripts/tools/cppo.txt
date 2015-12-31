@@ -357,7 +357,7 @@ def processEntry(arg1, arg2):
         g.activeFileSize = getFileLength(arg1, arg2)
     else:
         filePath = (os.path.join(arg1, arg2))
-        g.activeFileName = arg2.split('#')[0]
+        g.activeFileName = (arg2 if g.EX else arg2.split('#')[0])
 
     if (not g.PDOSPATH_INDEX or
         g.activeFileName.upper() == g.PDOSPATH_SEGMENT.upper()):
@@ -382,15 +382,20 @@ def processEntry(arg1, arg2):
         else: # if ProDOS file either from image or ShrinkIt archive
             if not g.PDOSPATH_INDEX:
                 print("   " + g.activeFileName +
-                     (" [resource fork]" if shk_rfork else ""))
+                     ((" [resource fork]" + 
+                     ("" if (g.AD or g.EX)
+                         else " (ignoring, use -e or -ad to keep)"))
+                     if shk_rfork else ""))
             if g.DIR:
                 return
             if not g.targetName:
                 g.targetName = g.activeFileName
-            if g.EX:
+            if g.EX and not g.SHK:
                 eTargetName = (g.targetName + "#" +
                                getFileType(arg1, arg2).lower() +
                                getAuxType(arg1, arg2).lower())
+            elif g.EX and g.SHK:
+                eTargetName = arg2
             touch(g.targetDir + "/" + g.targetName)
             if g.AD:
                 makeADfile()
@@ -413,11 +418,12 @@ def processEntry(arg1, arg2):
                                    time.ctime(
                                    os.path.getmtime(filePath)))))
                 creationDate = modifiedDate
-                if not shk_rfork:
+                if not shk_rfork or g.EX:
                     shutil.move(filePath, (g.targetDir + "/" + g.targetName))
-                else: # shk_rfork:
+                elif g.AD and shk_rfork:
                     with open(filePath, 'rb') as infile:
                         g.adFileData += infile.read()
+                        
             if g.AD: # AppleDouble
                 # set dates
                 ADfilePath = (g.ADdir + "/" + g.targetName)
@@ -432,13 +438,13 @@ def processEntry(arg1, arg2):
                 writecharsHex(g.adFileData,
                               654,
                               ((getFileType(arg1, arg2) +
-                               getAuxType(arg1, arg2)) if not g.SHK else
+                                getAuxType(arg1, arg2)) if not g.SHK else
                                (arg2.split('#')[1][0:2] +
-                               arg2.split('#')[1][2:6])))                                   
+                                arg2.split('#')[1][2:6])))                                   
                 writechars(g.adFileData, 657, b'pdos')
                 saveFile(ADfilePath, g.adFileData)
             touch((g.targetDir + "/" + g.targetName), modifiedDate)
-            if g.EX: # extended name
+            if g.EX and not shk_rfork: # extended name from ProDOS image
                 os.rename((g.targetDir + "/" + g.targetName),
                           (g.targetDir + "/" + eTargetName))
                 if (len(g.exFileData) > 0):
@@ -483,7 +489,9 @@ def processForkedFile(arg1):
                               readcharHex(g.imageData, forkStart+f+6) +
                               readcharHex(g.imageData, forkStart+f+5))
             # print(">>>" + rsrcForkLenHex)
-            print("    [resource fork]")
+            print("    [resource fork]" +
+                 ("" if (g.AD or g.EX)
+                     else " (ignoring, use -e or -ad to keep)"))
             if g.AD:
                 writecharsHex(g.adFileData, 35, rsrcForkLenHex)
         else:
@@ -948,10 +956,7 @@ if (g.SHK or
     if (os.name == "nt"):
         print("ShrinkIt archives cannot be extracted on Windows.")
         sys.exit(2)
-    elif not g.AD and not g.DIR:
-        print("ShrinkIt archives must be used with -ad option.")
-        sys.exit(2)
-    elif (g.DIR or g.EX):
+    elif (g.DIR):
         usage()
     elif (len(args) == 4):
         print("Only entire ShrinkIt archives can be extracted, not one file.")
@@ -991,7 +996,8 @@ if g.SHK:
         g.ADdir = (g.targetDir + "/.AppleDouble")
         print("/".join(dirName.split('/')[3:]) if oneDir else "\n"+volumeName)
         makedirs(g.targetDir)
-        makedirs(g.ADdir)
+        if g.AD:
+            makedirs(g.ADdir)
         for fname in sorted(fileList):
             processEntry(dirName, fname)
     shutil.rmtree(unshkdir, True)
