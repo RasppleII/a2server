@@ -1001,7 +1001,7 @@ if g.SHK:
         if not g.DIR:
             g.targetDir = (targetDir + ("" if oneDir else ("/" + volumeName)) +
                           ("/" if (dirName.count('/') > 2) else "") +
-                           "/".join(dirName.split('/')[3:])) # chop off tempdir
+                          ("/".join(dirName.split('/')[3:]))) # chop tempdir
             g.ADdir = (g.targetDir + "/.AppleDouble")
         if not g.DIR:
             makedirs(g.targetDir)
@@ -1016,6 +1016,43 @@ if g.SHK:
     syncExit()
             
 g.imageData = loadFile(g.imageFile)
+
+# detect if image is 2mg and remove 64-byte header if so
+if (g.imageFile.lower().endswith(".2mg") or
+    g.imageFile.lower().endswith(".2img")):
+    g.imageData = g.imageData[64:]
+    
+# detect if image is DOS-ordered and convert if so
+if (len(g.imageData) == 143360):
+    prodosDisk = False
+    dosOrder = False
+    # is boot sector valid
+    if (to_hex(readchars(g.imageData, 0, 4)) == '0138b003'):
+        if (readchars(g.imageData, 259, 6) == b'PRODOS'):
+            prodosDisk = True
+        elif (readchars(g.imageData, 3587, 6) == b'PRODOS'):
+            prodosDisk = True
+            dosOrder = True
+    # fall back on disk extension if weird boot block (e.g. AppleCommander)
+    if not prodosDisk:
+        if (g.imageFile.lower().endswith(".dsk") or
+              g.imageFile.lower().endswith(".do")):
+              dosOrder = True
+    if dosOrder:
+        # for each track,
+        # read each sector in the right sequence to make
+        # valid ProDOS blocks (sector pairs)
+        imageDataPO = bytearray(143360)
+        for t in range(0, 35):
+            for s in [0, 14, 13, 12, 11, 10, 9,
+                      8, 7, 6, 5, 4, 3, 2, 1, 15]:
+                writechars(imageDataPO,
+                           (t*16+(s if (s==0 or s==15) else (15-s)))*256,
+                           readchars(g.imageData, (t*16+s)*256, 256))
+        g.imageData=bytes(imageDataPO)
+
+    if not prodosDisk:
+        print("Unable to verify if this is a ProDOS disk image or not.")
 
 if (len(args) == 4):
     g.PDOSPATH = args[2]
