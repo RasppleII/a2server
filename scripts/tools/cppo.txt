@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 # vim: set tabstop=4 shiftwidth=4 expandtab filetype=python:
 
 """cppo: Copy or catalog one or all files from a ProDOS raw disk image.
@@ -43,6 +43,7 @@ import datetime
 import shutil
 import errno
 import uuid
+import subprocess
 
 # Intentially fails on pre-2.6 so user can see what's wrong
 b'ERROR: cppo requires Python 2.6 or later, including 3.x.'
@@ -700,7 +701,7 @@ def writecharHex(arg1, arg2, arg3):
 # exit: 21=invalid arg1, 22=invalid arg2, 23=invalid arg3
     if not isinstance(arg1, bytearray): sys.exit(21)
     if (arg2<0): sys.exit(22)
-    if not isinstance(arg3, type("".encode().decode())): sys.exit(23)
+    if not isinstance(arg3, type("".encode("L1").decode("L1"))): sys.exit(23)
     arg1[arg2:arg2+1] = to_bytes(arg3)
 
 def writecharsHex(arg1, arg2, arg3):
@@ -712,7 +713,7 @@ def writecharsHex(arg1, arg2, arg3):
 # exit: 21=invalid arg1, 22=invalid arg2, 23=invalid arg3
     if not isinstance(arg1, bytearray): sys.exit(21)
     if (arg2<0): sys.exit(22)
-    if not isinstance(arg3, type("".encode().decode())): sys.exit(23)
+    if not isinstance(arg3, type("".encode("L1").decode("L1"))): sys.exit(23)
     arg1[arg2:arg2+len(to_bytes(arg3))] = to_bytes(arg3)
 
 #---- IvanX general purpose functions ----#
@@ -735,8 +736,9 @@ def to_hex(val):
     if isinstance(val, bytes): # bytes
         return b2a_hex(val).decode("L1")
     elif isnumber(val):
-        # .encode().decode() always returns unicode in both P2 and P3
-        return (hex(val)[2:].split("L")[0]).encode("L1").decode("L1")
+        # hex returns str/bytes in P2, but str/unicode in P3, so
+        # .encode().decode() always returns unicode in either
+        return hex(val)[2:].encode("L1").decode("L1").split("L")[0]
     else:
         raise Exception("to_hex() requires bytes, int/long, or [bin-ustr]")
 
@@ -758,7 +760,7 @@ def to_dec(val):
         return int(val[0], 2)
     elif isinstance(val, bytes): # bytes
         return int(to_hex(val), 16)
-    elif isinstance(val, type("".encode().decode())): # hex-ustr
+    elif isinstance(val, type("".encode("L1").decode("L1"))): # hex-ustr
         return int(val, 16)
     else:
         raise Exception("to_dec() requires bytes, hex-ustr or [bin-ustr]")
@@ -767,7 +769,7 @@ def to_bin(val):
     """convert bytes, hex-ustr, or int/long to bin-ustr"""
     if isinstance(val, bytes): # bytes
         return (bin(to_dec(to_hex(val))))[2:].encode("L1").decode("L1")
-    elif isinstance(val, type("".encode().decode())): # hex-ustr
+    elif isinstance(val, type("".encode("L1").decode("L1"))): # hex-ustr
         return (bin(int(val, 16)))[2:].encode("L1").decode("L1")
     elif isnumber(val): # int/long
         return (bin(val))[2:].encode("L1").decode("L1")
@@ -781,7 +783,7 @@ def to_bytes(val):
         val = to_hex(val[0])
     if isnumber(val): # int/long
         val = to_hex(val)
-    if isinstance(val, type("".encode().decode())): # hex-ustr
+    if isinstance(val, type("".encode("L1").decode("L1"))): # hex-ustr
         return a2b_hex(bytes(val.encode("L1"))) # works on both P2 and P3
     else:
         raise Exception(
@@ -888,10 +890,14 @@ def isnumber(number):
 # --- start
 
 args = sys.argv
-if (len(args) == 1):
-    usage()
 
-while (slyce(args[1],0,1) == "-"):
+while True: # breaks when there are no more arguments starting with dash
+    if (len(args) == 1):
+        usage()
+
+    if (slyce(args[1],0,1) != "-"):
+        break
+        
     if (args[1] == "-s"):
         g.silent = 1
         args = args[1:] #shift
@@ -939,7 +945,10 @@ if (g.SHK or
     g.imageFile[-3:].lower() == "shk" or
     g.imageFile[-3:].lower() == "sdk" or
     g.imageFile[-3:].lower() == "bxy"):
-    if not g.AD:
+    if (os.name == "nt"):
+        print("ShrinkIt archives cannot be extracted on Windows.")
+        sys.exit(2)
+    elif not g.AD and not g.DIR:
         print("ShrinkIt archives must be used with -ad option.")
         sys.exit(2)
     elif (g.DIR or g.EX):
@@ -947,13 +956,14 @@ if (g.SHK or
     elif (len(args) == 4):
         print("Only entire ShrinkIt archives can be extracted, not one file.")
         usage(2)
-    elif (not os.path.isfile("/usr/local/bin/nulib2") and
-        not os.path.isfile("/usr/bin/nulib2") and
-        not os.path.isfile("nulib2")):
-        print("Nulib2 not found. Can't expand ShrinkIt archive.")
-        sys.exit(2)
     else:
-        g.SHK = 1
+        try:
+            with open(os.devnull, "w") as fnull:
+                subprocess.call("nulib2", stdout = fnull, stderr = fnull)
+            g.SHK=1
+        except Exception:
+            print("Nulib2 is not available; not expanding ShrinkIt archive.")
+            sys.exit(2)
 if g.SHK:
     unshkdir = ("/tmp/cppo-" + str(uuid.uuid4()))
     makedirs(unshkdir)
@@ -963,7 +973,7 @@ if g.SHK:
                  if not name.startswith(".")]
     if (len(fileNames) == 1 and os.path.isdir(unshkdir + "/" + fileNames[0])):
         oneDir = True
-        volumeName=toProDOSName(fileNames[0])
+        volumeName = toProDOSName(fileNames[0])
     else:
         oneDir = False
         volumeName = toProDOSName(os.path.basename(g.imageFile))
@@ -975,17 +985,15 @@ if g.SHK:
     # recursively process unshrunk archive hierarchy
     for dirName, subdirList, fileList in os.walk(unshkdir):
         subdirList.sort()
-        g.targetDir = (args[2] + (("/" + volumeName) if not oneDir else "") +
+        g.targetDir = (args[2] + ("" if oneDir else ("/" + volumeName)) +
                       ("/" if (dirName.count('/') > 2) else "") +
                        "/".join(dirName.split('/')[3:])) # chop off tempdir
         g.ADdir = (g.targetDir + "/.AppleDouble")
-        print("/".join(dirName.split('/')[3:]))
+        print("/".join(dirName.split('/')[3:]) if oneDir else "\n"+volumeName)
         makedirs(g.targetDir)
         makedirs(g.ADdir)
         for fname in sorted(fileList):
             processEntry(dirName, fname)
-    if (unshkdir.count('/') > 2):
-        unshkdir = "/".join(dirName.split('/')[0:3])
     shutil.rmtree(unshkdir, True)
     syncExit()
             
