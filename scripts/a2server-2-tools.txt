@@ -59,8 +59,8 @@ if ! hash nulib2 &> /dev/null; then
     echo "A2SERVER: Installing nulib2..."
 
     cd /tmp
-    if [[ $arch ]]; then
-        { wget -qO- "${binaryURL}precompiled/nulib2-3.1.0-${arch}.tgz" | sudo tar Pzx; } &> /dev/null
+    if [[ $arch && ! -f /tmp/a2server-compileAlways ]]; then
+        { wget -qO- "${binaryURL}precompiled/nulib2-3.1.0a1-${arch}.tgz" | sudo tar Pzx; } &> /dev/null
     fi
         
     if ! hash nulib2 &> /dev/null; then
@@ -76,27 +76,30 @@ if ! hash nulib2 &> /dev/null; then
         sudo apt-get -y clean
 
         cd /tmp
-        rm -rf /tmp/nulib &> /dev/null
-        mkdir /tmp/nulib
-        cd /tmp/nulib
+        rm -rf /tmp/nulib2 &> /dev/null
+        mkdir /tmp/nulib2
+        cd /tmp/nulib2
         if [[ $useExternalURL ]]; then
-            wget -q -O nulibdist.tar.gz http://web.archive.org/web/20131031160750/http://www.nulib.com/downloads/nulibdist.tar.gz
-            tar zxf nulibdist.tar.gz &> /dev/null
+            wget -q -O nulib2-3.1.0a1.zip "https://github.com/fadden/nulib2/archive/51af83986cd5798daa7e0d82a161c9d3963c72bc.zip"
+            unzip nulib2-3.1.0a1.zip 2> /dev/null
+            rm nulib2-3.1.0a1.zip &> /dev/null
         fi
-        if [[ ! -d nulib2-220 ]]; then
-            wget -q -O nulibdist.tar.gz ${binaryURL}external/source/nulibdist.tar.gz
-            tar zxf nulibdist.tar.gz &> /dev/null
+        if [ ! -d nulib2* ]; then
+            wget -q -O nulib2-3.1.0a1.zip "${binaryURL}external/source/nulib2-3.1.0a1.zip"
+            unzip nulib2-3.1.0a1.zip 2> /dev/null
+            rm nulib2-3.1.0a1.zip &> /dev/null
         fi
-        cd nufxlib*
+        cd nulib2*
+        cd nufxlib
         ./configure
         make
         sudo make install
-        cd ../nulib2*
+        cd ../nulib2
         ./configure
         make
         sudo make install
         cd
-        rm -rf /tmp/nulib
+        rm -rf /tmp/nulib2
     fi
 
 else
@@ -123,7 +126,7 @@ if ! command -v unar > /dev/null; then
     fi
     
     if ! command -v unar > /dev/null; then
-        if [[ $arch ]]; then
+        if [[ $arch && ! -f /tmp/a2server-compileAlways ]]; then
             # Dependencies: for unar
             sudo apt-get -y install libgnustep-base1.22
             sudo apt-get clean

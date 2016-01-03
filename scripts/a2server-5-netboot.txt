@@ -280,7 +280,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                             wget -qO $outfile "${binaryURL}external/appleii/gsos603/$diskname.po"
                         fi
                     fi
-                    cppo -s -ad $outfile $netInstallDir &> /dev/null
+                    cppo -s -ad $outfile $netInstallDir
                 done
                 rm *.sea* &> /dev/null
                 sed -i "s/\([^\\]\r:\)/\1A2FILES:GSOS.Installer:Net.Install:/g" $netInstallDir/Install/Scripts/*

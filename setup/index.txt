@@ -9,7 +9,7 @@
 # to download and execute, type:
 # wget ivanx.com/a2server/setup; source setup
 
-a2serverVersion="129d3"
+a2serverVersion="129d4"
 
 # Ensure URL we'll use ends in a /
 case "$A2SERVER_SCRIPT_URL" in
@@ -43,6 +43,7 @@ skipRepoUpdate=
 autoAnswerYes=
 setupNetBoot=
 setupWindowsSharing=
+compileAlways=
 updateRasppleII=
 rm /tmp/a2server-* 2> /dev/null
 while [[ $1 ]]; do
@@ -62,6 +63,10 @@ while [[ $1 ]]; do
         shift
         setupWindowsSharing="-w"
         touch /tmp/a2server-setupWindowsSharing
+    elif [[ $1 == "-c" ]]; then
+        shift
+        compileAlways="-c"
+        touch /tmp/a2server-compileAlways
     elif [[ $1 == "-os" || $1 == "os" ]]; then
         # elif [[ ${1,,} == "rasppleii" || ${1,,} == "raspple" || ${1,,} == "rasappleii" || ${1,,} == "rasapple" || ${1,,} == "raspple2" || ${1,,} == "rasapple2" ]]; then
         shift
@@ -80,6 +85,7 @@ while [[ $1 ]]; do
         echo "-r: don't update package repositories"
         echo "-b: auto-setup network boot (use with -y)"
         echo "-w: auto-setup Windows file sharing (use with -y)"
+        echo "-c: compile non-package items, rather than downloading binaries"
         if [[ $isRpi ]]; then
             echo "-os: update Raspbian OS, A2CLOUD, A2SERVER, and Apple II Pi"
         fi
@@ -338,8 +344,5 @@ fi
 
 unset a2server_update 2> /dev/null
 unset doSetup 2> /dev/null
-rm /tmp/a2server-autoAnswerYes 2> /dev/null
-rm /tmp/a2server-packageReposUpdated 2> /dev/null
-rm /tmp/a2server-setupNetBoot 2> /dev/null
-rm /tmp/a2server-setupWindowsSharing 2> /dev/null
+rm /tmp/a2server-* 2> /dev/null
 rm setup &> /dev/null

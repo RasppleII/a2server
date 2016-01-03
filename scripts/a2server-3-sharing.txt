@@ -124,7 +124,7 @@ else
         fi
         
         # install Netatalk
-        if [[ $arch ]]; then
+        if [[ $arch && ! -f /tmp/a2server-compileAlways ]]; then
             { wget -qO- "${binaryURL}precompiled/netatalk224-${arch}_${debianName}.tgz" | sudo tar Pzx; } &> /dev/null
         fi
         sudo mandb &> /dev/null
@@ -200,7 +200,7 @@ fi
 if ! command -v macipgw > /dev/null; then
     echo "A2SERVER: Installing TCP over AppleTalk (MacIP)..."
     
-    if [[ $arch ]]; then
+    if [[ $arch && ! -f /tmp/a2server-compileAlways ]]; then
         { wget -qO- "${binaryURL}precompiled/macipgw-${arch}.tgz" | sudo tar Pzx; } 2> /dev/null
     fi
     
@@ -211,14 +211,16 @@ if ! command -v macipgw > /dev/null; then
         mkdir /tmp/macipgw
         cd /tmp/macipgw
         if [[ $useExternalURL ]]; then
-            wget -qO macipgw.zip "https://github.com/zero2sixd/macipgw/archive/master.zip"
-            unzip macipgw-src.zip &> /dev/null
+            wget -qO macipgw.zip "https://github.com/zero2sixd/macipgw/archive/2a5f6a7521a627e46b18468d44f4306fb0a7b7ab.zip"
+            unzip macipgw.zip 2> /dev/null
+            rm macipgw.zip &> /dev/null
         fi
         if [[ ! -d macipgw-master ]]; then
-            wget -qO macipgw-src.zip "${binaryURL}external/source/macipgw-src.zip"
-            unzip macipgw-src.zip &> /dev/null
+            wget -qO macipgw.zip "${binaryURL}external/source/macipgw.zip"
+            unzip macipgw.zip 2> /dev/null
+            rm macipgw.zip &> /dev/null
         fi
-        cd macipgw-master
+        cd macipgw*
         make
         sudo make install
         cd "$wd"
@@ -389,7 +391,7 @@ if ! command -v ciopfs > /dev/null; then
 
     # Dependency: For ciopfs
     sudo apt-get -y install fuse libglib2.0-0 libattr1 libfuse2
-    if [[ $arch ]]; then
+    if [[ $arch && ! -f /tmp/a2server-compileAlways ]]; then
         { wget -qO- "${binaryURL}precompiled/ciopfs-${arch}.tgz" | sudo tar Pzx; } &> /dev/null
     fi
     if [[ -f /etc/fuse.conf ]] && sudo grep -q user_allow_other /etc/fuse.conf; then
