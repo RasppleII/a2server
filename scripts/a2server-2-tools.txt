@@ -109,7 +109,7 @@ fi
 # download and install The Unarchiver, for expanding Apple disk images
 # http://wakaba.c3.cx/s/apps/unarchiver.html
 
-if ! command -v unar > /dev/null; then
+if ! hash unar &> /dev/null; then
 
     echo "A2SERVER: Installing The Unarchiver..."
 
@@ -125,7 +125,7 @@ if ! command -v unar > /dev/null; then
         sudo apt-get clean
     fi
     
-    if ! command -v unar > /dev/null; then
+    if ! hash unar &> /dev/null; then
         if [[ $arch && ! -f /tmp/a2server-compileAlways ]]; then
             # Dependencies: for unar
             sudo apt-get -y install libgnustep-base1.22
@@ -134,7 +134,7 @@ if ! command -v unar > /dev/null; then
         fi
 
         # If all else fails, compile from source.
-        if ! command -v unar >/dev/null; then
+        if ! hash unar &> /dev/null; then
 
             # Dependencies: build-deps for unar
             sudo apt-get -y install build-essential libgnustep-base-dev libz-dev libbz2-dev libssl-dev libicu-dev unzip
@@ -165,7 +165,7 @@ else
     echo "A2SERVER: The Unarchiver has already been installed."
 fi
 
-if ! command -v unzip >/dev/null; then
+if ! hash unzip &> /dev/null; then
     echo "A2SERVER: Installing unzip..."
     if [[ ! -f /tmp/a2server-packageReposUpdated ]]; then
         # prepare for installing packages
