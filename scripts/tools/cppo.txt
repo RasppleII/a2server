@@ -519,6 +519,8 @@ def processEntry(arg1, arg2):
           getFileLength(arg1, arg2), getAuxType(arg1, arg2),
           getCreationDate(arg1, arg2), getModifiedDate(arg1, arg2))
     '''
+    
+    origFileName = None
     g.shk_rfork = (1 if (g.SHK and (arg2[-1:] == "r")) else 0)
     if g.SHK: # ShrinkIt archive
         g.activeFileName = (arg2 if g.EX else arg2.split('#')[0])
@@ -1145,6 +1147,7 @@ if (g.SHK or
             sys.exit(2)
 
 if g.SHK:
+    g.PNAME = 0
     if not g.DIR:
         targetDir = (args[3] if (len(args) == 4) else args[2])
     unshkdir = ("/tmp/cppo-" + str(uuid.uuid4()))
@@ -1187,6 +1190,8 @@ if g.SHK:
             processEntry(dirName, fname)
     shutil.rmtree(unshkdir, True)
     syncExit()
+    
+# end script if SHK
             
 g.imageData = loadFile(g.imageFile)
 
@@ -1298,12 +1303,15 @@ if g.D33:
         print("ProDOS file not found within image file.")
     syncExit()
 
+# below: ProDOS
+
 g.activeDirBlock = 0
 g.activeFileName = ""
 g.activeFileSize = 0
 g.activeFileBytesCopied = 0
 g.resourceFork = 0
 g.PDOSPATH_INDEX = 0
+g.PNAME = 0
 
 if (len(args) == 4):
     g.PDOSPATH = g.extractFile.replace(':', '/').split('/')
