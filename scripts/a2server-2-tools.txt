@@ -45,16 +45,25 @@ fi
 
 echo "A2SERVER: Installing A2SERVER tools..."
 
-if ! command -v nulib2 > /dev/null; then
+# delete older nulib2 which doesn't correctly handle zero-length forks in GSHK-created archives
+if hash nulib2 &> /dev/null; then
+    nulib2version=$(nulib2 | sed -n 2p | sed 's|^.*v\([0-9]\)\.\([0-9]\)\.\([0-9]\).*$|\1\2\3|' 2> /dev/null)
+    if (( $nulib2version < 310 )); then
+        sudo apt-get -y purge nulib2 &> /dev/null
+        sudo rm $(command -v nulib2) &> /dev/null
+    fi
+fi
+
+if ! hash nulib2 &> /dev/null; then
 
     echo "A2SERVER: Installing nulib2..."
 
     cd /tmp
     if [[ $arch ]]; then
-        { wget -qO- "${binaryURL}precompiled/nulib2-${arch}.tgz" | sudo tar Pzx; } &> /dev/null
+        { wget -qO- "${binaryURL}precompiled/nulib2-3.1.0-${arch}.tgz" | sudo tar Pzx; } &> /dev/null
     fi
-
-    if ! command -v nulib2 > /dev/null; then
+        
+    if ! hash nulib2 &> /dev/null; then
 
         if [[ ! -f /tmp/a2server-packageReposUpdated ]]; then
             # prepare for installing packages
@@ -132,12 +141,12 @@ if ! command -v unar > /dev/null; then
             mkdir /tmp/unar
             cd /tmp/unar
             if [[ $useExternalURL ]]; then
-                wget -O unar_1.8.zip https://github.com/incbee/Unarchiver/archive/unar-1.8.zip
-                unzip -o unar_1.8.zip &> /dev/null
+                wget -O unar-1.8.1.zip https://github.com/incbee/Unarchiver/archive/unar-1.8.1.zip
+                unzip -o unar-1.8.1.zip &> /dev/null
             fi
             if [ ! -d *Unarchiver*/XADMaster ]; then # need single bracket for glob
-                wget -O unar_1.8.zip ${binaryURL}external/source/unar-1.8.zip
-                unzip -o unar_1.8.zip &> /dev/null
+                wget -O unar-1.8.1.zip ${binaryURL}external/source/unar-1.8.1.zip
+                unzip -o unar-1.8.1.zip &> /dev/null
             fi
             cd *Unarchiver*/XADMaster
             make -f Makefile.linux

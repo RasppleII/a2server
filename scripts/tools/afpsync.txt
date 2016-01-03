@@ -43,7 +43,6 @@ processPath () {
                 echo "AppleDouble files have been updated for volume $sharepath."
             else
                 [[ ! $renameLower ]] && echo "Could not update all files on volume $sharepath."
-                [[ ! $renameLower ]] && echo "Ensure filenames are all caps on volume $sharepath."
                 if [[ $showerrors ]]; then
                     echo $result \
                         | while read LINE; do
@@ -63,7 +62,6 @@ processPath () {
                     $0 $sharepath
                 else
                     echo "Use afpsync -e to see error details."
-                    echo "Use afpsync -r to rename lowercase names to uppercase."
                 fi
             fi
             unset IFS

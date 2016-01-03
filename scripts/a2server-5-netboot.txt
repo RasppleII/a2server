@@ -280,7 +280,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                             wget -qO $outfile "${binaryURL}external/appleii/gsos603/$diskname.po"
                         fi
                     fi
-                    cppo -s -ad $outfile $netInstallDir 2> /dev/null
+                    cppo -s -ad $outfile $netInstallDir &> /dev/null
                 done
                 rm *.sea* &> /dev/null
                 sed -i "s/\([^\\]\r:\)/\1A2FILES:GSOS.Installer:Net.Install:/g" $netInstallDir/Install/Scripts/*
@@ -472,7 +472,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                     wget -qO shrinkit.sdk ${binaryURL}external/appleii/shrinkit.sdk
                     nulib2 -x -s shrinkit.sdk &> /dev/null
                 fi
-                cppo -s -ad SHRINKIT /SHRINKIT/SHRINKIT $diskToolsP8Dir 2> /dev/null
+                cppo -s -ad SHRINKIT /SHRINKIT/SHRINKIT $diskToolsP8Dir &> /dev/null
                 afpsync -v $sharepath > /dev/null
             fi
         
@@ -515,10 +515,10 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                 fi
                 truncate -s 819284 'Apple II System Disk 3.2.sea'
                 dd if='Apple II System Disk 3.2.sea' of=A2SYSDISK32.HDV bs=84 skip=1 2> /dev/null
-                cppo -s -ad A2SYSDISK32.HDV /UTILITIES/SYSUTIL.SYSTEM $diskToolsP8Dir/SYSUTIL 2> /dev/null
-                cppo -s -ad A2SYSDISK32.HDV /UTILITIES/UTIL.0 $diskToolsP8Dir 2> /dev/null
-                cppo -s -ad A2SYSDISK32.HDV /UTILITIES/UTIL.1 $diskToolsP8Dir 2> /dev/null
-                cppo -s -ad A2SYSDISK32.HDV /UTILITIES/UTIL.2 $diskToolsP8Dir 2> /dev/null
+                cppo -s -ad A2SYSDISK32.HDV /UTILITIES/SYSUTIL.SYSTEM $diskToolsP8Dir/SYSUTIL &> /dev/null
+                cppo -s -ad A2SYSDISK32.HDV /UTILITIES/UTIL.0 $diskToolsP8Dir &> /dev/null
+                cppo -s -ad A2SYSDISK32.HDV /UTILITIES/UTIL.1 $diskToolsP8Dir &> /dev/null
+                cppo -s -ad A2SYSDISK32.HDV /UTILITIES/UTIL.2 $diskToolsP8Dir &> /dev/null
                 afpsync -v $sharepath > /dev/null
             fi
     
@@ -571,7 +571,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                         wget -qO spectrum_gold_2mg.zip ${binaryURL}external/appleii/spectrum/spectrum_gold_2mg.zip
                         unzip -p spectrum_gold_2mg.zip 2> /dev/null | dd bs=64 skip=1 of=Spectrum.Gold.HDV 2> /dev/null
                     fi
-                    cppo -s -ad Spectrum.Gold.HDV .
+                    cppo -s -ad Spectrum.Gold.HDV . &> /dev/null
                     userFolder=$(tr [:lower:] [:upper:] <<< $USER)
                     for thisFolder in \
                       Installer/Extras/CDEvs^System/CDevs \
@@ -610,7 +610,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                 echo
                 cd /tmp/netboot
                 wget -qO A2CLOUD.HDV "${binaryURL}A2CLOUD.HDV"
-                cppo -ad A2CLOUD.HDV . > /dev/null
+                cppo -ad A2CLOUD.HDV . &> /dev/null
                 cd A2CLOUD
                 mv *PT3* *PROTERM* $protermDir
                 mv Z.LINK $zlinkDir
