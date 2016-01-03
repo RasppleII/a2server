@@ -520,7 +520,7 @@ def processEntry(arg1, arg2):
           getCreationDate(arg1, arg2), getModifiedDate(arg1, arg2))
     '''
     
-    origFileName = None
+    origFileName = ''
     g.shk_rfork = (1 if (g.SHK and (arg2[-1:] == "r")) else 0)
     if g.SHK: # ShrinkIt archive
         g.activeFileName = (arg2 if g.EX else arg2.split('#')[0])
