@@ -520,8 +520,14 @@ def processEntry(arg1, arg2):
     eTargetName = None
     g.exFileData = None
     g.outFileData = bytearray(b'')
-    g.shk_rfork = (1 if (g.SHK and (arg2[-1:] == "r")) else 0)
+    g.shk_hasrf = ""
+    g.shk_rfork = False
     if g.SHK: # ShrinkIt archive
+        if (arg2[-1:] == "r" and os.path.isfile(os.path.join(arg1,arg2[:-1]))):
+            g.shk_rfork = True
+        elif (not g.EX and not g.AD and
+              os.path.isfile(os.path.join(arg1, (arg2 + "r")))):
+            g.shk_hasrf = "+"
         g.activeFileName = (arg2 if g.EX else arg2.split('#')[0])
         origFileName = g.activeFileName
     else: # ProDOS or DOS 3.3 image
@@ -556,7 +562,7 @@ def processEntry(arg1, arg2):
                (os.path.basename(g.extractFile) ==
                 origFileName.split('#')[0])):
                 if (not (g.DIR and (g.shk_rfork and not g.EX and not g.AD))):
-                    print("   " + g.activeFileName +
+                    print("   " + g.activeFileName + g.shk_hasrf +
                          ((" [" + origFileName + "] ")
                            if (g.PNAME and (origFileName != g.activeFileName))
                            else "") +
