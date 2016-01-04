@@ -525,7 +525,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
         fi
 
         if [[ ! $autoAnswerYes ]]; then
-            [[ -f "$gsosDir/SYSTEM/START.GS.OS" ]] && gsosInstalled="GS/OS and " || gsosInstalled=
+            [[ -f "$gsosDir/System/Start.GS.OS" ]] && gsosInstalled="GS/OS and " || gsosInstalled=
             echo
             echo "Do you want to download communications software for"
             echo -n "$gsosInstalled""ProDOS 8? "
@@ -537,38 +537,23 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 
             mkdir -p $commDir
 
-            echo -n "Spectrum"
-            # get Spectrum
-            if [[ -f $spectrumDir/SPECTRUM.HDV || -f $spectrumDir/Spectrum ]]; then
-                echo " is already installed."
-            else
-                mkdir -p $spectrumDir
-                echo
-                mkdir -p /tmp/netboot/spectrum
-                cd /tmp/netboot/spectrum
-                if [[ ! -f $gsosDir/SYSTEM/START.GS.OS ]]; then
-                #if true; then
-                    # provide disk images for MountIt if no GS/OS present
-                    for filename in spectrum.2mg spectrum_extras.2mg spectrum_sounds.2mg spectrum_manuals.2mg; do
-                        if [[ $useExternalURL ]]; then
-                            wget -qO $filename http://www.speccie.co.uk/speccie/software/$filename
-                        fi
-                        if [[ $? -ne 0 || ! -f $filename ]]; then
-                            wget -qO $filename ${binaryURL}external/appleii/spectrum/$filename
-                        fi
-                        dd bs=64 skip=1 if=$filename of=$spectrumDir/${filename,,}.HDV 2> /dev/null
-                    done
-                    echo -n "The Spectrum installer disk image files can be converted to floppy disks with Asimov or DSK2FILE, or mounted directly with MountIt. If using MountIt, mount bouth SPECTRUM.HDV and EXTRAS.HDV before running the installer." > $spectrumDir/SPECTRUM.README
-                    afpsync -v $gsosDir > /dev/null
-                    afptype -p TXT -q $spectrumDir/SPECTRUM.README
+            if [[ $gsosInstalled ]]; then
+                echo -n "Spectrum"
+                # get Spectrum
+                if [[ -f $spectrumDir/Spectrum ]]; then
+                    echo " is already installed."
                 else
+                    mkdir -p $spectrumDir
+                    echo
+                    mkdir -p /tmp/netboot/spectrum
+                    cd /tmp/netboot/spectrum
                     # install Spectrum into GS/OS
                     if [[ $useExternalURL ]]; then
                         wget -qO spectrum_gold_2mg.zip http://www.speccie.co.uk/speccie/software/spectrum_gold_2mg.zip
                         unzip -p spectrum_gold_2mg.zip 2> /dev/null | dd bs=64 skip=1 of=Spectrum.Gold.HDV 2> /dev/null
                     fi
                     if [[ ! -f Spectrum.Gold.2mg ]]; then
-                        wget -qO spectrum_gold_2mg.zip ${binaryURL}external/appleii/spectrum/spectrum_gold_2mg.zip
+                        wget -qO spectrum_gold_2mg.zip ${binaryURL}external/appleii/spectrum_gold_2mg.zip
                         unzip -p spectrum_gold_2mg.zip 2> /dev/null | dd bs=64 skip=1 of=Spectrum.Gold.HDV 2> /dev/null
                     fi
                     cppo -s -ad Spectrum.Gold.HDV . &> /dev/null
