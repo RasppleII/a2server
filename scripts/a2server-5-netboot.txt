@@ -51,6 +51,15 @@ updateP8YearTables () {
     cd "$wd"
 }
 
+cpAD () {
+    # copy a file with its AppleDouble component in ./.AppleDouble
+    # arg1 = source path, # arg2 = destination directory (not filename)
+    cp -p "$1" "$2"
+    mkdir -p "$2"/.AppleDouble
+    cp -p "${1%/*}"/.AppleDouble/"${1##*/}" "$2"/.AppleDouble
+    [[ $3 == "-s" ]] && afpsync -v > /dev/null
+}
+
 # bail out on automated netboot setup unless -b is also specified
 [[ -f /tmp/a2server-autoAnswerYes ]] && autoAnswerYes=1 || autoAnswerYes=
 if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
@@ -432,16 +441,22 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                 echo " is already installed."
             else
                 echo
-                cd /tmp/netboot
+                mkdir -p /tmp/netboot/mountit
+                cd /tmp/netboot/mountit
                 if [[ $useExternalURL ]]; then
                     wget -q -O MOUNTIT.SHK http://www.brutaldeluxe.fr/products/apple2gs/MOUNTIT.SHK
+                    cppo -s -ad MOUNTIT.SHK System:System.Setup:MountIt . &> /dev/null
+                    cppo -s -ad MOUNTIT.SHK ReadMe . &> /dev/null
                 fi
-                if [[ $? -ne 0 || ! -f MOUNTIT.SHK ]]; then
+                if [[ ! -f ReadMe ]]; then
                     wget -qO MOUNTIT.SHK ${binaryURL}external/appleii/MOUNTIT.SHK
+                    cppo -s -ad MOUNTIT.SHK System:System.Setup:MountIt . &> /dev/null
+                    cppo -s -ad MOUNTIT.SHK ReadMe . &> /dev/null
                 fi
-                cp -p MOUNTIT.SHK $imageToolsDir/MOUNTIT.SHK
+                cpAD ./MountIt $gsosDir/System/System.Setup
+                mkdir -p $gsosDir/GSOS.Installer/Image.Tools/MountIt
+                cpAD ./ReadMe $gsosDir/GSOS.Installer/Image.Tools/MountIt
                 afpsync -v $gsosDir > /dev/null
-                afptype -p SHK -q $imageToolsDir/MOUNTIT.SHK
             fi
         fi
 
