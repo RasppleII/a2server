@@ -1,14 +1,12 @@
 #!/usr/bin/env python
 # vim: set tabstop=4 shiftwidth=4 expandtab filetype=python:
 
-u"""cppo: Copy/catalog files from a ProDOS/DOS 3.3/ShrinkIt image/archive.
+"""cppo: Copy/catalog files from a ProDOS/DOS 3.3/ShrinkIt image/archive.
 
-    copy all files:
-        cppo [options] imagefile target_directory
-    copy one file:
-        cppo [options] imagefile /extract/path target_path
-    catalog image:
-        cppo -cat [options] imagefile
+copy all files: cppo [options] imagefile target_directory
+copy one file : cppo [options] imagefile /extract/path target_path
+catalog image : cppo -cat [options] imagefile
+
 options:
 -shk: ShrinkIt archive as source (also auto-enabled by filename).
 -ad : Netatalk-compatible AppleDouble metadata files and resource forks.
@@ -620,7 +618,8 @@ def processEntry(arg1, arg2):
                         saveFile((saveName + "r"), g.exFileData)
                         touch((saveName + "r"), modifiedDate)
                 if (g.PDOSPATH_SEGMENT or
-                   (g.extractFile.lower() == origFileName.lower())):
+                   (g.extractFile and
+                   (g.extractFile.lower() == origFileName.lower()))):
                     syncExit()
                 g.targetName = None    
     #else:
@@ -1117,7 +1116,7 @@ while True: # breaks when there are no more arguments starting with dash
         g.EX = 1
         g.PNAME = 1
         args = args[1:] #shift
-    
+
     elif (args[1] == "-cat"):
         if g.AD or g.EX: usage()
         g.DIR = 1
