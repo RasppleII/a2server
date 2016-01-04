@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # vim: set tabstop=4 shiftwidth=4 expandtab filetype=python:
 
-"""cppo: Copy/catalog files from a ProDOS/DOS 3.3/ShrinkIt image/archive.
+u"""cppo: Copy/catalog files from a ProDOS/DOS 3.3/ShrinkIt image/archive.
+
     copy all files:
         cppo [options] imagefile target_directory
     copy one file:
@@ -20,9 +21,9 @@ options:
     "MY FILENAME" (DOS 3.3 image source)
     Dir:SubDir:FileName (ShrinkIt archive source)
 
++ after a file name indicates a GS/OS or Mac OS extended (forked) file.
 Wildcard matching (*) is not supported and images are not validated.
-ShrinkIt support requires Nulib2. cppo requires Python 2.6+ or 3.0+.
-"""
+ShrinkIt support requires Nulib2. cppo requires Python 2.6+ or 3.0+."""
 
 # cppo by Ivan X, ivan@ivanx.com, ivanx.com/appleii
 
@@ -527,6 +528,8 @@ def processEntry(arg1, arg2):
     g.outFileData = bytearray(b'')
     if g.SHK: # ShrinkIt archive
         g.activeFileName = (arg2 if g.EX else arg2.split('#')[0])
+        if g.UC:
+            g.activeFileName = g.activeFileName.upper()
         origFileName = g.activeFileName
     else: # ProDOS or DOS 3.3 image
         g.activeFileName = getFileName(arg1 ,arg2).decode("L1")
@@ -557,8 +560,8 @@ def processEntry(arg1, arg2):
             g.ADdir = (g.targetDir + "/.AppleDouble")
         else: # ProDOS or DOS 3.3 file either from image or ShrinkIt archive
             if (not g.extractFile or
-               (os.path.basename(g.extractFile) ==
-                origFileName.split('#')[0])):
+               (os.path.basename(g.extractFile.lower()) ==
+                origFileName.split('#')[0].lower())):
                 print("   " + g.activeFileName.split("#")[0] +
                      ("+" if (g.shk_hasrf or
                              (not g.SHK and getStorageType(arg1, arg2) == 5))
@@ -616,7 +619,8 @@ def processEntry(arg1, arg2):
                     if (g.exFileData != None):
                         saveFile((saveName + "r"), g.exFileData)
                         touch((saveName + "r"), modifiedDate)
-                if g.PDOSPATH_SEGMENT or (g.extractFile == origFileName):
+                if (g.PDOSPATH_SEGMENT or
+                   (g.extractFile.lower() == origFileName.lower())):
                     syncExit()
                 g.targetName = None    
     #else:
@@ -1200,6 +1204,8 @@ if g.SHK:
                           ("/".join(dirName.split('/')[3:]))) # chop tempdir
             if g.extractFile: # solo item, so don't put it in the tree
                 g.targetDir = targetDir
+            if g.UC:
+                g.targetDir = g.targetDir.upper()
             g.ADdir = (g.targetDir + "/.AppleDouble")
             makedirs(g.targetDir)
             if g.AD:
