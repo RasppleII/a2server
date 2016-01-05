@@ -54,10 +54,15 @@ updateP8YearTables () {
 cpAD () {
     # copy a file with its AppleDouble component in ./.AppleDouble
     # arg1 = source path, # arg2 = destination directory (not filename)
+    afpsync=
+    if [[ $1 == "-s" ]]; then
+        afpsync=1
+        shift
+    fi
     cp -p "$1" "$2"
     mkdir -p "$2"/.AppleDouble
     cp -p "${1%/*}"/.AppleDouble/"${1##*/}" "$2"/.AppleDouble
-    [[ $3 == "-s" ]] && afpsync -v > /dev/null
+    [[ $afpsync ]] && afpsync -v > /dev/null
 }
 
 # bail out on automated netboot setup unless -b is also specified
@@ -591,9 +596,23 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                         mkdir -p $gsosDir/"${thisFolder##*^}"/.AppleDouble
                         cp -R Spectrum.Gold/${thisFolder%%^*}/.AppleDouble/* $gsosDir/"${thisFolder##*^}"/.AppleDouble
                     done
-                    mv Spectrum.Gold/Installer/SoundPatch Spectrum.Gold/Spectrum.2.5.4/Spectrum $spectrumDir
-                    mkdir -p $spectrumDir/.AppleDouble
-                    mv Spectrum.Gold/Installer/.AppleDouble/SoundPatch Spectrum.Gold/Spectrum.2.5.4/.AppleDouble/Spectrum $spectrumDir/.AppleDouble
+                    cpAD Spectrum.Gold/Installer/SoundPatch $spectrumDir
+                    cpAD Spectrum.Gold/Spectrum.2.5.4/Spectrum $spectrumDir
+                    # mv Spectrum.Gold/Installer/SoundPatch Spectrum.Gold/Spectrum.2.5.4/Spectrum $spectrumDir
+                    # mkdir -p $spectrumDir/.AppleDouble
+                    # mv Spectrum.Gold/Installer/.AppleDouble/SoundPatch Spectrum.Gold/Spectrum.2.5.4/.AppleDouble/Spectrum $spectrumDir/.AppleDouble
+                    afpsync -v $gsosDir > /dev/null
+                fi
+
+                echo -n "Marinetti 3.0b8"
+                if [[ -f $gsosDir/System/CDevs/TCPIP ]]; then
+                    echo " is already installed."
+                else
+                    echo
+                    mkdir -p /tmp/netboot/marinetti
+                    cd /tmp/netboot/marinetti
+                    wget -qO MarinettiB1.SHK ${binaryURL}appleii/MarinettiB1.SHK
+                    cppo -ad -s -n MarinettiB1.SHK $gsosDir > /dev/null
                     afpsync -v $gsosDir > /dev/null
                 fi
             fi
@@ -603,13 +622,13 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
             if [[ -f $protermDir/PROTERM ]]; then
                 echo " are already installed."
             else
+                echo
                 mkdir -p $protermDir
                 mkdir -p $protermDir/.AppleDouble
                 mkdir -p $zlinkDir
                 mkdir -p $zlinkDir/.AppleDouble
-                echo
                 cd /tmp/netboot
-                wget -qO A2CLOUD.HDV "${binaryURL}A2CLOUD.HDV"
+                wget -qO A2CLOUD.HDV "${binaryURL}appleii/A2CLOUD.HDV"
                 cppo -ad A2CLOUD.HDV . &> /dev/null
                 cd A2CLOUD
                 mv *PT3* *PROTERM* $protermDir
@@ -660,7 +679,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
     if [[ $autoAnswerYes || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
         # Farallon bridge patch for GS/OS courtesy of Geoff Body
         echo "A2SERVER: Downloading Farallon bridge patch..."
-        wget -O /tmp/FARALLON.PO "${binaryURL}FARALLON.B1.PO" &> /dev/null
+        wget -O /tmp/FARALLON.PO "${binaryURL}appleii/FARALLON.B1.PO" &> /dev/null
         if [[ -d $gsosDir/SYSTEM/SYSTEM.SETUP ]]; then
             cppo -s -ad /tmp/FARALLON.PO /ATALKPATCH/ATALKIRQ $gsosDir/SYSTEM/SYSTEM.SETUP &> /dev/null
             echo
