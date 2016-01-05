@@ -76,7 +76,7 @@ g.extractFile = None
 # runtime options
 g.AD = 0      # -ad  (AppleDouble headers + resource forks)
 g.EX = 0      # -e   (extended filenames + resource forks)
-g.DIR = 0     # -cat (catalog only, no extract)
+g.CAT = 0     # -cat (catalog only, no extract)
 g.UC = 0      # -uc  (GS/OS mixed case filenames extract as uppercase)
 g.SHK = 0     # -shk (ShrinkIt archive source)
 g.D33 = 0     #      (DOS 3.3 image source, selected automatically)
@@ -488,7 +488,8 @@ def processDir(arg1, arg2=None, arg3=None, arg4=None, arg5=None):
             g.DIRPATH = (g.DIRPATH + "/" + workingDirName)
             if g.PDOSPATH_INDEX:
                 if (g.PDOSPATH_INDEX == 1):
-                    if (("/" + g.PDOSPATH_SEGMENT) != g.DIRPATH):
+                    if (("/" + g.PDOSPATH_SEGMENT.lower()) !=
+                               g.DIRPATH.lower()):
                         print("ProDOS volume name does not match disk image.")
                         sys.exit(2)
                     else:
@@ -544,9 +545,9 @@ def processEntry(arg1, arg2):
             if not g.PDOSPATH_INDEX:
                 g.targetDir = (g.targetDir + "/" + g.activeFileName)
             g.ADdir = (g.targetDir + "/.AppleDouble")
-            if not (g.DIR or os.path.isdir(g.targetDir)):
+            if not (g.CAT or os.path.isdir(g.targetDir)):
                 makedirs(g.targetDir)
-            if not (g.DIR or (not g.AD) or os.path.isdir(g.ADdir)):
+            if not (g.CAT or (not g.AD) or os.path.isdir(g.ADdir)):
                 makedirs(g.ADdir)
             if g.PDOSPATH_SEGMENT:
                 g.PDOSPATH_INDEX += 1
@@ -567,7 +568,7 @@ def processEntry(arg1, arg2):
                      ((" [" + origFileName + "] ")
                        if (g.PNAME and (origFileName != g.activeFileName))
                        else ""))
-                if g.DIR:
+                if g.CAT:
                     return
                 if not g.targetName:
                     g.targetName = g.activeFileName
@@ -1083,12 +1084,13 @@ def isnumber(number):
 args = sys.argv
 
 while True: # breaks when there are no more arguments starting with dash
+
     if (len(args) == 1):
         usage()
-
+        
     if (slyce(args[1],0,1) != "-"):
         break
-        
+
     if (args[1] == "-s"):
         g.nomsg = 1
         args = args[1:] #shift
@@ -1098,7 +1100,6 @@ while True: # breaks when there are no more arguments starting with dash
         args = args[1:] #shift
 
     elif (args[1] == "-ad"):
-        if g.EX: usage()
         g.AD = 1
         g.PNAME = 1
         args = args[1:] #shift
@@ -1112,21 +1113,25 @@ while True: # breaks when there are no more arguments starting with dash
         args = args[1:] #shift
 
     elif (args[1] == "-e"):
-        if g.AD: usage()
         g.EX = 1
         g.PNAME = 1
         args = args[1:] #shift
 
     elif (args[1] == "-cat"):
-        if g.AD or g.EX: usage()
-        g.DIR = 1
+        g.CAT = 1
         args = args[1:] #shift
 
     else:
         usage()
 
-if not ((g.DIR and len(args) >= 2) or (len(args) >= 3)):
-    usage()
+if g.EX:
+    if g.AD: usage()
+if g.AD:
+    if g.EX: usage()
+if g.CAT:
+    if not (len(args) == 2): usage()
+else:
+    if not ((len(args) == 3) or (len(args) == 4)): usage()
 
 g.imageFile = args[1]
 if not os.path.isfile(g.imageFile):
@@ -1155,7 +1160,7 @@ if (len(args) == 4):
 
 if g.SHK:
     g.PNAME = 0
-    if not g.DIR:
+    if not g.CAT:
         targetDir = (args[3] if g.extractFile else args[2])
     unshkdir = ("/tmp/cppo-" + str(uuid.uuid4()))
     makedirs(unshkdir)
@@ -1192,12 +1197,12 @@ if g.SHK:
             volumeName[-4:].lower() == ".sdk" or
             volumeName[-4:].lower() == ".bxy"):
             volumeName = volumeName[0:-4]
-    if not g.DIR and not g.extractFile:
+    if not g.CAT and not g.extractFile:
         print("Extracting into " + volumeName)
     # recursively process unshrunk archive hierarchy
     for dirName, subdirList, fileList in os.walk(unshkdir):
         subdirList.sort()
-        if not g.DIR:
+        if not g.CAT:
             g.targetDir = (targetDir + ("" if oneDir else ("/" + volumeName)) +
                           ("/" if (dirName.count('/') > 2) else "") +
                           ("/".join(dirName.split('/')[3:]))) # chop tempdir
@@ -1311,7 +1316,7 @@ if g.extractFile:
         print("Target directory not found.")
         sys.exit(2)
 else:
-    if not g.DIR:
+    if not g.CAT:
         if not os.path.isdir(args[2]):
             print("Target directory not found.")
             sys.exit(2)
@@ -1324,7 +1329,7 @@ if g.D33:
         diskName = os.path.splitext(diskName)[0]
     if g.PNAME:
         diskName = toProdosName(diskName)
-    if not g.DIR:
+    if not g.CAT:
         g.targetDir = (args[3] if g.extractFile
                                else (args[2] + "/" + diskName))
         g.ADdir = (g.targetDir + "/.AppleDouble")
@@ -1362,7 +1367,7 @@ if g.extractFile:
     print("ProDOS file not found within image file.")
     sys.exit(2)
 else:
-    if not g.DIR:
+    if not g.CAT:
         # print(args[0], args[1], args[2])
         g.targetDir = (args[2] + "/" + getVolumeName().decode("L1"))
         g.ADdir = (g.targetDir + "/.AppleDouble")
@@ -1371,6 +1376,6 @@ else:
         if not ((not g.AD) or os.path.isdir(g.ADdir)):
             makedirs(g.ADdir)
     processDir(2)
-    if not g.DIR:
+    if not g.CAT:
         syncExit()
 
