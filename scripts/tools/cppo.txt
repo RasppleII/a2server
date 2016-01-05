@@ -74,14 +74,15 @@ g.imageFile = None
 g.extractFile = None
 
 # runtime options
-g.AD = 0      # -ad  (AppleDouble headers + resource forks)
-g.EX = 0      # -e   (extended filenames + resource forks)
-g.CAT = 0     # -cat (catalog only, no extract)
-g.UC = 0      # -uc  (GS/OS mixed case filenames extract as uppercase)
-g.SHK = 0     # -shk (ShrinkIt archive source)
-g.D33 = 0     #      (DOS 3.3 image source, selected automatically)
-g.PNAME = 0   # -pro (adapt DOS 3.3 names to ProDOS)
-g.nomsg = 0   # -s   (suppress afpsync message at end)
+g.AD = 0       # -ad  (AppleDouble headers + resource forks)
+g.EX = 0       # -e   (extended filenames + resource forks)
+g.CAT = 0      # -cat (catalog only, no extract)
+g.UC = 0       # -uc  (GS/OS mixed case filenames extract as uppercase)
+g.SHK = 0      # -shk (ShrinkIt archive source)
+g.PNAME = 0    # -pro (adapt DOS 3.3 names to ProDOS)
+g.nomsg = 0    # -s   (suppress afpsync message at end)
+g.nodir = 0    # -n   (don't create parent dir for SHK, extract files in place)
+g.D33 = 0      #      (DOS 3.3 image source, selected automatically)
 
 # functions
 
@@ -1095,6 +1096,10 @@ while True: # breaks when there are no more arguments starting with dash
         g.nomsg = 1
         args = args[1:] #shift
     
+    elif (args[1] == "-n"):
+        g.nodir = 1
+        args = args[1:] #shift
+
     elif (args[1] == "-uc"):
         g.UC = 1
         args = args[1:] #shift
@@ -1187,7 +1192,9 @@ if g.SHK:
 
     fileNames = [name for name in os.listdir(unshkdir)
                  if not name.startswith(".")]
-    if (len(fileNames) == 1 and os.path.isdir(unshkdir + "/" + fileNames[0])):
+    if g.nodir:
+        oneDir = True # force extract in place
+    elif (len(fileNames) == 1 and os.path.isdir(unshkdir + "/" + fileNames[0])):
         oneDir = True
         volumeName = toProdosName(fileNames[0])
     else:
@@ -1197,7 +1204,7 @@ if g.SHK:
             volumeName[-4:].lower() == ".sdk" or
             volumeName[-4:].lower() == ".bxy"):
             volumeName = volumeName[0:-4]
-    if not g.CAT and not g.extractFile:
+    if not g.CAT and not g.nodir and not g.extractFile:
         print("Extracting into " + volumeName)
     # recursively process unshrunk archive hierarchy
     for dirName, subdirList, fileList in os.walk(unshkdir):
