@@ -9,12 +9,12 @@
 
 # Ensure URL we'll use ends in a /
 case "$A2SERVER_SCRIPT_URL" in
-	*/) scriptURL="$A2SERVER_SCRIPT_URL" ;;
-	*) scriptURL="${A2SERVER_SCRIPT_URL:-http://ivanx.com/a2server}/" ;;
+    */) scriptURL="$A2SERVER_SCRIPT_URL" ;;
+    *) scriptURL="${A2SERVER_SCRIPT_URL:-http://ivanx.com/a2server}/" ;;
 esac
 case "$A2SERVER_BINARY_URL" in
-	*/) binaryURL="$A2SERVER_BINARY_URL" ;;
-	*) binaryURL="${A2SERVER_BINARY_URL:-http://ivanx.com/a2server/files}/" ;;
+    */) binaryURL="$A2SERVER_BINARY_URL" ;;
+    *) binaryURL="${A2SERVER_BINARY_URL:-http://ivanx.com/a2server/files}/" ;;
 esac
 useExternalURL=1
 [[ $A2SERVER_NO_EXTERNAL ]] && useExternalURL=
@@ -52,18 +52,69 @@ cpAD () {
     [[ $afpsync ]] && afpsync -v > /dev/null
 }
 
+checkP8YearTables () {
+    updateP8YearTables -c $1
+    return $?
+}
+
 updateP8YearTables () {            
     # Geoff Body and Andrew Roughan helped Joseph Carter with this one
     # Update ProDOS 8 year table (and spalsh date because may as well)
-    # Effectively, we're turning p8 into the 6.0.3 version here.
+    # Effectively, we're turning p8 into the 6.0.2 or 6.0.3 version here.
+    check=
+    if [[ $1 == "-c" ]]; then
+        check=1
+        shift
+    fi
+    patch1="patch1_$1"
+    patch2="patch2_$1"
+    patch1_602=$(echo -n -e "\xb2\xb2\xad\xca\xf5\xee\xad\xb1\xb5")
+    patch2_602=$(echo -n -e "\x12\x11\x0b\x10\x0f\x0e\x0d")
+    patch1_603=$(echo -n -e "\xb0\xb2\xad\xc1\xf5\xe7\xad\xb1\xb5")
+    patch2_603=$(echo -n -e "\x12\x11\x0b\x10\x0f\x0e\x0d")
+
     wd=$PWD
     cd /usr/local/etc/netatalk/a2boot
-    echo -n -e "\xb0\xb2\xad\xc1\xf5\xe7\xad\xb1\xb5" | sudo dd of="p8" bs=38 seek=1 conv=notrunc 2> /dev/null
-    echo -n -e "\x12\x11\x0b\x10\x0f\x0e\x0d" | sudo dd of="p8" bs=3958 seek=1 conv=notrunc 2> /dev/null
-    echo -n -e "\xb0\xb2\xad\xc1\xf5\xe7\xad\xb1\xb5" | sudo dd of="ProDOS16 Image" bs=3110 seek=1 conv=notrunc 2> /dev/null
-    echo -n -e "\x12\x11\x0b\x10\x0f\x0e\x0d" | sudo dd of="ProDOS16 Image" bs=7030 seek=1 conv=notrunc 2> /dev/null
-    echo -n -e "\xb0\xb2\xad\xc1\xf5\xe7\xad\xb1\xb5" | sudo dd of="Apple :2f:2fe Boot Blocks" bs=79 seek=1 conv=notrunc 2> /dev/null
-    echo -n -e "\x12\x11\x0b\x10\x0f\x0e\x0d" | sudo dd of="Apple :2f:2fe Boot Blocks" bs=7071 seek=1 conv=notrunc 2> /dev/null
+    files=("p8" "ProDOS16 Image" "Apple :2f:2fe Boot Blocks" "$gsosDir/System/P8")
+    offset1=(38 3110 79 38)
+    offset2=(3958 7030 7071 3958)
+    
+    i=0
+    if [[ $check ]]; then
+        # check if patched
+        patched=0 # 0 is true in this case since it's the return value
+        while (( $i < ${#files[@]} )); do
+            [[ ! -f "${files[$i]}" ]] && { (( i++ )); continue; }
+            if [[ ${!patch1} != $(sudo dd if="${files[$i]}" skip=${offset1[$i]} bs=1 count=9 2> /dev/null) ]]; then
+                patched=1 # 1 is false
+                break
+            fi
+            if [[ ${!patch2} != $(sudo dd if="${files[$i]}" skip=${offset2[$i]} bs=1 count=7 2> /dev/null) ]]; then
+                patched=1 # 1 is false
+                break
+            fi
+            (( i++ ))
+        done
+    else
+        echo "A2SERVER: Patching ProDOS 8 Thunderclock year tables..."
+        # perform patch
+        while (( $i < ${#files[@]} )); do
+            [[ ! -f "${files[$i]}" ]] && { (( i++ )); continue; }
+            echo -n -e ${!patch1} | sudo dd of="${files[$i]}" seek=${offset1[$i]} bs=1 conv=notrunc 2> /dev/null
+            echo -n -e ${!patch2} | sudo dd of="${files[$i]}" seek=${offset2[$i]} bs=1 conv=notrunc 2> /dev/null
+            (( i++ ))
+        done
+        patched=0
+    fi
+    return $patched
+    
+    # echo -n -e "\xb0\xb2\xad\xc1\xf5\xe7\xad\xb1\xb5" | sudo dd of="p8" bs=38 seek=1 conv=notrunc 2> /dev/null
+    # echo -n -e "\x12\x11\x0b\x10\x0f\x0e\x0d" | sudo dd of="p8" bs=3958 seek=1 conv=notrunc 2> /dev/null
+    # echo -n -e "\xb0\xb2\xad\xc1\xf5\xe7\xad\xb1\xb5" | sudo dd of="ProDOS16 Image" bs=3110 seek=1 conv=notrunc 2> /dev/null
+    # echo -n -e "\x12\x11\x0b\x10\x0f\x0e\x0d" | sudo dd of="ProDOS16 Image" bs=7030 seek=1 conv=notrunc 2> /dev/null
+    # echo -n -e "\xb0\xb2\xad\xc1\xf5\xe7\xad\xb1\xb5" | sudo dd of="Apple :2f:2fe Boot Blocks" bs=79 seek=1 conv=notrunc 2> /dev/null
+    # echo -n -e "\x12\x11\x0b\x10\x0f\x0e\x0d" | sudo dd of="Apple :2f:2fe Boot Blocks" bs=7071 seek=1 conv=notrunc 2> /dev/null
+
     cd "$wd"
 }
 
@@ -376,13 +427,15 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
             fi
         fi
         
-        if [[ ! $autoAnswerYes && gsosInstall -lt 2 ]]; then
+        if [[ ! $autoAnswerYes && (! $gsosInstall || $gsosInstall -lt 2) ]] && ! checkP8YearTables 603; then
             echo
-            echo -n "Do you want to update the ProDOS 8 year tables? "
+            echo -n "Do you want to update the ProDOS 8 Thunderclock year tables? "
             read
         fi
         if [[ $autoAnswerYes || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
-            updateP8YearTables
+            updateP8YearTables 603
+        elif [[ $gsosInstall -ge 2 ]]; then
+            updateP8YearTables 60${gsosInstall}
         fi
 
         if [[ ! $autoAnswerYes ]]; then
