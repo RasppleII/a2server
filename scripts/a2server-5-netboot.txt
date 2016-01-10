@@ -36,6 +36,41 @@ adtproDir=$commDir/ADTPro
 gsosURL="http://download.info.apple.com/Apple_Support_Area/Apple_Software_Updates/English-North_American/Apple_II/Apple_IIGS_System_6.0.1/"
 gsosBackupURL="http://archive.org/download/download.info.apple.com.2012.11/download.info.apple.com.2012.11.zip/download.info.apple.com%2FApple_Support_Area%2FApple_Software_Updates%2FEnglish-North_American%2FApple_II%2FApple_IIGS_System_6.0.1%2F"
 
+# --- bashByter library routines
+
+decToChar () {
+# converts single-byte decimal value to equivalent character
+# arg: decimal number from 0-255
+# out: one character
+#exit: 8=extraneous arg, 11=missing arg, 21=invalid arg
+    [[ $1 ]] || return 11
+    [[ $2 ]] && return 8
+    [[ ( $(printf %d "$1" 2> /dev/null ) == $1 ) \
+     && ( $1 -ge 0 ) && ( $1 -le 255 ) ]] || return 21
+    # args are valid
+    echo -n -e "\x$(printf %02X "$1")"
+}
+
+charToDec () {
+# converts single character to corresponding decimal value
+# stdin OR arg: one character
+#  [arg overrides stdin; stdin is required for NUL (0) or LF (0x0A)]
+# out: decimal value from 0-255
+#exit: 8=extraneous arg, 9=invalid stdin,
+#      11=missing stdin/arg, 21=invalid arg
+    [[ ( ! -t 0 ) && $1 ]] && { cat > /dev/null; return 8; }
+    [[ ( -t 0 ) ]] && { [[ $2 ]] && return 8; [[ $1 ]] || return 11; }
+    # arg/stdin is potentially valid (additional check below)
+    charX="$1X"; [[ $1 ]] || charX="$(cat; echo -n 'X';)"
+    [[ ${#charX} -le 2 ]] || return $(( $([[ $1 ]]; echo $?) ? 9 : 21 ))
+    # above line verifies that arg/stdin is valid
+    [[ ${#charX} -ne 2 ]] && { echo -n 0; return 0; }
+    echo -n "${charX:0:1}" | od -t u1 | \
+     head -1 | sed 's/[0\ ]*//' | tr -d ' \n'
+}
+
+# --- end bashByter
+
 cpAD () {
     # copy a file with its AppleDouble component in ./.AppleDouble
     # arg1 = source path, # arg2 = destination directory (not filename)
@@ -58,53 +93,71 @@ checkP8YearTables () {
 }
 
 updateP8YearTables () {            
-    # Geoff Body and Andrew Roughan helped Joseph Carter with this one
+    # JC: Geoff Body and Andrew Roughan helped Joseph Carter with this one
     # Update ProDOS 8 year table (and spalsh date because may as well)
     # Effectively, we're turning p8 into the 6.0.2 or 6.0.3 version here.
+    #
+    # ID: updates the year tables for the Thunderclock driver in ProDOS 8;
+    #     calculated from the day of week and date, as year is unavailable.
+    #     accepts optional arguments for custom patches
+    #     arg1 = year table, comma separated
+    #     arg2 = date string for ProDOS splash screen in format "dd-Mmm-yy"
+    #     OR for presets, arg1=602 or arg1=603, arg2 is empty
     check=
     if [[ $1 == "-c" ]]; then
         check=1
         shift
     fi
-    patch1="patch1_$1"
-    patch2="patch2_$1"
-    patch1_602=$(echo -n -e "\xb2\xb2\xad\xca\xf5\xee\xad\xb1\xb5")
-    patch2_602=$(echo -n -e "\x12\x11\x0b\x10\x0f\x0e\x0d")
-    patch1_603=$(echo -n -e "\xb0\xb2\xad\xc1\xf5\xe7\xad\xb1\xb5")
-    patch2_603=$(echo -n -e "\x12\x11\x0b\x10\x0f\x0e\x0d")
+    patch1=""
+    patch2=""
+    if [[ $1 == "602" ]]; then
+        patch1=$(echo -n -e "\x12\x11\x0b\x10\x0f\x0e\x0d")
+        patch2=$(echo -n -e "\xb2\xb2\xad\xca\xf5\xee\xad\xb1\xb5")
+    elif [[ $1 == "603" ]]; then
+        patch1=$(echo -n -e "\x12\x11\x0b\x10\x0f\x0e\x0d")
+        patch2=$(echo -n -e "\xb0\xb2\xad\xc1\xf5\xe7\xad\xb1\xb5")
+    elif [[ $1 ]]; then # year table supplied as seven comma-separated values
+        for year in $(tr "," " " <<< $1); do
+            patch1=${patch1}$(echo -n -e "\x$(printf %02X $year)")
+        done
+        if [[ $2 ]]; then # splash screen date supplied, convert to high-ascii bytes
+            for c in $(sed "s/./& /g" <<< $2); do
+                patch2=${patch2}$(decToChar $(( $(charToDec $c) + 128 )))
+            done
+        fi
+    fi
 
     wd=$PWD
     cd /usr/local/etc/netatalk/a2boot
     files=("p8" "ProDOS16 Image" "Apple :2f:2fe Boot Blocks" "$gsosDir/System/P8")
-    offset1=(38 3110 79 38)
-    offset2=(3958 7030 7071 3958)
+    offset1=(3958 7030 7071 3958) # splash screen date
+    offset2=(38 3110 79 38) # year table
     
     i=0
     if [[ $check ]]; then
-        # check if patched
+        # check if patched -- we're not actually doing this any more; we're always patching
         patched=0 # 0 is true in this case since it's the return value
         while (( $i < ${#files[@]} )); do
             [[ ! -f "${files[$i]}" ]] && { (( i++ )); continue; }
-            if [[ ${!patch1} != $(sudo dd if="${files[$i]}" skip=${offset1[$i]} bs=1 count=9 2> /dev/null) ]]; then
+            if [[ ! $patch1 || $patch1 != $(sudo dd if="${files[$i]}" skip=${offset1[$i]} bs=1 count=7 2> /dev/null) ]]; then
                 patched=1 # 1 is false
                 break
             fi
-            if [[ ${!patch2} != $(sudo dd if="${files[$i]}" skip=${offset2[$i]} bs=1 count=7 2> /dev/null) ]]; then
+            if [[ ! $patch2 || $patch2 != $(sudo dd if="${files[$i]}" skip=${offset2[$i]} bs=1 count=9 2> /dev/null) ]]; then
                 patched=1 # 1 is false
                 break
             fi
             (( i++ ))
         done
     else
-        echo "A2SERVER: Patching ProDOS 8 Thunderclock year tables..."
         # perform patch
         while (( $i < ${#files[@]} )); do
             [[ ! -f "${files[$i]}" ]] && { (( i++ )); continue; }
-            echo -n -e ${!patch1} | sudo dd of="${files[$i]}" seek=${offset1[$i]} bs=1 conv=notrunc 2> /dev/null
-            echo -n -e ${!patch2} | sudo dd of="${files[$i]}" seek=${offset2[$i]} bs=1 conv=notrunc 2> /dev/null
+            [[ $patch1 ]] && echo -n -e ${patch1} | sudo dd of="${files[$i]}" seek=${offset1[$i]} bs=1 conv=notrunc 2> /dev/null
+            [[ $patch2 ]] && echo -n -e ${patch2} | sudo dd of="${files[$i]}" seek=${offset2[$i]} bs=1 conv=notrunc 2> /dev/null
             (( i++ ))
         done
-        patched=0
+        patched=0 # 0 is true
     fi
     return $patched
     
@@ -427,16 +480,23 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
             fi
         fi
         
-        if [[ ! $autoAnswerYes && (! $gsosInstall || $gsosInstall -lt 2) ]] && ! checkP8YearTables 603; then
-            echo
-            echo -n "Do you want to update the ProDOS 8 Thunderclock year tables? "
-            read
-        fi
-        if [[ $autoAnswerYes || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
-            updateP8YearTables 603
-        elif [[ $gsosInstall -ge 2 ]]; then
-            updateP8YearTables 60${gsosInstall}
-        fi
+        # if [[ ! $autoAnswerYes && (! $gsosInstall || $gsosInstall -lt 2) ]] && ! checkP8YearTables 603; then
+        #     echo
+        #     echo -n "Do you want to update the ProDOS 8 Thunderclock year tables? "
+        #     read
+        # fi
+        # if [[ $autoAnswerYes || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
+        #    updateP8YearTables 603
+        # elif [[ $gsosInstall -ge 2 ]]; then
+        #    updateP8YearTables 60${gsosInstall}
+        # fi
+
+        # patch ProDOS 8 Thunderclock driver year table based on today's date
+        echo
+        echo "A2SERVER: Updating ProDOS 8 Thunderclock driver year tables..."
+        mkdir -p /tmp/netboot
+        wget -qO /tmp/netboot/clock.patch.py "${scriptURL}scripts/clock.patch.py"
+        updateP8YearTables $(python /tmp/netboot/clock.patch.py $(LANG=C date +"%a %m/%d/%y"))
 
         if [[ ! $autoAnswerYes ]]; then
             echo

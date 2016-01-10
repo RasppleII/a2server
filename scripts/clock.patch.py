@@ -14,7 +14,8 @@ command line argument (e.g "Wed 3/13/15"). I also improved error
 checking. These are in the BASIC lines that don't end in 0.
 
 Rather than modifying PRODOS, this outputs a string of comma-separated
-values for a calling script (the a2server-setup installer script).
+year values for a calling script (the a2server-setup installer),
+followed by a space and a dd-Mmm-yy date string.
 '''
 
 # imports for python 3 code compatibility
@@ -25,6 +26,7 @@ from __future__ import division
 
 # other imports
 import sys
+import datetime
 
 # substitute raw_input for input in Python2
 try: input = raw_input
@@ -145,6 +147,7 @@ while True:
     else: dow_str = ""; day = ""
                                                 # 1430  REM  Calculate the number of days so far this year
 dys = da + cu[mo]                               # 1440 DYS = DA + CU(MO)
+oyr = yr
                                                 # 1450  REM  Must account for extra day in leap year
 if ((yr / 4) == int(yr / 4)) and (mo > 2):      # 1460  IF (YR / 4) =  INT (YR / 4) AND MO > 2 THEN DYS = DYS + 1
     dys = dys + 1
@@ -171,4 +174,7 @@ for i in range(1,8):                            # 1540  FOR I = 1 TO 7
     yr = yr + 1                                 # 1660 YR = YR + 1
                                                 # 1670  NEXT I
 
-print(",".join([str(x) for x in yt[1:]]))
+print(",".join([str(x) for x in yt[1:]]) + " " +
+      str(da).encode("L1").decode("L1").zfill(2) + "-" +
+      datetime.date(1900, mo, 1).strftime('%b') + "-" +
+      str(oyr).encode("L1").decode("L1")[2:])
