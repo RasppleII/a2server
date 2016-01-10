@@ -497,7 +497,8 @@ def processDir(arg1, arg2=None, arg3=None, arg4=None, arg5=None):
                         g.PDOSPATH_INDEX += 1
                         g.PDOSPATH_SEGMENT = g.PDOSPATH[g.PDOSPATH_INDEX]
             else:
-                print(g.DIRPATH)
+                pass
+                # print(g.DIRPATH)
     while (pe < entryCount):
         if (getStorageType(arg1, e) > 0):
             #print(pe, e, entryCount)
@@ -540,7 +541,7 @@ def processEntry(arg1, arg2):
 
     if (not g.PDOSPATH_INDEX or
         g.activeFileName.upper() == g.PDOSPATH_SEGMENT.upper()):
-        
+            
         # if ProDOS directory, not file
         if (not g.SHK and getStorageType(arg1, arg2) == 13):
             if not g.PDOSPATH_INDEX:
@@ -559,10 +560,17 @@ def processEntry(arg1, arg2):
                 g.targetDir = g.targetDir.rsplit("/", 1)[0]
             g.ADdir = (g.targetDir + "/.AppleDouble")
         else: # ProDOS or DOS 3.3 file either from image or ShrinkIt archive
+            dirPrint = ""
+            if g.DIRPATH:
+                dirPrint = g.DIRPATH + "/"
+            else:
+                if g.SHK:
+                    if ("/".join(dirName.split('/')[3:])):
+                        dirPrint = ("/".join(dirName.split('/')[3:]) + "/")
             if (not g.extractFile or
                (os.path.basename(g.extractFile.lower()) ==
                 origFileName.split('#')[0].lower())):
-                print("   " + g.activeFileName.split("#")[0] +
+                print(dirPrint + g.activeFileName.split("#")[0] +
                      ("+" if (g.shk_hasrf or
                              (not g.SHK and getStorageType(arg1, arg2) == 5))
                           else "") +
@@ -1227,10 +1235,6 @@ if g.SHK:
             makedirs(g.targetDir)
             if g.AD:
                 makedirs(g.ADdir)
-        if not g.extractFile:
-            print("/".join(dirName.split('/')[3:])
-                  if "/".join(dirName.split('/')[3:])
-                  else "(top level)")
         for fname in sorted(fileList):
             g.shk_hasrf = ""
             g.shk_rfork = False
