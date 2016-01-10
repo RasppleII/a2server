@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-'''CLOCK.PATCH implemented in Python 2/3 for A2SERVER
+'''CLOCK.PATCH by Greg Branche implemented in Python 2/3 for A2SERVER
 
 This is a line-for-line conversion of an edited version of CLOCK.PATCH
 from the System Tools 2 disk in GS/OS 6.0.1. It's not good Python,
