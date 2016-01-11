@@ -59,8 +59,7 @@ g.activeFileName = None
 g.activeFileSize = None
 g.activeFileBytesCopied = 0
 g.resourceFork = 0
-g.shk_hasrf = ""
-g.shk_rfork = 0
+g.shk_hasrf = False
 
 g.PDOSPATH = []
 g.PDOSPATH_INDEX = 0
@@ -570,7 +569,8 @@ def processEntry(arg1, arg2):
             if (not g.extractFile or
                (os.path.basename(g.extractFile.lower()) ==
                 origFileName.split('#')[0].lower())):
-                print(dirPrint + g.activeFileName.split("#")[0] +
+                filePrint = g.activeFileName.split("#")[0]
+                print(dirPrint + filePrint +
                      ("+" if (g.shk_hasrf or
                              (not g.SHK and getStorageType(arg1, arg2) == 5))
                           else "") +
@@ -1236,14 +1236,27 @@ if g.SHK:
             if g.AD:
                 makedirs(g.ADdir)
         for fname in sorted(fileList):
-            g.shk_hasrf = ""
-            g.shk_rfork = False
+            g.shk_hasrf = False
+            rfork = False
+            disk_image = False
             if (fname[-1:] == "r" and
                 os.path.isfile(os.path.join(dirName, fname[:-1]))):
-                g.shk_rfork = True
+                rfork = True
+            elif (fname[-1:] == "i"):
+                disk_image = True
             elif (os.path.isfile(os.path.join(dirName, (fname + "r")))):
-                g.shk_hasrf = "+"
-            if not g.shk_rfork:
+                g.shk_hasrf = True
+            elif (os.path.isfile(os.path.join(dirName, (fname + "i")))):
+                # disk image; remove shell image
+                os.remove(os.path.join(dirName, fname))
+                imagePath = os.path.join(dirName, fname).split("#")[0]
+                new_name = (imagePath +
+                           ("" if (fname.lower().endswith(".po") or
+                                   fname.lower().endswith(".hdv"))
+                               else ".po") + "#e00005")
+                os.rename((os.path.join(dirName, fname) + "i"), new_name)
+                fname = os.path.basename(new_name)
+            if not rfork and not disk_image:
                 processEntry(dirName, fname)
     shutil.rmtree(unshkdir, True)
     syncExit()
