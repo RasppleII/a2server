@@ -779,6 +779,37 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 
                     afpsync -v $gsosDir > /dev/null
                 fi
+
+                echo "SAFE2 (FTP)"
+                if [[ -f $commDir/SAFE2/SAFE2 ]]; then
+                    echo " is already installed."
+                else
+                    echo
+                    mkdir -p $commDir/SAFE2
+                    mkdir -p /tmp/netboot/safe
+                    cd /tmp/netboot/safe
+                    if [[ $useExternalURL ]]; then
+                        wget -qO safe2.bxy http://www.speccie.co.uk/speccie/software/safe229.bxy
+                        cppo -s -ad safe2.bxy . &> /dev/null
+                    fi
+                    if [[ ! -f SAFE2.Archive/Safe2 ]]; then
+                        wget -qO safe2.bxy ${binaryURL}external/appleii/safe2.bxy
+                        cppo -s -ad safe2.bxy . &> /dev/null
+                    fi
+                    cd SAFE2.Archive
+                    cpAD Safe2 $commDir/SAFE2
+                    cpAD The.Manual $commDir/SAFE2
+                    cpAD Read.Me.First $commDir/SAFE2
+                    cpAD Version.History $commDir/SAFE2
+                    cpAD Fonts/SAFE.8 $gsosDir/System/Fonts
+                    cpAD Fonts/Shaston.16 $gsosDir/System/Fonts
+                    cpAD TimeZone/TimeZone $gsosDir/System/CDEvs
+                    cpAD TimeZone/Tool056 $gsosDir/System/Tools
+                    mv Help/Help.Files/SAFE2 $gsosDir/System/Desk.Accs/Help.Files
+
+                    afpsync -v $gsosDir > /dev/null
+                fi
+
             fi
 
             echo -n "ProTERM and Z-Link"
