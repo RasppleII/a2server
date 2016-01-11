@@ -1204,27 +1204,33 @@ if g.SHK:
         shutil.rmtree(unshkdir)
         unshkdir = newunshkdir
 
-    fileNames = [name for name in os.listdir(unshkdir)
+    fileNames = [name for name in sorted(os.listdir(unshkdir))
                  if not name.startswith(".")]
-    if g.nodir:
-        oneDir = True # force extract in place
-    elif (len(fileNames) == 1 and os.path.isdir(unshkdir + "/" + fileNames[0])):
-        oneDir = True
+    if g.nodir: # extract in place from "-n"
+        curDir = True
+    elif (len(fileNames) == 1 and
+          os.path.isdir(unshkdir + "/" + fileNames[0])):
+        curDir = True # only one folder at top level, so extract in place
         volumeName = toProdosName(fileNames[0])
-    else:
-        oneDir = False
+    elif (len(fileNames) == 2 and # disk image, so extract in place
+          fileNames[1][-1:] == "i" and
+          fileNames[0] == fileNames[1][:-1]):
+        curDir = True
+        volumeName = toProdosName(fileNames[0].split("#")[0])
+    else: # extract in folder based on disk image name
+        curDir = False
         volumeName = toProdosName(os.path.basename(g.imageFile))
         if (volumeName[-4:].lower() == ".shk" or
             volumeName[-4:].lower() == ".sdk" or
             volumeName[-4:].lower() == ".bxy"):
             volumeName = volumeName[0:-4]
-    if not g.CAT and not g.nodir and not g.extractFile:
+    if not g.CAT and not curDir and not g.extractFile:
         print("Extracting into " + volumeName)
     # recursively process unshrunk archive hierarchy
     for dirName, subdirList, fileList in os.walk(unshkdir):
         subdirList.sort()
         if not g.CAT:
-            g.targetDir = (targetDir + ("" if oneDir else ("/" + volumeName)) +
+            g.targetDir = (targetDir + ("" if curDir else ("/" + volumeName)) +
                           ("/" if (dirName.count('/') > 2) else "") +
                           ("/".join(dirName.split('/')[3:]))) # chop tempdir
             if g.extractFile: # solo item, so don't put it in the tree
