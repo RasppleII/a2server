@@ -780,7 +780,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                     afpsync -v $gsosDir > /dev/null
                 fi
 
-                echo -n "SAFE2 (FTP)"
+                echo -n "SAFE2 (FTP client)"
                 if [[ -f $commDir/SAFE2/SAFE2 ]]; then
                     echo " is already installed."
                 else
@@ -811,7 +811,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                     afpsync -v $gsosDir > /dev/null
                 fi
 
-                echo -n "SAM2 (POP email)"
+                echo -n "SAM2 (POP email client)"
                 if [[ -f $commDir/SAM2/SAM2 ]]; then
                     echo " is already installed."
                 else
@@ -824,30 +824,66 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                         wget -qO sam2.bxy http://www.speccie.co.uk/speccie/software/sam205.bxy
                         cppo -s -ad sam2.bxy . &> /dev/null
                     fi
-                    if [[ ! -f SAFE2.Archive/Safe2 ]]; then
+                    if [[ ! -f SAM2.Archive/SAM2/SAM2 ]]; then
                         wget -qO sam2.bxy ${binaryURL}external/appleii/sam2.bxy
                         cppo -s -ad sam2.bxy . &> /dev/null
                     fi
                     cd SAM2.Archive
                     cpAD SAM2/SAM2 $commDir/SAM2
                     cpAD SAM2/SAM2.Data/Taglines $commDir/SAM2/SAM2.Data
-                    cpAD Tools/HTMLTool/TOOL130 $gsosDir/System/Tools
-                    cpAD Tools/Hierarchic/Hierarchic $gsosDir/System/CDEvs
                     cpAD Sounds/SP.Snds.Aux $gsosDir/System/Sounds
                     cpAD Fonts/SAM.8 $gsosDir/System/Fonts
                     cpAD Fonts/SAM.10 $gsosDir/System/Fonts
-                    cpAD Fonts/SIS.3.10 $gsosDir/System/Fonts
-                    cpAD Fonts/SIS.4.10 $gsosDir/System/Fonts
                     cpAD The.Manual $commDir/SAM2
                     cpAD Read.Me.First $commDir/SAM2
                     cpAD Version.History $commDir/SAM2
                     rm -r $gsosDir/System/Desk.Accs/Help.Files/SAM2 2> /dev/null
                     mv Help/Help.Files/SAM2 $gsosDir/System/Desk.Accs/Help.Files
+                    # cpAD Fonts/SIS.3.10 $gsosDir/System/Fonts
+                    # cpAD Fonts/SIS.4.10 $gsosDir/System/Fonts
+                    # cpAD Tools/HTMLTool/TOOL130 $gsosDir/System/Tools
+                    # cpAD Tools/Hierarchic/Hierarchic $gsosDir/System/CDEvs
+                    # cpAD Fonts/Shaston.16 $gsosDir/System/Fonts
 
                     afpsync -v $gsosDir > /dev/null
                 fi
 
-            fi
+                echo -n "SNAP (Usenet client)"
+                if [[ -f $commDir/SNAP/SNAP ]]; then
+                    echo " is already installed."
+                else
+                    echo
+                    mkdir -p $commDir/SNAP
+                    mkdir -p /tmp/netboot/snap
+                    cd /tmp/netboot/snap
+                    if [[ $useExternalURL ]]; then
+                        wget -qO snap.bxy http://www.speccie.co.uk/speccie/software/snap118.bxy
+                        cppo -s -ad snap.bxy . &> /dev/null
+                    fi
+                    if [[ ! -f SNAP.Archive/SNAP ]]; then
+                        wget -qO snap.bxy ${binaryURL}external/appleii/snap.bxy
+                        cppo -s -ad snap.bxy . &> /dev/null
+                    fi
+                    cd SNAP.Archive
+                    cpAD SNAP $commDir/SNAP
+                    cpAD Fonts/SNAP.8 $gsosDir/System/Fonts
+                    cpAD Fonts/SNAP.10 $gsosDir/System/Fonts
+                    cpAD The.Manual $commDir/SNAP
+                    cpAD Read.Me.First $commDir/SNAP
+                    cpAD Change.List $commDir/SNAP
+                    cpAD Quick.Start $commDir/SNAP
+                    rm -r $gsosDir/System/Desk.Accs/Help.Files/SNAP 2> /dev/null
+                    mv Help/Help.Files/SNAP $gsosDir/System/Desk.Accs/Help.Files
+                    # cpAD Fonts/SIS.3.10 $gsosDir/System/Fonts
+                    # cpAD Fonts/SIS.4.10 $gsosDir/System/Fonts
+                    # cpAD Tools/HTMLTool/TOOL130 $gsosDir/System/Tools
+                    # cpAD Tools/Hierarchic/Hierarchic $gsosDir/System/CDEvs
+                    # cpAD Fonts/Shaston.16 $gsosDir/System/Fonts
+
+                    afpsync -v $gsosDir > /dev/null
+                fi
+
+             fi
 
             echo -n "ProTERM and Z-Link"
             # get A2CLOUD disk and copy from there
