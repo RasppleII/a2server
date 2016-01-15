@@ -60,7 +60,7 @@ if ! hash nulib2 &> /dev/null; then
 
     cd /tmp
     if [[ $arch && ! -f /tmp/a2server-compileAlways ]]; then
-        { wget -qO- "${binaryURL}precompiled/nulib2-3.1.0a1-${arch}.tgz" | sudo tar Pzx; } &> /dev/null
+        { wget -qO- "${binaryURL}precompiled/nulib2-3.1.0a2-${arch}.tgz" | sudo tar Pzx; } &> /dev/null
     fi
         
     if ! hash nulib2 &> /dev/null; then
@@ -80,14 +80,14 @@ if ! hash nulib2 &> /dev/null; then
         mkdir /tmp/nulib2
         cd /tmp/nulib2
         if [[ $useExternalURL ]]; then
-            wget -q -O nulib2-3.1.0a1.zip "https://github.com/fadden/nulib2/archive/51af83986cd5798daa7e0d82a161c9d3963c72bc.zip"
-            unzip nulib2-3.1.0a1.zip 2> /dev/null
-            rm nulib2-3.1.0a1.zip &> /dev/null
+            wget -q -O nulib2-3.1.0a2.zip "https://github.com/fadden/nulib2/archive/20fe7efb4d37fedf807416c16d74d51d893ea48a.zip"
+            unzip nulib2-3.1.0a2.zip 2> /dev/null
+            rm nulib2-3.1.0a2.zip &> /dev/null
         fi
         if [ ! -d nulib2* ]; then
-            wget -q -O nulib2-3.1.0a1.zip "${binaryURL}external/source/nulib2-3.1.0a1.zip"
-            unzip nulib2-3.1.0a1.zip 2> /dev/null
-            rm nulib2-3.1.0a1.zip &> /dev/null
+            wget -q -O nulib2-3.1.0a2.zip "${binaryURL}external/source/nulib2-3.1.0a2.zip"
+            unzip nulib2-3.1.0a2.zip 2> /dev/null
+            rm nulib2-3.1.0a2.zip &> /dev/null
         fi
         cd nulib2*
         cd nufxlib
