@@ -9,7 +9,7 @@
 # to download and execute, type:
 # wget ivanx.com/a2server/setup; source setup
 
-a2serverVersion="130"
+a2serverVersion="131"
 
 # Ensure URL we'll use ends in a /
 case "$A2SERVER_SCRIPT_URL" in
@@ -37,10 +37,11 @@ fi
 echo
 [[ $scriptURL != *"ivanx.com"* ]] && echo "Using script URL: $scriptURL"
 [[ $binaryURL != *"ivanx.com"* ]] && echo "Using binary URL: $binaryURL"
-[[ ! $useExternalURL ]] && echo -e "Not using external URLs. Payloads must be in:\n  ${binaryURL}external\n  (See A2SERVER developer page for more information.)"
+[[ ! $useExternalURL ]] && echo -e "Not using external URLs. Downloads must be available from:\n  ${binaryURL}external/appleii/\n  ${binaryURL}external/source/\n  (See the A2SERVER developer page for more information.)"
 
 skipRepoUpdate=
 autoAnswerYes=
+installAll=
 setupNetBoot=
 setupWindowsSharing=
 compileAlways=
@@ -51,6 +52,9 @@ while [[ $1 ]]; do
         shift
         skipRepoUpdate="-r"
         touch /tmp/a2server-packageReposUpdated
+    elif [[ $1 == "-i" ]]; then
+        shift
+        installAll="-i"
     elif [[ $1 == "-y" ]]; then
         shift
         autoAnswerYes="-y"
@@ -81,6 +85,7 @@ while [[ $1 ]]; do
     elif [[ $1 ]]; then
         echo "options:"
         echo "-v: display installed and available versions, then exit"
+        echo "-i: reinstall A2SERVER software (but not Apple II software)"
         echo "-y: auto-answer yes to all prompts"
         echo "-r: don't update package repositories"
         echo "-b: auto-setup network boot (use with -y)"
@@ -228,6 +233,16 @@ if (( $doSetup )); then
         chmod ugo+x /tmp/7.console
 
         echo "A2SERVER: Scripts have been downloaded. Installing..."
+
+        if [[ $installAll ]]; then
+            sudo rm /usr/local/etc/A2SERVER-version 2> /dev/null
+            sudo rm /usr/local/bin/nulib2 2> /dev/null
+            sudo rm /usr/local/bin/unar 2> /dev/null
+            sudo rm /usr/local/sbin/macipgw 2> /dev/null
+            sudo rm /usr/local/bin/ciopfs 2> /dev/null
+            sudo rm /usr/local/etc/netatalk/afppasswd 2> /dev/null
+            sudo rm /usr/local/etc/netatalk/a2boot/p8 /usr/local/etc/netatalk/a2boot/ProDOS16\ Image 2> /dev/null
+        fi
 
         /tmp/1.storage
         rm /tmp/1.storage
