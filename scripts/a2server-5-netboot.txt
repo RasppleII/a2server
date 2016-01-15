@@ -28,10 +28,6 @@ p8Dir="/srv/A2SERVER/A2FILES"
 diskToolsP8Dir=$p8Dir/Disk.Tools.P8
 
 commDir="/srv/A2SERVER/A2FILES/Comm"
-spectrumDir=$commDir/Spectrum
-protermDir=$commDir/ProTERM
-zlinkDir=$commDir/Z.Link
-adtproDir=$commDir/ADTPro
 
 gsosURL="http://download.info.apple.com/Apple_Support_Area/Apple_Software_Updates/English-North_American/Apple_II/Apple_IIGS_System_6.0.1/"
 gsosBackupURL="http://archive.org/download/download.info.apple.com.2012.11/download.info.apple.com.2012.11.zip/download.info.apple.com%2FApple_Support_Area%2FApple_Software_Updates%2FEnglish-North_American%2FApple_II%2FApple_IIGS_System_6.0.1%2F"
@@ -173,15 +169,27 @@ updateP8YearTables () {
 
 # bail out on automated netboot setup unless -b is also specified
 [[ -f /tmp/a2server-autoAnswerYes ]] && autoAnswerYes=1 || autoAnswerYes=
+
+netbootInstalled=
+if [[ -f /usr/local/etc/netatalk/a2boot/ProDOS16\ Boot\ Blocks ]] && \
+    [[ -f /usr/local/etc/netatalk/a2boot/ProDOS16\ Image ]] && \
+    [[ -f /usr/local/etc/netatalk/a2boot/Apple\ :2f:2fe\ Boot\ Blocks ]] && \
+    [[ -f /usr/local/etc/netatalk/a2boot/p8 ]] && \
+    [[ -f /usr/local/etc/netatalk/a2boot/Basic.System ]]; then
+    netbootInstalled=1
+fi
+REPLY=
 if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
-    
     if [[ ! $autoAnswerYes ]]; then
-        echo
-        echo "Do you want to set up A2SERVER to be able to boot Apple II"
-        echo -n "computers over the network? "
-        read
-    fi
-    
+        if [[ ! $netbootInstalled ]]; then
+            echo
+            echo "Do you want to set up A2SERVER to be able to boot Apple II"
+            echo -n "computers over the network? "
+            read
+        else
+            echo "A2SERVER is already set up to boot Apple II computers over the network."
+        fi
+    fi    
     if [[ $autoAnswerYes || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
     
         nbmode=1
@@ -189,12 +197,15 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
         
         sudo true
         mkdir -p /tmp/netboot
+        rm -r /tmp/netboot/* 2> /dev/null
         cd /tmp/netboot
         
         # this will get "Disk 7" (Apple II Setup) as a raw (block dump) image
         if [[ ! -f /usr/local/etc/netatalk/a2boot/ProDOS16\ Boot\ Blocks ]] \
         || [[ ! -f /usr/local/etc/netatalk/a2boot/ProDOS16\ Image ]] \
-        || [[ ! -f /usr/local/etc/netatalk/a2boot/Apple\ :2f:2fe\ Boot\ Blocks ]]; then
+        || [[ ! -f /usr/local/etc/netatalk/a2boot/Apple\ :2f:2fe\ Boot\ Blocks ]] \
+        || [[ ! -f /usr/local/etc/netatalk/a2boot/p8 ]] \
+        || [[ ! -f /usr/local/etc/netatalk/a2boot/Basic.System ]]; then
             echo "A2SERVER: Downloading Apple II Boot Blocks..."
             cd /tmp/netboot
             
@@ -213,10 +224,10 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
             truncate -s 819284 'Disk 7 of 7-Apple II Setup.sea'
             dd if='Disk 7 of 7-Apple II Setup.sea' of=APPLE2SETUP.HDV bs=84 skip=1 2> /dev/null
                 
-            # copy the Boot Blocks into the right place
             mkdir -p a2setup
             sudo mount -t hfs -o ro,loop APPLE2SETUP.HDV a2setup
             sudo mkdir -p /usr/local/etc/netatalk/a2boot
+            sudo rm -r /usr/local/etc/netatalk/a2boot/* 2> /dev/null
             sudo cp -p a2setup/System\ Folder/* /usr/local/etc/netatalk/a2boot
             sudo umount a2setup
             sudo mv /usr/local/etc/netatalk/a2boot/Apple* /usr/local/etc/netatalk/a2boot/'Apple :2f:2fe Boot Blocks'
@@ -278,6 +289,10 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
         mkatinit -gs -d -f     # GS/OS registered user and Guest starts up with SYSTEM/FINDER
         mkatinit -d -f guest   # ProDOS 8 Guest starts up with BASIC.SYSTEM (no registered user)
 
+        netbootInstalled=1
+    fi
+
+    if [[ $netbootInstalled ]]; then
         gsosInstall=
         gsosReinstall=1
         if [[ -f "$gsosDir/SYSTEM/START.GS.OS" ]]; then
@@ -299,7 +314,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                         echo -n "Are you sure you want to delete your entire GS/OS System folder? "
                         read
                         if [[ ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
-                            rm -r "$gsosDir/SYSTEM/* $gsosDir/System/.AppleDouble/*" 2> /dev/null
+                            rm -r "$gsosDir/System"/* "$gsosDir/System/.AppleDouble"/* 2> /dev/null
                             afpsync &> /dev/null
                             echo
                             break
@@ -308,7 +323,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                         echo -n "Are you sure you want to reinstall GS/OS over your existing system? "
                         read
                         if [[ ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
-                            rm -r "$gsosDir/SYSTEM/START.GS.OS $gsosDir/System/.AppleDouble/START.GS.OS" 2> /dev/null
+                            rm -r "$gsosDir/System/Start.GS.OS $gsosDir/System/.AppleDouble/Start.GS.OS" 2> /dev/null
                             afpsync &> /dev/null
                             echo
                             break
@@ -345,6 +360,8 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                 # echo
                 echo
                 echo "A2SERVER: Downloading GS/OS 6.0.${gsosInstall} installer disk images..."
+                mkdir -p /tmp/netboot
+                rm -r /tmp/netboot/* 2> /dev/null
                 cd /tmp/netboot
                 mkdir -p $imagesDir
                 mkdir -p $netInstallDir
@@ -362,8 +379,8 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                 fi
     
                 # delete previously downloaded installer
-                rm "$imagesDir/* $imagesDir/.AppleDouble/*" 2> /dev/null
-                rm "$netInstallDir/* $netInstallDir/.AppleDouble/*" 2> /dev/null
+                rm "$imagesDir/* $imagesDir/.AppleDouble"/* 2> /dev/null
+                rm "$netInstallDir/* $netInstallDir/.AppleDouble"/* 2> /dev/null
                 afpsync -v $gsosDir > /dev/null
     
                 for diskname in ${diskNames[@]}; do
@@ -456,6 +473,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                 }
                 
                 mkdir -p /tmp/netboot
+                rm -r /tmp/netboot/* 2> /dev/null
                 cd /tmp/netboot
     
                 echo "A2SERVER: Preparing GS/OS installer scripts..."    
@@ -495,99 +513,113 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
         echo
         echo "A2SERVER: Updating ProDOS 8 Thunderclock driver year tables..."
         mkdir -p /tmp/netboot
+        rm -r /tmp/netboot/* 2> /dev/null
         wget -qO /tmp/netboot/clock.patch.py "${scriptURL}scripts/clock.patch.py"
         updateP8YearTables $(python /tmp/netboot/clock.patch.py $(LANG=C date +"%a %m/%d/%y"))
 
-        if [[ ! $autoAnswerYes ]]; then
-            echo
-            echo "Do you want to download and install utilities for working with"
-            echo -n "disk images and archive files in GS/OS? "
-            read
+        gsosInstalled=""
+        [[ -f "$gsosDir/System/Start.GS.OS" ]] && gsosInstalled="GS/OS and "
+        p8ToolsInstalled=
+        [[ -f $diskToolsP8Dir/SHRINKIT && -f $diskToolsP8Dir/DSK2FILE && -f $diskToolsP8Dir/SYSUTIL ]] && p8ToolsInstalled=1
+        gsosToolsInstalled=
+        [[ -f $imageToolsDir/Asimov && -f $gsosDir/System/System.Setup/MountIt && -f $imageToolsDir/GSHK ]] && gsosToolsInstalled=1
+        toolsInstalled=
+        if [[ $gsosInstalled ]]; then
+            [[ $gsosToolsInstalled && $p8ToolsInstalled ]] && toolsInstalled=1
+        else
+            toolsInstalled=$p8ToolsInstalled
         fi
-        if [[ $autoAnswerYes || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
-    
-            # download image tools and put them in IMAGE.TOOLS
-            echo "A2SERVER: Downloading GS/OS disk image utilities..."
-            mkdir -p $imageToolsDir
-    
-            # get Asimov2 (for GS/OS)
-            echo -n "Asimov 2.0"
-            if [[ -f $imageToolsDir/Asimov ]]; then
-                echo " is already installed."
+        REPLY=
+        if [[ ! $autoAnswerYes ]]; then
+            if [[ ! $toolsInstalled ]]; then
+                echo
+                echo "Do you want to download and install utilities for working with"
+                echo -n "disk images and archive files in ${gsosInstalled}ProDOS 8? "
+                read
             else
                 echo
-                cd /tmp/netboot
-                if [[ $useExternalURL ]]; then
-                    wget -qO Asimov.shk http://www.ninjaforce.com/downloads/Asimov.shk
-                    nulib2 -x -s Asimov.shk &> /dev/null
-                fi
-                if [[ ! -d Asimov ]]; then
-                    wget -qO Asimov.shk ${binaryURL}external/appleii/Asimov.shk
-                    nulib2 -x -s Asimov.shk &> /dev/null
-                fi
-                cp -p Asimov/Asimov $imageToolsDir/Asimov
-                afpsync -v $gsosDir > /dev/null
-                cat Asimov/Asimov_rsrc_ >> $imageToolsDir/.AppleDouble/Asimov
-                afptype -p S16 -q $imageToolsDir/Asimov
+                echo "A2SERVER: Disk image and archive utilities are already installed."
             fi
+        fi
+        if [[ $gsosInstalled ]]; then
+            if [[ $autoAnswerYes || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
         
-            echo -n "GS-ShrinkIt 1.1"
-            # get GS-ShrinkIt
-            if [[ -f $imageToolsDir/GSHK ]]; then
-                echo " is already installed."
-            else
-                echo
-                mkdir -p /tmp/netboot/gshk
-                cd /tmp/netboot/gshk
-                if [[ $useExternalURL ]]; then
-                    wget -qO gshk11.sea http://web.archive.org/web/20131031160750/http://nulib.com/library/gshk11.sea
-                    #wget -qO gshk11.sea http://www.nulib.com/library/gshk11.sea
-                    nulib2 -x -s gshk11.sea &> /dev/null
+                # download image tools and put them in IMAGE.TOOLS
+                echo "A2SERVER: Downloading GS/OS disk image utilities..."
+                mkdir -p $imageToolsDir
+        
+                # get Asimov2 (for GS/OS)
+                echo -n "Asimov 2.0"
+                if [[ -f $imageToolsDir/Asimov ]]; then
+                    echo " is already installed."
+                else
+                    echo
+                    cd /tmp/netboot
+                    if [[ $useExternalURL ]]; then
+                        wget -qO Asimov.shk http://www.ninjaforce.com/downloads/Asimov.shk
+                        nulib2 -x -s Asimov.shk &> /dev/null
+                    fi
+                    if [[ ! -d Asimov ]]; then
+                        wget -qO Asimov.shk ${binaryURL}external/appleii/Asimov.shk
+                        nulib2 -x -s Asimov.shk &> /dev/null
+                    fi
+                    cp -p Asimov/Asimov $imageToolsDir/Asimov
+                    afpsync -v $gsosDir > /dev/null
+                    cat Asimov/Asimov_rsrc_ >> $imageToolsDir/.AppleDouble/Asimov
+                    afptype -p S16 -q $imageToolsDir/Asimov
                 fi
-                if [[ ! -f GSHK ]]; then
-                    wget -qO gshk11.sea ${binaryURL}external/appleii/gshk11.sea
-                    nulib2 -x -s gshk11.sea &> /dev/null
+            
+                echo -n "GS-ShrinkIt 1.1"
+                # get GS-ShrinkIt
+                if [[ -f $imageToolsDir/GSHK ]]; then
+                    echo " is already installed."
+                else
+                    echo
+                    mkdir -p /tmp/netboot/gshk
+                    cd /tmp/netboot/gshk
+                    if [[ $useExternalURL ]]; then
+                        wget -qO gshk11.sea http://web.archive.org/web/20131031160750/http://nulib.com/library/gshk11.sea
+                        #wget -qO gshk11.sea http://www.nulib.com/library/gshk11.sea
+                        nulib2 -x -s gshk11.sea &> /dev/null
+                    fi
+                    if [[ ! -f GSHK ]]; then
+                        wget -qO gshk11.sea ${binaryURL}external/appleii/gshk11.sea
+                        nulib2 -x -s gshk11.sea &> /dev/null
+                    fi
+                    cp -p GSHK $imageToolsDir/GSHK
+                    afpsync -v $gsosDir > /dev/null
+                    cat GSHK_rsrc_ >> $imageToolsDir/.AppleDouble/GSHK
+                    afptype -p S16 -a DB07 -q $imageToolsDir/GSHK
+                    cd /tmp/netboot
                 fi
-                cp -p GSHK $imageToolsDir/GSHK
-                afpsync -v $gsosDir > /dev/null
-                cat GSHK_rsrc_ >> $imageToolsDir/.AppleDouble/GSHK
-                afptype -p S16 -a DB07 -q $imageToolsDir/GSHK
-                cd /tmp/netboot
-            fi
-    
-            echo -n "MountIt 1.4"    
-            # get MountIt (for GS/OS)
-            if [[ -f $gsosDir/System/System.Setup/MountIt ]]; then
-                echo " is already installed."
-            else
-                echo
-                mkdir -p /tmp/netboot/mountit
-                cd /tmp/netboot/mountit
-                if [[ $useExternalURL ]]; then
-                    wget -q -O MOUNTIT.SHK http://www.brutaldeluxe.fr/products/apple2gs/MOUNTIT.SHK
-                    cppo -s -ad MOUNTIT.SHK System:System.Setup:MountIt . &> /dev/null
-                    cppo -s -ad MOUNTIT.SHK ReadMe . &> /dev/null
+        
+                echo -n "MountIt 1.4"    
+                # get MountIt (for GS/OS)
+                if [[ -f $gsosDir/System/System.Setup/MountIt ]]; then
+                    echo " is already installed."
+                else
+                    echo
+                    mkdir -p /tmp/netboot/mountit
+                    cd /tmp/netboot/mountit
+                    if [[ $useExternalURL ]]; then
+                        wget -q -O MOUNTIT.SHK http://www.brutaldeluxe.fr/products/apple2gs/MOUNTIT.SHK
+                        cppo -s -ad MOUNTIT.SHK System:System.Setup:MountIt . &> /dev/null
+                        cppo -s -ad MOUNTIT.SHK ReadMe . &> /dev/null
+                    fi
+                    if [[ ! -f ReadMe ]]; then
+                        wget -qO MOUNTIT.SHK ${binaryURL}external/appleii/MOUNTIT.SHK
+                        cppo -s -ad MOUNTIT.SHK System:System.Setup:MountIt . &> /dev/null
+                        cppo -s -ad MOUNTIT.SHK ReadMe . &> /dev/null
+                    fi
+                    cpAD ./MountIt $gsosDir/System/System.Setup
+                    mkdir -p $gsosDir/GSOS.Installer/Image.Tools/MountIt
+                    cpAD ./ReadMe $gsosDir/GSOS.Installer/Image.Tools/MountIt
+                    afpsync -v $gsosDir > /dev/null
                 fi
-                if [[ ! -f ReadMe ]]; then
-                    wget -qO MOUNTIT.SHK ${binaryURL}external/appleii/MOUNTIT.SHK
-                    cppo -s -ad MOUNTIT.SHK System:System.Setup:MountIt . &> /dev/null
-                    cppo -s -ad MOUNTIT.SHK ReadMe . &> /dev/null
-                fi
-                cpAD ./MountIt $gsosDir/System/System.Setup
-                mkdir -p $gsosDir/GSOS.Installer/Image.Tools/MountIt
-                cpAD ./ReadMe $gsosDir/GSOS.Installer/Image.Tools/MountIt
-                afpsync -v $gsosDir > /dev/null
             fi
         fi
 
-        if [[ ! $autoAnswerYes ]]; then
-            echo
-            echo "Do you want to download and install utilities for working with"
-            echo -n "disk images and archive files in ProDOS 8? "
-            read
-        fi
         if [[ $autoAnswerYes || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
-    
             echo "A2SERVER: Downloading ProDOS 8 disk image utilities..."
 
             mkdir -p $diskToolsP8Dir
@@ -659,12 +691,27 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
     
         fi
 
+        p8CommInstalled=
+        [[ -f $commDir/ProTERM/PROTERM && -f $commDir/Z.Link/Z.LINK && -f $commDir/ADTPro/ADTPRO && -f $commDir/ADTPro/VSDRIVE ]] && p8CommInstalled=1
+        gsosCommInstalled=
+        [[ -f $commDir/Spectrum/Spectrum && -f $commDir/SAM2/SAM2 && -f $commDir/SAFE2/SAFE2 && $commDir/SNAP/SNAP && $gsosDir/System/CDevs/TCPIP ]] && gsosCommInstalled=1
+        commInstalled=
+        if [[ $gsosInstalled ]]; then
+            [[ $gsosCommInstalled && $p8CommInstalled ]] && commInstalled=1
+        else
+            commInstalled=$p8CommInstalled
+        fi
+        REPLY=
         if [[ ! $autoAnswerYes ]]; then
-            [[ -f "$gsosDir/System/Start.GS.OS" ]] && gsosInstalled="GS/OS and " || gsosInstalled=
-            echo
-            echo "Do you want to download communications software for"
-            echo -n "$gsosInstalled""ProDOS 8? "
-            read
+            if [[ ! $commInstalled ]]; then
+                echo
+                echo "Do you want to download communications software for"
+                echo -n "$gsosInstalled""ProDOS 8? "
+                read
+            else
+                echo
+                echo "A2SERVER: Communications software is already installed."
+            fi
         fi
         if [[ $autoAnswerYes || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
     
@@ -675,13 +722,13 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
             if [[ $gsosInstalled ]]; then
                 echo -n "Spectrum"
                 # get Spectrum
-                if [[ -f $spectrumDir/Spectrum ]]; then
+                if [[ -f $commDir/Spectrum/Spectrum ]]; then
                     echo " is already installed."
                 else
                     echo
-                    mkdir -p $spectrumDir
+                    mkdir -p $commDir/Spectrum
                     # remove images that might have been installed by 1.2.5
-                    cd $spectrumDir
+                    cd $commDir/Spectrum
                     rm SPECTRUM.HDV MANUALS.HDV SOUNDS.HDV EXTRAS.HDV &> /dev/null
                     # install Spectrum into GS/OS
                     mkdir -p /tmp/netboot/spectrum
@@ -714,8 +761,8 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                         mkdir -p $gsosDir/"${thisFolder##*^}"/.AppleDouble
                         cp -R Spectrum.Gold/${thisFolder%%^*}/.AppleDouble/* $gsosDir/"${thisFolder##*^}"/.AppleDouble
                     done
-                    cpAD Spectrum.Gold/Installer/SoundPatch $spectrumDir
-                    cpAD Spectrum.Gold/Spectrum.2.5.4/Spectrum $spectrumDir
+                    cpAD Spectrum.Gold/Installer/SoundPatch $commDir/Spectrum
+                    cpAD Spectrum.Gold/Spectrum.2.5.4/Spectrum $commDir/Spectrum
                     afpsync -v $gsosDir > /dev/null
                 fi
 
@@ -780,7 +827,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                     afpsync -v $gsosDir > /dev/null
                 fi
 
-                echo -n "SAFE2 (FTP client)"
+                echo -n "SAFE2"
                 if [[ -f $commDir/SAFE2/SAFE2 ]]; then
                     echo " is already installed."
                 else
@@ -807,11 +854,12 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                     cpAD TimeZone/Tool056 $gsosDir/System/Tools
                     rm -r $gsosDir/System/Desk.Accs/Help.Files/SAFE2 2> /dev/null
                     mv Help/Help.Files/SAFE2 $gsosDir/System/Desk.Accs/Help.Files
+                    wget -qO- ${scriptURL}files/safe2-setup.tgz | tar Pzx
 
                     afpsync -v $gsosDir > /dev/null
                 fi
 
-                echo -n "SAM2 (POP email client)"
+                echo -n "SAM2"
                 if [[ -f $commDir/SAM2/SAM2 ]]; then
                     echo " is already installed."
                 else
@@ -848,7 +896,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                     afpsync -v $gsosDir > /dev/null
                 fi
 
-                echo -n "SNAP (Usenet client)"
+                echo -n "SNAP"
                 if [[ -f $commDir/SNAP/SNAP ]]; then
                     echo " is already installed."
                 else
@@ -874,6 +922,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                     cpAD Quick.Start $commDir/SNAP
                     rm -r $gsosDir/System/Desk.Accs/Help.Files/SNAP 2> /dev/null
                     mv Help/Help.Files/SNAP $gsosDir/System/Desk.Accs/Help.Files
+                    wget -qO- ${scriptURL}files/snap-setup.tgz | tar Pzx
                     # cpAD Fonts/SIS.3.10 $gsosDir/System/Fonts
                     # cpAD Fonts/SIS.4.10 $gsosDir/System/Fonts
                     # cpAD Tools/HTMLTool/TOOL130 $gsosDir/System/Tools
@@ -887,37 +936,37 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 
             echo -n "ProTERM and Z-Link"
             # get A2CLOUD disk and copy from there
-            if [[ -f $protermDir/PROTERM ]]; then
+            if [[ -f $commDir/ProTERM/PROTERM && -f $commDir/Z.Link/Z.LINK ]]; then
                 echo " are already installed."
             else
                 echo
-                mkdir -p $protermDir
-                mkdir -p $protermDir/.AppleDouble
-                mkdir -p $zlinkDir
-                mkdir -p $zlinkDir/.AppleDouble
+                mkdir -p $commDir/ProTERM
+                mkdir -p $commDir/ProTERM/.AppleDouble
+                mkdir -p $commDir/Z.Link
+                mkdir -p $commDir/Z.Link/.AppleDouble
                 cd /tmp/netboot
                 wget -qO A2CLOUD.HDV "${binaryURL}appleii/A2CLOUD.HDV"
                 cppo -ad A2CLOUD.HDV . &> /dev/null
                 cd A2CLOUD
-                mv *PT3* *PROTERM* $protermDir
-                mv Z.LINK $zlinkDir
+                mv *PT3* *PROTERM* $commDir/ProTERM
+                mv Z.LINK $commDir/Z.Link
                 cd .AppleDouble
-                mv *PT3* *PROTERM* $protermDir/.AppleDouble
-                mv Z.LINK $zlinkDir/.AppleDouble
+                mv *PT3* *PROTERM* $commDir/ProTERM/.AppleDouble
+                mv Z.LINK $commDir/Z.Link/.AppleDouble
                 afpsync -v $gsosDir > /dev/null
             fi            
 
             echo -n "ADTPro and VSDRIVE"
-            if [[ -f $adtproDir/ADTPRO ]]; then
+            if [[ -f $commDir/ADTPro/ADTPRO ]]; then
                 echo " are already installed."
             else
-                mkdir -p $adtproDir
-                mkdir -p $adtproDir/.AppleDouble
+                mkdir -p $commDir/ADTPro
+                mkdir -p $commDir/ADTPro/.AppleDouble
                 echo
                 cd /tmp/netboot/A2CLOUD
-                mv *ADTPRO* *VEDRIVE* *VSDRIVE* $adtproDir
+                mv *ADTPRO* *VEDRIVE* *VSDRIVE* $commDir/ADTPro
                 cd .AppleDouble
-                mv *ADTPRO* *VEDRIVE* *VSDRIVE* $adtproDir/.AppleDouble
+                mv *ADTPRO* *VEDRIVE* *VSDRIVE* $commDir/ADTPro/.AppleDouble
                 afpsync -v $gsosDir > /dev/null
             fi            
 
@@ -938,31 +987,30 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
     
     fi
 
-    if [[ ! $autoAnswerYes ]]; then
-        echo
-        echo "Do you want to download the patch required for using"
-        echo -n "a Farallon LocalTalk-to-Ethernet bridge with GS/OS? "
-        read
-    fi
-    if [[ $autoAnswerYes || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
-        # Farallon bridge patch for GS/OS courtesy of Geoff Body
-        echo "A2SERVER: Downloading Farallon bridge patch..."
-        wget -qO /tmp/FARALLON.PO "${binaryURL}appleii/FARALLON.B1.PO" &> /dev/null
-        if [[ -d $gsosDir/SYSTEM/SYSTEM.SETUP ]]; then
+    REPLY=
+    if [[ -d $gsosDir/SYSTEM/SYSTEM.SETUP ]]; then
+        if [[ ! $autoAnswerYes ]]; then
+            if [[ ! -f $gsosDir/SYSTEM/SYSTEM.SETUP/ATALKIRQ ]]; then
+                echo
+                echo "Do you want to download the patch required for using"
+                echo -n "a Farallon LocalTalk-to-Ethernet bridge with GS/OS? "
+                read
+            else
+                echo
+                echo "A2SERVER: The Farallon bridge patch has already been installed."
+            fi
+        fi
+        if [[ $autoAnswerYes || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
+            # Farallon bridge patch for GS/OS courtesy of Geoff Body
+            echo "A2SERVER: Downloading Farallon bridge patch..."
+            wget -qO /tmp/FARALLON.PO "${binaryURL}appleii/FARALLON.B1.PO" &> /dev/null
             cppo -s -ad /tmp/FARALLON.PO /ATALKPATCH/ATALKIRQ $gsosDir/SYSTEM/SYSTEM.SETUP &> /dev/null
             echo
             echo "A2SERVER: The Farallon bridge patch is installed."
-        else
-            cppo -s -ad /tmp/FARALLON.PO /ATALKPATCH/ATALKIRQ $gsosDir &> /dev/null
             echo
-            echo "On your Apple IIgs, copy the file ATALKIRQ in /A2SHARED to the"
-            echo "SYSTEM.SETUP folder of the SYSTEM folder of your GSOS startup disk,"
-            echo "or, if you can't, download the patch from the A2SERVER web site."
+            echo "Note: Farallon bridges can only be used in GS/OS (with this patch)"
+            echo "and Apple IIe computers. Apple IIgs computers which network boot"
+            echo "directly into ProDOS 8 will freeze after a few minutes."
         fi
-        echo
-        echo "Note: Farallon bridges can only be used in GS/OS (with this patch)"
-        echo "and Apple IIe computers. Apple IIgs computers which network boot"
-        echo "directly into ProDOS 8 will freeze after a few minutes."
     fi
-
 fi
