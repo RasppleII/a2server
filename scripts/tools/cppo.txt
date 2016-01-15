@@ -1212,9 +1212,8 @@ if g.SHK:
           os.path.isdir(unshkdir + "/" + fileNames[0])):
         curDir = True # only one folder at top level, so extract in place
         volumeName = toProdosName(fileNames[0])
-    elif (len(fileNames) == 2 and # disk image, so extract in place
-          fileNames[1][-1:] == "i" and
-          fileNames[0] == fileNames[1][:-1]):
+    elif (len(fileNames) == 1 and    # disk image, so extract in place
+          fileNames[0][-1:] == "i"):
         curDir = True
         volumeName = toProdosName(fileNames[0].split("#")[0])
     else: # extract in folder based on disk image name
@@ -1242,27 +1241,23 @@ if g.SHK:
             if g.AD:
                 makedirs(g.ADdir)
         for fname in sorted(fileList):
+            if (fname[-1:] == "i"):
+                # disk image; rename to include suffix and correct type/auxtype
+                imagePath = os.path.join(dirName, fname).split("#")[0]
+                new_name = (imagePath +
+                           ("" if (imagePath.lower().endswith(".po") or
+                                   imagePath.lower().endswith(".hdv"))
+                               else ".PO") + "#e00005")
+                os.rename(os.path.join(dirName, fname), new_name)
+                fname = os.path.basename(new_name)
             g.shk_hasrf = False
             rfork = False
-            disk_image = False
             if (fname[-1:] == "r" and
                 os.path.isfile(os.path.join(dirName, fname[:-1]))):
                 rfork = True
-            elif (fname[-1:] == "i"):
-                disk_image = True
             elif (os.path.isfile(os.path.join(dirName, (fname + "r")))):
                 g.shk_hasrf = True
-            elif (os.path.isfile(os.path.join(dirName, (fname + "i")))):
-                # disk image; remove shell image
-                os.remove(os.path.join(dirName, fname))
-                imagePath = os.path.join(dirName, fname).split("#")[0]
-                new_name = (imagePath +
-                           ("" if (fname.lower().endswith(".po") or
-                                   fname.lower().endswith(".hdv"))
-                               else ".po") + "#e00005")
-                os.rename((os.path.join(dirName, fname) + "i"), new_name)
-                fname = os.path.basename(new_name)
-            if not rfork and not disk_image:
+            if not rfork:
                 processEntry(dirName, fname)
     shutil.rmtree(unshkdir, True)
     syncExit()
