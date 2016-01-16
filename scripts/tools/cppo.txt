@@ -491,7 +491,7 @@ def processDir(arg1, arg2=None, arg3=None, arg4=None, arg5=None):
                     if (("/" + g.PDOSPATH_SEGMENT.lower()) !=
                                g.DIRPATH.lower()):
                         print("ProDOS volume name does not match disk image.")
-                        sys.exit(2)
+                        quitNow(2)
                     else:
                         g.PDOSPATH_INDEX += 1
                         g.PDOSPATH_SEGMENT = g.PDOSPATH[g.PDOSPATH_INDEX]
@@ -630,7 +630,7 @@ def processEntry(arg1, arg2):
                 if (g.PDOSPATH_SEGMENT or
                    (g.extractFile and
                    (g.extractFile.lower() == origFileName.lower()))):
-                    syncExit()
+                    quitNow(0)
                 g.targetName = None    
     #else:
         #print(g.activeFileName + " doesn't match " + g.PDOSPATH_SEGMENT)
@@ -742,17 +742,21 @@ def makeADfile():
     writecharsHex(g.exFileData, hexToDec("7A"), "0000000F000002AD00000004")
     # dbd (second time) will create DEV, INO, SYN, SV~
 
-def syncExit():
-    if (not g.nomsg and g.AD and os.path.isdir("/usr/local/etc/netatalk")):
+def quitNow(exitCode=0):
+    if (exitCode == 0 and not g.nomsg and
+        g.AD and os.path.isdir("/usr/local/etc/netatalk")):
         print("File(s) have been copied to the target directory. " +
               "If the directory")
         print("is shared by Netatalk, please type 'afpsync' now.")
-    # saveFile(g.imageFile, g.imageData)
-    sys.exit(0)
+    if g.SHK: # clean up
+        for file in os.listdir("/tmp"):
+            if file.startswith("cppo-"):
+                shutil.rmtree(file)
+    sys.exit(exitCode)
 
 def usage(exitcode=1):
     print(sys.modules[__name__].__doc__)
-    sys.exit(exitcode)
+    quitNow(exitcode)
 
 # --- ID bashbyter functions (adapted)
 
@@ -1149,7 +1153,7 @@ else:
 g.imageFile = args[1]
 if not os.path.isfile(g.imageFile):
     print("Image/archive file \"" + g.imageFile + "\" was not found.")
-    sys.exit(2)
+    quitNow(2)
 
 # automatically set ShrinkIt mode if extension suggests it
 if (g.SHK or
@@ -1158,7 +1162,7 @@ if (g.SHK or
     g.imageFile[-3:].lower() == "bxy"):
     if (os.name == "nt"):
         print("ShrinkIt archives cannot be extracted on Windows.")
-        sys.exit(2)
+        quitNow(2)
     else:
         try:
             with open(os.devnull, "w") as fnull:
@@ -1166,7 +1170,7 @@ if (g.SHK or
             g.SHK=1
         except Exception:
             print("Nulib2 is not available; not expanding ShrinkIt archive.")
-            sys.exit(2)
+            quitNow(2)
 
 if (len(args) == 4):
     g.extractFile = args[2]
@@ -1188,10 +1192,10 @@ if g.SHK:
         print(
           "File not found in ShrinkIt archive. Try cppo -cat to get the path,")
         print("  and omit any leading slash or colon.")
-        sys.exit(1)
+        quitNow(1)
     elif (result != 0):
         print("ShrinkIt archive is invalid, or some other problem happened.")
-        sys.exit(1)
+        quitNow(1)
     if g.extractFile:
         g.extractFile = g.extractFile.replace(':', '/')
         extractPath = (unshkdir + "/" + g.extractFile)
@@ -1260,7 +1264,7 @@ if g.SHK:
             if not rfork:
                 processEntry(dirName, fname)
     shutil.rmtree(unshkdir, True)
-    syncExit()
+    quitNow(0)
 
 # end script if SHK
             
@@ -1345,12 +1349,12 @@ if g.extractFile:
         g.targetName = targetPath.rsplit("/", 1)[1]
     if not os.path.isdir(g.targetDir):
         print("Target directory not found.")
-        sys.exit(2)
+        quitNow(2)
 else:
     if not g.CAT:
         if not os.path.isdir(args[2]):
             print("Target directory not found.")
-            sys.exit(2)
+            quitNow(2)
     
 if g.D33:
     diskName = os.path.basename(g.imageFile)
@@ -1373,7 +1377,7 @@ if g.D33:
                 readcharDec(g.imageData, ts(17,0)+2)])
     if g.extractFile:
         print("ProDOS file not found within image file.")
-    syncExit()
+    quitNow(0)
 
 # below: ProDOS
 
@@ -1396,7 +1400,7 @@ if g.extractFile:
         mkdir(g.ADdir)
     processDir(2)
     print("ProDOS file not found within image file.")
-    sys.exit(2)
+    quitNow(2)
 else:
     if not g.CAT:
         # print(args[0], args[1], args[2])
@@ -1408,5 +1412,5 @@ else:
             makedirs(g.ADdir)
     processDir(2)
     if not g.CAT:
-        syncExit()
+        quitNow(0)
 
