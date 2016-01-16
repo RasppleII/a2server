@@ -720,7 +720,20 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
             mkdir -p $commDir
 
             if [[ $gsosInstalled ]]; then
-                echo -n "Spectrum"
+
+                unset safeUrl samUrl snapUrl safeVer samVer snapVer
+                if [[ $useExternalURL ]]; then
+                    html=$(wget -qO- http://speccie.co.uk/speccie/Site/Download_Centre_files/widget1_markup.html)
+                    safeUrl=$(echo "$html" | grep -i 'safe2.*bxy' | tr '<>' '\n' | grep href | cut -d '=' -f 2)
+                    samUrl=$(echo "$html" | grep -i 'sam2.*bxy' | tr '<>' '\n' | grep href | cut -d '=' -f 2)
+                    snapUrl=$(echo "$html" | grep -i 'snap.*bxy' | tr '<>' '\n' | grep href | cut -d '=' -f 2)
+                    safeVer=$(echo $safeUrl | rev | cut -d '/' -f 1 | cut -d '.' -f 2 | rev | cut -c 5- | sed 's/./.&/g' | cut -c 2-)
+                    samVer=$(echo $samUrl | rev | cut -d '/' -f 1 | cut -d '.' -f 2 | rev | cut -c 4- | sed 's/./.&/g' | cut -c 2-)
+                    snapVer=$(echo $snapUrl | rev | cut -d '/' -f 1 | cut -d '.' -f 2 | rev | cut -c 5- | sed 's/./.&/g' | cut -c 2-)
+                    spectrumVer=$(echo "$html" | grep 'Spectrum.*Gold.2mg' | tr '<>' '\n' | grep '^Spectrum.*2mg$' | cut -d ' ' -f 2)
+                fi
+
+                echo -n "Spectrum $spectrumVer"
                 # get Spectrum
                 if [[ -f $commDir/Spectrum/Spectrum ]]; then
                     echo " is already installed."
@@ -735,14 +748,15 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                     cd /tmp/netboot/spectrum
                     if [[ $useExternalURL ]]; then
                         wget -qO spectrum_gold_2mg.zip http://www.speccie.co.uk/speccie/software/spectrum_gold_2mg.zip
-                        unzip -p spectrum_gold_2mg.zip 2> /dev/null | dd bs=64 skip=1 of=Spectrum.Gold.HDV 2> /dev/null
+                        unzip spectrum_gold_2mg.zip Spectrum.Gold.2mg &> /dev/null
                     fi
-                    if [[ ! -f Spectrum.Gold.HDV || $(wc -c < Spectrum.Gold.HDV) -eq 0 ]]; then
+                    if [[ ! -f Spectrum.Gold.2mg || $(wc -c < Spectrum.Gold.2mg) -eq 0 ]]; then
                         wget -qO spectrum_gold_2mg.zip ${binaryURL}external/appleii/spectrum_gold_2mg.zip
-                        unzip -p spectrum_gold_2mg.zip 2> /dev/null | dd bs=64 skip=1 of=Spectrum.Gold.HDV 2> /dev/null
+                        unzip spectrum_gold_2mg.zip Spectrum.Gold.2mg &> /dev/null
                     fi
-                    cppo -s -ad Spectrum.Gold.HDV . &> /dev/null
+                    cppo -s -ad Spectrum.Gold.2mg . &> /dev/null
                     userFolder=$(tr [:lower:] [:upper:] <<< $USER)
+                    
                     for thisFolder in \
                       Installer/Extras/CDEvs^System/CDevs \
                       Installer/Extras/Tools^System/Tools \
@@ -750,10 +764,10 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                       Installer/Extras/System.Setup^System/System.Setup \
                       Installer/Help^System/Desk.Accs \
                       Installer/Spectrum.Sounds^System/Sounds \
-                      Spectrum.2.5.4/Add.Ons^USERS/$userFolder/Add.Ons \
-                      Spectrum.2.5.4/Spectrum.Script^USERS/$userFolder/Spectrum.Script \
-                      Spectrum.2.5.4/Add.Ons^Comm/Spectrum/Add.Ons \
-                      Spectrum.2.5.4/Spectrum.Script^Comm/Spectrum/Spectrum.Script \
+                      Spectrum.*/Add.Ons^USERS/$userFolder/Add.Ons \
+                      Spectrum.*/Spectrum.Script^USERS/$userFolder/Spectrum.Script \
+                      Spectrum.*/Add.Ons^Comm/Spectrum/Add.Ons \
+                      Spectrum.*/Spectrum.Script^Comm/Spectrum/Spectrum.Script \
                       Manuals^Comm/Spectrum/Manuals
                     do
                         mkdir -p $gsosDir/"${thisFolder##*^}"
@@ -762,7 +776,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                         cp -R Spectrum.Gold/${thisFolder%%^*}/.AppleDouble/* $gsosDir/"${thisFolder##*^}"/.AppleDouble
                     done
                     cpAD Spectrum.Gold/Installer/SoundPatch $commDir/Spectrum
-                    cpAD Spectrum.Gold/Spectrum.2.5.4/Spectrum $commDir/Spectrum
+                    cpAD Spectrum.Gold/Spectrum.*/Spectrum $commDir/Spectrum
                     afpsync -v $gsosDir > /dev/null
                 fi
 
@@ -774,7 +788,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                     mkdir -p /tmp/netboot/marinetti
                     cd /tmp/netboot/marinetti
 
-                    # Marinetti 3.0b1
+                    # Marinetti 3.0b1 -- had to repackage because installer is GS/OS self-contained app
                     wget -qO MarinettiB1.SHK ${binaryURL}appleii/MarinettiB1.SHK
                     cppo -ad -s -n MarinettiB1.SHK $gsosDir > /dev/null
 
@@ -827,7 +841,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                     afpsync -v $gsosDir > /dev/null
                 fi
 
-                echo -n "SAFE2"
+                echo -n "SAFE2 $safeVer"
                 if [[ -f $commDir/SAFE2/SAFE2 ]]; then
                     echo " is already installed."
                 else
@@ -836,7 +850,8 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                     mkdir -p /tmp/netboot/safe2
                     cd /tmp/netboot/safe2
                     if [[ $useExternalURL ]]; then
-                        wget -qO safe2.bxy http://www.speccie.co.uk/speccie/software/safe229.bxy
+                        [[ ! $safeUrl ]] && safeUrl="http://www.speccie.co.uk/speccie/software/safe229.bxy"
+                        wget -qO safe2.bxy "$safeUrl"
                         cppo -s -ad safe2.bxy . &> /dev/null
                     fi
                     if [[ ! -f SAFE2.Archive/Safe2 ]]; then
@@ -859,7 +874,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                     afpsync -v $gsosDir > /dev/null
                 fi
 
-                echo -n "SAM2"
+                echo -n "SAM2 $samVer"
                 if [[ -f $commDir/SAM2/SAM2 ]]; then
                     echo " is already installed."
                 else
@@ -869,7 +884,8 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                     mkdir -p /tmp/netboot/sam2
                     cd /tmp/netboot/sam2
                     if [[ $useExternalURL ]]; then
-                        wget -qO sam2.bxy http://www.speccie.co.uk/speccie/software/sam205.bxy
+                        [[ ! $samUrl ]] && samUrl="http://www.speccie.co.uk/speccie/software/sam205.bxy"
+                        wget -qO sam2.bxy "$samUrl"
                         cppo -s -ad sam2.bxy . &> /dev/null
                     fi
                     if [[ ! -f SAM2.Archive/SAM2/SAM2 ]]; then
@@ -896,7 +912,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                     afpsync -v $gsosDir > /dev/null
                 fi
 
-                echo -n "SNAP"
+                echo -n "SNAP $snapVer"
                 if [[ -f $commDir/SNAP/SNAP ]]; then
                     echo " is already installed."
                 else
@@ -905,7 +921,8 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                     mkdir -p /tmp/netboot/snap
                     cd /tmp/netboot/snap
                     if [[ $useExternalURL ]]; then
-                        wget -qO snap.bxy http://www.speccie.co.uk/speccie/software/snap118.bxy
+                        [[ ! $snapUrl ]] && snapUrl="http://www.speccie.co.uk/speccie/software/snap118.bxy"
+                        wget -qO snap.bxy "$snapUrl"
                         cppo -s -ad snap.bxy . &> /dev/null
                     fi
                     if [[ ! -f SNAP.Archive/SNAP ]]; then
@@ -931,34 +948,44 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 
                     afpsync -v $gsosDir > /dev/null
                 fi
-
              fi
 
-            echo -n "ProTERM and Z-Link"
+            echo -n "ProTERM 3.1"
             # get A2CLOUD disk and copy from there
-            if [[ -f $commDir/ProTERM/PROTERM && -f $commDir/Z.Link/Z.LINK ]]; then
-                echo " are already installed."
+            if [[ -f $commDir/ProTERM/PROTERM ]]; then
+                echo " is already installed."
             else
                 echo
                 mkdir -p $commDir/ProTERM
                 mkdir -p $commDir/ProTERM/.AppleDouble
-                mkdir -p $commDir/Z.Link
-                mkdir -p $commDir/Z.Link/.AppleDouble
                 cd /tmp/netboot
                 wget -qO A2CLOUD.HDV "${binaryURL}appleii/A2CLOUD.HDV"
-                cppo -ad A2CLOUD.HDV . &> /dev/null
+                cppo -s -ad A2CLOUD.HDV . &> /dev/null
                 cd A2CLOUD
                 mv *PT3* *PROTERM* $commDir/ProTERM
-                mv Z.LINK $commDir/Z.Link
                 cd .AppleDouble
                 mv *PT3* *PROTERM* $commDir/ProTERM/.AppleDouble
+                afpsync -v $gsosDir > /dev/null
+            fi            
+
+            echo -n "Z-Link 12-15-91"
+            # get A2CLOUD disk and copy from there
+            if [[ -f $commDir/Z.Link/Z.LINK ]]; then
+                echo " is already installed."
+            else
+                echo
+                mkdir -p $commDir/Z.Link
+                mkdir -p $commDir/Z.Link/.AppleDouble
+                cd /tmp/netboot/A2CLOUD
+                mv Z.LINK $commDir/Z.Link
+                cd .AppleDouble
                 mv Z.LINK $commDir/Z.Link/.AppleDouble
                 afpsync -v $gsosDir > /dev/null
             fi            
 
-            echo -n "ADTPro and VSDRIVE"
+            echo -n "ADTPro 2.0.1"
             if [[ -f $commDir/ADTPro/ADTPRO ]]; then
-                echo " are already installed."
+                echo " is already installed."
             else
                 mkdir -p $commDir/ADTPro
                 mkdir -p $commDir/ADTPro/.AppleDouble
