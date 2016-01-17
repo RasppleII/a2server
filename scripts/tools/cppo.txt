@@ -41,6 +41,7 @@ import shutil
 import errno
 import uuid
 import subprocess
+import tempfile
 
 # Intentionally fails on pre-2.6 (no b'') so user can see what's wrong
 b'ERROR: cppo requires Python 2.6 or later, including 3.x.'
@@ -749,9 +750,9 @@ def quitNow(exitCode=0):
               "If the directory")
         print("is shared by Netatalk, please type 'afpsync' now.")
     if g.SHK: # clean up
-        for file in os.listdir("/tmp"):
+        for file in os.listdir(tempfile.gettempdir()):
             if file.startswith("cppo-"):
-                shutil.rmtree(file)
+                shutil.rmtree(tempfile.gettempdir() + "/" + file)
     sys.exit(exitCode)
 
 def usage(exitcode=1):
@@ -1179,7 +1180,7 @@ if g.SHK:
     g.PNAME = 0
     if not g.CAT:
         targetDir = (args[3] if g.extractFile else args[2])
-    unshkdir = ("/tmp/cppo-" + str(uuid.uuid4()))
+    unshkdir = (tempfile.gettempdir() + "/cppo-" + str(uuid.uuid4()))
     makedirs(unshkdir)
     result = os.system("/bin/bash -c 'cd " + unshkdir + "; " +
                        "result=$(nulib2 -xse " + os.path.abspath(g.imageFile) +
@@ -1201,7 +1202,7 @@ if g.SHK:
         extractPath = (unshkdir + "/" + g.extractFile)
         extractPathDir = os.path.dirname(extractPath)
         # move the extracted file to the root
-        newunshkdir = ("/tmp/cppo-" + str(uuid.uuid4()))
+        newunshkdir = (tempfile.gettempdir() + "/cppo-" + str(uuid.uuid4()))
         makedirs(newunshkdir)
         for filename in os.listdir(extractPathDir):
             shutil.move(extractPathDir + "/" + filename, newunshkdir)
