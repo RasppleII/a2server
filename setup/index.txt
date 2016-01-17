@@ -9,12 +9,12 @@
 # to download and execute, type:
 # wget ivanx.com/a2server/setup; source setup
 
-a2serverVersion="132"
+a2serverVersion="133"
 
 # Ensure URL we'll use ends in a /
 case "$A2SERVER_SCRIPT_URL" in
 	*/) scriptURL="$A2SERVER_SCRIPT_URL" ;;
-	*) scriptURL="${A2SERVER_SCRIPT_URL:-http://ivanx.com/a2server}/" ;;
+	*) scriptURL="${A2SERVER_SCRIPT_URL:-https://rawgit.com/RasppleII/a2server/current}/" ;;
 esac
 case "$A2SERVER_BINARY_URL" in
 	*/) binaryURL="$A2SERVER_BINARY_URL" ;;
@@ -35,7 +35,7 @@ if [[ -f /usr/local/etc/A2SERVER-version ]]; then
 fi
 
 echo
-[[ $scriptURL != *"ivanx.com"* ]] && echo "Using script URL: $scriptURL"
+[[ $scriptURL != *"ivanx.com"* && $scriptURL != *"rawgit.com"* ]] && echo "Using script URL: $scriptURL"
 [[ $binaryURL != *"ivanx.com"* ]] && echo "Using binary URL: $binaryURL"
 [[ ! $useExternalURL ]] && echo -e "Not using external URLs. Downloads must be available from:\n  ${binaryURL}external/appleii/\n  ${binaryURL}external/source/\n  (See the A2SERVER developer page for more information.)"
 
