@@ -93,7 +93,7 @@ updateP8YearTables () {
     # Update ProDOS 8 year table (and spalsh date because may as well)
     # Effectively, we're turning p8 into the 6.0.2 or 6.0.3 version here.
     #
-    # ID: updates the year tables for the Thunderclock driver in ProDOS 8;
+    # ID: updates the year table for the Thunderclock driver in ProDOS 8;
     #     calculated from the day of week and date, as year is unavailable.
     #     accepts optional arguments for custom patches
     #     arg1 = year table, comma separated
@@ -500,7 +500,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
         
         # if [[ ! $autoAnswerYes && (! $gsosInstall || $gsosInstall -lt 2) ]] && ! checkP8YearTables 603; then
         #     echo
-        #     echo -n "Do you want to update the ProDOS 8 Thunderclock year tables? "
+        #     echo -n "Do you want to update the ProDOS 8 Thunderclock year table? "
         #     read
         # fi
         # if [[ $autoAnswerYes || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
@@ -511,7 +511,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 
         # patch ProDOS 8 Thunderclock driver year table based on today's date
         echo
-        echo "A2SERVER: Updating ProDOS 8 Thunderclock driver year tables..."
+        echo "A2SERVER: Updating ProDOS 8 Thunderclock driver year table..."
         mkdir -p /tmp/netboot
         rm -r /tmp/netboot/* 2> /dev/null
         wget -qO /tmp/netboot/clock.patch.py "${scriptURL}scripts/clock.patch.py"
@@ -694,7 +694,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
         p8CommInstalled=
         [[ -f $commDir/ProTERM/PROTERM && -f $commDir/Z.Link/Z.LINK && -f $commDir/ADTPro/ADTPRO && -f $commDir/ADTPro/VSDRIVE ]] && p8CommInstalled=1
         gsosCommInstalled=
-        [[ -f $commDir/Spectrum/Spectrum && -f $commDir/SAM2/SAM2 && -f $commDir/SAFE2/SAFE2 && $commDir/SNAP/SNAP && $gsosDir/System/CDevs/TCPIP ]] && gsosCommInstalled=1
+        [[ -f $commDir/Spectrum/Spectrum && -f $commDir/SAM2/SAM2 && -f $commDir/SAFE2/SAFE2 && -f $commDir/SNAP/SNAP && -f $gsosDir/System/CDevs/TCPIP ]] && gsosCommInstalled=1
         commInstalled=
         if [[ $gsosInstalled ]]; then
             [[ $gsosCommInstalled && $p8CommInstalled ]] && commInstalled=1
@@ -809,7 +809,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                     if [[ $? != 0 || ! -f PPPX.1.3d4.SHK || $(wc -c < PPPX.1.3d4.SHK) != "22068" ]]; then
                         wget -qO PPPX.1.3d4.SHK ${binaryURL}external/appleii/PPPX.1.3d4.SHK
                     fi
-                    cppo -ad -s PPPX.1.3d4.SHK . &> /dev/null
+                    cppo -ad -s PPPX.1.3d4.SHK . > /dev/null
                     cd PPPX.1.3d4
                     cpAD PPP.scripted $gsosDir/System/TCPIP
                     cpAD PPP.Script.DOC $commDir/Marinetti/Documentation
