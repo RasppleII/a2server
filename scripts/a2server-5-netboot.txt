@@ -171,11 +171,13 @@ updateP8YearTables () {
 [[ -f /tmp/a2server-autoAnswerYes ]] && autoAnswerYes=1 || autoAnswerYes=
 
 netbootInstalled=
-if [[ -f /usr/local/etc/netatalk/a2boot/ProDOS16\ Boot\ Blocks ]] && \
-    [[ -f /usr/local/etc/netatalk/a2boot/ProDOS16\ Image ]] && \
-    [[ -f /usr/local/etc/netatalk/a2boot/Apple\ :2f:2fe\ Boot\ Blocks ]] && \
-    [[ -f /usr/local/etc/netatalk/a2boot/p8 ]] && \
-    [[ -f /usr/local/etc/netatalk/a2boot/Basic.System ]]; then
+if [[ -f /usr/local/etc/netatalk/a2boot/ProDOS16\ Boot\ Blocks && \
+    -f /usr/local/etc/netatalk/a2boot/ProDOS16\ Image && \
+    -f /usr/local/etc/netatalk/a2boot/Apple\ :2f:2fe\ Boot\ Blocks && \
+    -f /usr/local/etc/netatalk/a2boot/p8 && \
+    -f /usr/local/etc/netatalk/a2boot/Basic.System && \
+    -f $gsosDir/USERS/USER1/SETUP/ATINIT && \
+    -f $gsosDir/USERS/"<ANY USER>"/SETUP/ATINIT ]] ; then
     netbootInstalled=1
 fi
 REPLY=
@@ -270,8 +272,8 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
             echo
             echo "A2SERVER: Creating NETBOOT.P8..."
             touch $p8Dir/NETBOOT.P8
-            echo -n -e "\x38\x20\x1f\xfe\x90\x01\x60\xfb\x08\xc2\x30\xf4\x02\x00\xf4\x62\x00\xa2\x03\x0b\x22\x00\x00\xe1\x78\xf4\x00\x00\xf4\x00\x00\xab\xab\x2b\x38\xfb\xce\xf4\x03\xa9\x0c\x8d\x68\xc0\x9c\x47\xc0\x9c\x41\xc0\xa9\x09\x8d\x39\xc0\xa9\xc0\x8d\x39\xc0\x5c\x62\xfa\x00" | \
-              sudo dd of="$p8Dir/NETBOOT.P8" 2> /dev/null
+            echo -n -e "\x38\x20\x1f\xfe\x90\x01\x60\xfb\x08\xc2\x30\xf4\x02\x00\xf4\x62\x00\xa2\x03\x0b\x22\x00\x00\xe1\x78\xf4\x00\x00\xf4\x00\x00\xab\xab\x2b\x38\xfb\xce\xf4\x03\xa9\x0c\x8d\x68\xc0\x9c\x47\xc0\x9c\x41\xc0\xa9\x09\x8d\x39\xc0\xa9\xc0\x8d\x39\xc0\x5c\x62\xfa\x00" \
+            | sudo dd of="$p8Dir/NETBOOT.P8" 2> /dev/null
             afpsync -v $p8Dir > /dev/null
             afptype -p SYS -q $p8Dir/NETBOOT.P8
         fi
@@ -280,8 +282,8 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
             echo "A2SERVER: Creating NETBOOT.GSOS..."
             # create tool for setting GSOS boot in battery RAM and rebooting. Props yet again to Geoff Body.
             touch $gsosDir/NETBOOT.GSOS
-            echo -n -e "\x38\x20\x1f\xfe\x90\x01\x60\xfb\x08\xc2\x30\xf4\x01\x00\xf4\x62\x00\xa2\x03\x0b\x22\x00\x00\xe1\x78\xf4\x00\x00\xf4\x00\x00\xab\xab\x2b\x38\xfb\xce\xf4\x03\xa9\x0c\x8d\x68\xc0\x9c\x47\xc0\x9c\x41\xc0\xa9\x09\x8d\x39\xc0\xa9\xc0\x8d\x39\xc0\x5c\x62\xfa\x00" | \
-              sudo dd of="$p8Dir/NETBOOT.GSOS" 2> /dev/null
+            echo -n -e "\x38\x20\x1f\xfe\x90\x01\x60\xfb\x08\xc2\x30\xf4\x01\x00\xf4\x62\x00\xa2\x03\x0b\x22\x00\x00\xe1\x78\xf4\x00\x00\xf4\x00\x00\xab\xab\x2b\x38\xfb\xce\xf4\x03\xa9\x0c\x8d\x68\xc0\x9c\x47\xc0\x9c\x41\xc0\xa9\x09\x8d\x39\xc0\xa9\xc0\x8d\x39\xc0\x5c\x62\xfa\x00" \
+            | sudo dd of="$p8Dir/NETBOOT.GSOS" 2> /dev/null
             afpsync -v $gsosDir > /dev/null
             afptype -p SYS -q $gsosDir/NETBOOT.GSOS
         fi
