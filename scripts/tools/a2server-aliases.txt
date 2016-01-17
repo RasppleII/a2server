@@ -25,7 +25,7 @@ alias ifreset='sudo rm /etc/udev/rules.d/70-persistent-net.rules; echo Interface
 
 alias netatalk-stop="sudo /etc/init.d/netatalk stop; bonjour-off"
 alias netatalk-start="sudo /etc/init.d/netatalk start; bonjour-on; grep -q 'ATALKD_RUN=yes' /etc/default/netatalk"
-alias netatalk-restart="sudo /etc/init.d/netatalk restart; bonjour-on;  grep -q 'ATALKD_RUN=yes' /etc/default/netatalk"
+alias netatalk-restart="sudo /etc/init.d/netatalk restart; bonjour-on; grep -q 'ATALKD_RUN=yes' /etc/default/netatalk"
 alias netatalk-off='sudo /etc/init.d/netatalk stop; bonjour-off; sudo update-rc.d -f netatalk remove &> /dev/null'
 alias netatalk-on='sudo update-rc.d netatalk defaults &> /dev/null; bonjour-on; sudo /etc/init.d/netatalk restart'
 
@@ -33,8 +33,8 @@ alias bonjour-off="sudo mv /etc/avahi/services/afpd.service /etc/avahi/services/
 alias bonjour-on="sudo mv /etc/avahi/services/afpd.service_disabled /etc/avahi/services/afpd.service &> /dev/null"
 
 
-alias netatalk-router-on='sudo sed -i '"'"'s/^eth0.*$/eth0 -router -phase 2 -net 1 -zone "A2SERVER"/'"'"' /usr/local/etc/netatalk/atalkd.conf; sudo sed -i '"'"'s/^wlan0.*$/wlan0 -router -phase 2 -net 1 -zone "A2SERVER"/'"'"' /usr/local/etc/netatalk/atalkd.conf; netatalk-restart'
-alias netatalk-router-off='sudo sed -i '"'"'s/^eth0.*$/eth0/'"'"' /usr/local/etc/netatalk/atalkd.conf; sudo sed -i '"'"'s/^wlan0.*$/wlan0/'"'"' /usr/local/etc/netatalk/atalkd.conf; netatalk-restart'
+alias netatalk-router-on='sudo sed -i '"'"'s/^\([^# ]*\)\( .*\)$/\1 -router\2 -zone "A2SERVER"/'"'"' /usr/local/etc/netatalk/atalkd.conf; netatalk-restart'
+alias netatalk-router-off='sudo sed -i '"'"'s/^\([^#].*\) -router\(.*\) -zone [^ ]*\(.*\)$/\1\2\3/'"'"' /usr/local/etc/netatalk/atalkd.conf; netatalk-restart'
 
 
 alias netatalk-eth='sudo sed -i 's/^wlan0/eth0/' /usr/local/etc/netatalk/atalkd.conf; netatalk-restart'

@@ -249,10 +249,13 @@ sudo sed -i 's/#ATALK_BGROUND=no/ATALK_BGROUND=yes/' /etc/default/netatalk
 if [[ ! $(grep 'kernelRelease' /etc/init.d/netatalk) ]]; then
     sudo sed -i 's@\(\tif \[ x\"$ATALKD_RUN\)@\n\t# check for valid AppleTalk kernel module\n\t[[ $ATALKD_RUN == "yes" ]] \&\& { kernelRelease=$(uname -r); kernelMajor=$(cut -d "." -f 1  <<< $kernelRelease); kernelMinor=$(cut -d "." -f 2  <<< $kernelRelease | sed '"'"'s/\\(^[0-9]*\\)[^0-9].*$/\\1/'"'"'); kernelPatch=$(cut -d "." -f 3- <<< $kernelRelease | sed '"'"'s/\\(^[0-9]*\\)[^0-9].*$/\\1/'"'"'); [[ ( $kernelMajor -eq 3 \&\& $kernelMinor -ge 12 \&\& $kernelMinor -le 15 ) \&\& ( ! ( -f /usr/bin/raspi-config \&\& $kernelMinor -eq 12 \&\& $kernelPatch -ge 25 ) ) \&\& ( ( ! -f /lib/modules/$kernelRelease/kernel/net/appletalk/appletalk.ko ) || $(sha1sum /lib/modules/$kernelRelease/kernel/net/appletalk/appletalk.ko | cut -f 1 -d " ") != "ecb239fc084c36de93f6926e7749b80f6024f269" ) ]] \&\& { ATALKD_RUN=no; echo "[AppleTalk networking is not available.]" 1>\&2; } }\n\n\1@' /etc/init.d/netatalk
 fi
+sudo sed -i 's/Starting Netatalk services (this will take a while): /Starting Netatalk services"\n\t\t\t[[ $ATALKD_RUN == "yes" ]] \&\& echo -n " (this will take 45 seconds)"\n\t\t\techo -n ":/' /etc/init.d/netatalk
+sudo sed -i 's/Starting Netatalk services in the background./Netatalk services will be available in 45 seconds./' /etc/init.d/netatalk
+sudo sed -i 's/-n "Restarting Netatalk Daemons (this will take a while)"/"Restarting Netatalk Daemons."/' /etc/init.d/netatalk
 
 # enable MacIPgw support after launching atalkd
 if ! grep -q -i 'macipgw' /etc/init.d/netatalk; then
-    sudo sed -i ':a;N;$!ba;s@\(echo -n " atalkd"\)\(.*# prepare\)@\1\n\n    # start MacIPgw (TCP over AppleTalk) service\n    ps aux | grep -q "[m]acipgw" \&\& sudo killall macipgw 2> /dev/null\n    atalkd_interface=$(grep "^[^ #]" /etc/netatalk/atalkd.conf | tail -1 | cut -d " " -f 1)\n    sysctl -w net.ipv4.ip_forward=1 > /dev/null\n    macipgw -n 8.8.8.8 192.168.151.0 255.255.255.0\n    /sbin/iptables -t nat -A POSTROUTING -o ${atalkd_interface} -j MASQUERADE\n    /sbin/iptables -A FORWARD -i ${atalkd_interface} -o tun0 -m state --state RELATED,ESTABLISHED -j ACCEPT\n    /sbin/iptables -A FORWARD -i tun1 -o ${atalkd_interface} -j ACCEPT\n\n    echo -n " macipgw"\n\2@' /etc/init.d/netatalk
+    sudo sed -i ':a;N;$!ba;s@\(echo -n " atalkd"\)\(.*# prepare\)@\1\n\n\t\t# start MacIPgw (TCP over AppleTalk) service\n\t\tps aux | grep -q "[m]acipgw" \&\& sudo killall macipgw 2> /dev/null || :\n\t\tatalkd_interface=$(grep "^[^ #]" /etc/netatalk/atalkd.conf | tail -1 | cut -d " " -f 1)\n\t\tsysctl -w net.ipv4.ip_forward=1 > /dev/null\n\t\tmacipgw -n 8.8.8.8 192.168.151.0 255.255.255.0\n\t\t/sbin/iptables -t nat -A POSTROUTING -o ${atalkd_interface} -j MASQUERADE\n\t\t/sbin/iptables -A FORWARD -i ${atalkd_interface} -o tun0 -m state --state RELATED,ESTABLISHED -j ACCEPT\n\t\t/sbin/iptables -A FORWARD -i tun1 -o ${atalkd_interface} -j ACCEPT\n\n\t\techo -n " macipgw"\n\2@' /etc/init.d/netatalk
     sudo sed -i 's@\(start-stop-daemon --stop --quiet --oknodo --exec /usr/local/sbin/atalkd.*$\)@\1\n                    echo -n " macipgw"\n            sudo killall macipgw 2> /dev/null@' /etc/init.d/netatalk
 fi
 
@@ -292,12 +295,12 @@ sudo sed -i 's/^~/#share1\n\n#share2/' \
 sudo sed -i 's/^:DEFAULT/#:DEFAULT/' \
 /usr/local/etc/netatalk/AppleVolumes.default
 
-if [[ ! $(grep ^eth0 /usr/local/etc/netatalk/atalkd.conf) && ! $(grep ^wlan0 /usr/local/etc/netatalk/atalkd.conf) ]]; then
+# if [[ ! $(grep ^eth0 /usr/local/etc/netatalk/atalkd.conf) && ! $(grep ^wlan0 /usr/local/etc/netatalk/atalkd.conf) ]]; then
+if [[ $(tac /usr/local/etc/netatalk/atalkd.conf | sed '/./,$!d' | head -1 | cut -c 1) == "#" ]]; then
     # enable netatalk on the default network interface
     # needs -router and -zone to prevent GS/OS AppleShare CDEV crash when used
     # with Dayna or Asante bridges
-    echo -e 'eth0 -router -phase 2 -net 1 -zone "A2SERVER"' \
-    | sudo tee -a /usr/local/etc/netatalk/atalkd.conf > /dev/null
+    echo -e 'eth0 -router -phase 2 -net 1 -zone "A2SERVER"' | sudo tee -a /usr/local/etc/netatalk/atalkd.conf > /dev/null
 fi
 
 # Raspberry Pi
