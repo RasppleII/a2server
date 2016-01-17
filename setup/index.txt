@@ -116,6 +116,10 @@ fi
 a2server_update=0
 doSetup=1
 
+if { [[ -f /usr/local/etc/A2SERVER-version ]] && (( $(head -c 3 /usr/local/etc/A2SERVER-version) < 150 )); }; then
+    a2server_update=1
+fi
+
 unsupportedOS=1
 if [[ $isRpi ]]; then #supported Raspbian? (16-Feb-15, 20-Jun-14, 09-Jan-14, etc)
     fwhash=$(zcat /usr/share/doc/raspberrypi-bootloader/changelog.Debian.gz | grep -m 1 'as of' | awk '{print $NF}')
