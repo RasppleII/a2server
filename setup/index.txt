@@ -35,7 +35,7 @@ if [[ -f /usr/local/etc/A2SERVER-version ]]; then
 fi
 
 echo
-[[ $scriptURL != *"ivanx.com"* && $scriptURL != *"rawgit.com"* ]] && echo "Using script URL: $scriptURL"
+[[ $scriptURL != *"ivanx.com"* && $scriptURL != *"rawgit.com/RasppleII/a2server"* ]] && echo "Using script URL: $scriptURL"
 [[ $binaryURL != *"ivanx.com"* ]] && echo "Using binary URL: $binaryURL"
 [[ ! $useExternalURL ]] && echo -e "Not using external URLs. Downloads must be available from:\n  ${binaryURL}external/appleii/\n  ${binaryURL}external/source/\n  (See the A2SERVER developer page for more information.)"
 
@@ -147,9 +147,8 @@ if [[ $unsupportedOS ]]; then
     echo
     echo "WARNING: A2SERVER and its installer scripts have only been tested on"
     echo "Debian and Raspbian. Continuing is probably fine, but might not be."
-    echo "Worst case could make your operating system no longer work properly,"
-    echo "or cause data to be lost."
-    echo "More information is at http://ivanx.com/a2server."
+    echo "Theoretical worst case would be your operating system no longer works"
+    echo "properly or data is lost, so consider backing up first."
 fi
 
 doSetup=1
