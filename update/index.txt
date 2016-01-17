@@ -37,9 +37,8 @@ else
     read
 fi
 if [[ ${REPLY:0:1} == "y" || ${REPLY:0:1} == "Y" ]]; then
-    sudo rm /usr/local/etc/A2SERVER-version &> /dev/null
     # sudo rm /usr/local/etc/netatalk/a2boot/* &> /dev/null
-    wget -q -O /tmp/setup "${scriptURL}setup/index.txt"; source /tmp/setup "$@"
+    wget -q -O /tmp/setup "${scriptURL}setup/index.txt"; source /tmp/setup -i "$@"
 fi
 
 unset currentVersion 2> /dev/null
