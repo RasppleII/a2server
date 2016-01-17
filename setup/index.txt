@@ -152,7 +152,7 @@ if [[ $unsupportedOS ]]; then
 fi
 
 doSetup=1
-if [[ ! -f /usr/local/etc/a2server-help.txt ]] || (( $a2server_update )); then
+if [[ $installAll || ! -f /usr/local/etc/a2server-help.txt ]] || (( $a2server_update )); then
     echo
     echo "Setting up A2SERVER will take up to 60 minutes, during which"
     echo "you'll see a bunch of stuff spit out across the screen."
