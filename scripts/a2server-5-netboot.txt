@@ -578,8 +578,10 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                     mkdir -p /tmp/netboot/gshk
                     cd /tmp/netboot/gshk
                     if [[ $useExternalURL ]]; then
-                        wget -qO gshk11.sea http://web.archive.org/web/20131031160750/http://nulib.com/library/gshk11.sea
-                        #wget -qO gshk11.sea http://www.nulib.com/library/gshk11.sea
+                        wget -qO gshk11.sea http://www.nulib.com/library/gshk11.sea
+                        if (( $? != 0 )); then
+                            wget -qO gshk11.sea http://web.archive.org/web/20131031160750/http://nulib.com/library/gshk11.sea
+                        fi
                         nulib2 -x -s gshk11.sea &> /dev/null
                     fi
                     if [[ ! -f GSHK ]]; then
@@ -632,7 +634,10 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                 echo
                 cd /tmp/netboot
                 if [[ $useExternalURL ]]; then
-                    wget -qO shrinkit.sdk http://web.archive.org/web/20131031160750/http://www.nulib.com/library/shrinkit.sdk
+                    wget -qO shrinkit.sdk http://www.nulib.com/library/shrinkit.sdk
+                    if (( $? != 0 )); then
+                        wget -qO shrinkit.sdk http://web.archive.org/web/20131031160750/http://www.nulib.com/library/shrinkit.sdk
+                    fi
                     nulib2 -x -s -e shrinkit.sdk &> /dev/null
                 fi
                 if [[ ! -f "SHRINKIT#000118i" ]]; then
@@ -673,8 +678,8 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                     wget --max-redirect 0 -qO Apple_II_System_Disk_3.2.sea.bin http://download.info.apple.com/Apple_Support_Area/Apple_Software_Updates/English-North_American/Apple_II/Apple_II_Supplemental/Apple_II_System_Disk_3.2.sea.bin
                     if (( $? != 0 )); then
                         wget -qO Apple_II_System_Disk_3.2.sea.bin http://archive.org/download/download.info.apple.com.2012.11/download.info.apple.com.2012.11.zip/download.info.apple.com%2FApple_Support_Area%2FApple_Software_Updates%2FEnglish-North_American%2FApple_II%2FApple_II_Supplemental%2FApple_II_System_Disk_3.2.sea.bin
-                        unar -k skip Apple_II_System_Disk_3.2.sea.bin &> /dev/null
                     fi
+                    unar -k skip Apple_II_System_Disk_3.2.sea.bin &> /dev/null
                 fi
                 if [[ ! -f 'Apple II System Disk 3.2.sea' ]]; then
                     wget -qO Apple_II_System_Disk_3.2.sea.bin ${binaryURL}external/appleii/Apple_II_System_Disk_3.2.sea.bin
@@ -724,15 +729,15 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                 unset safeUrl samUrl snapUrl safeVer samVer snapVer
                 if [[ $useExternalURL ]]; then
                     html=$(wget -qO- http://speccie.co.uk/speccie/Site/Download_Centre_files/widget1_markup.html)
-                    safeUrl=$(echo "$html" | grep -i 'safe2.*bxy' | tr '<>' '\n' | grep href | cut -d '=' -f 2)
-                    samUrl=$(echo "$html" | grep -i 'sam2.*bxy' | tr '<>' '\n' | grep href | cut -d '=' -f 2)
-                    snapUrl=$(echo "$html" | grep -i 'snap.*bxy' | tr '<>' '\n' | grep href | cut -d '=' -f 2)
+                    safeUrl=$(echo "$html" | grep -i 'safe2.*bxy' | tr '<>' '\n' | grep href | cut -d '=' -f 2 | tr -d '"')
+                    samUrl=$(echo "$html" | grep -i 'sam2.*bxy' | tr '<>' '\n' | grep href | cut -d '=' -f 2 | tr -d '"')
+                    snapUrl=$(echo "$html" | grep -i 'snap.*bxy' | tr '<>' '\n' | grep href | cut -d '=' -f 2 | tr -d '"')
                     safeVer=$(echo $safeUrl | rev | cut -d '/' -f 1 | cut -d '.' -f 2 | rev | cut -c 5- | sed 's/./.&/g' | cut -c 2-)
                     samVer=$(echo $samUrl | rev | cut -d '/' -f 1 | cut -d '.' -f 2 | rev | cut -c 4- | sed 's/./.&/g' | cut -c 2-)
                     snapVer=$(echo $snapUrl | rev | cut -d '/' -f 1 | cut -d '.' -f 2 | rev | cut -c 5- | sed 's/./.&/g' | cut -c 2-)
                     spectrumVer=$(echo "$html" | grep 'Spectrum.*Gold.2mg' | tr '<>' '\n' | grep '^Spectrum.*2mg$' | cut -d ' ' -f 2)
                 fi
-
+                
                 echo -n "Spectrum $spectrumVer"
                 # get Spectrum
                 if [[ -f $commDir/Spectrum/Spectrum ]]; then
@@ -869,7 +874,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                     cpAD TimeZone/Tool056 $gsosDir/System/Tools
                     rm -r $gsosDir/System/Desk.Accs/Help.Files/SAFE2 2> /dev/null
                     mv Help/Help.Files/SAFE2 $gsosDir/System/Desk.Accs/Help.Files
-                    wget -qO- ${scriptURL}files/safe2-setup.tgz | tar Pzx
+                    wget -qO- ${binaryURL}safe2-setup.tgz | tar Pzx
 
                     afpsync -v $gsosDir > /dev/null
                 fi
@@ -939,7 +944,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                     cpAD Quick.Start $commDir/SNAP
                     rm -r $gsosDir/System/Desk.Accs/Help.Files/SNAP 2> /dev/null
                     mv Help/Help.Files/SNAP $gsosDir/System/Desk.Accs/Help.Files
-                    wget -qO- ${scriptURL}files/snap-setup.tgz | tar Pzx
+                    wget -qO- ${binaryURL}snap-setup.tgz | tar Pzx
                     # cpAD Fonts/SIS.3.10 $gsosDir/System/Fonts
                     # cpAD Fonts/SIS.4.10 $gsosDir/System/Fonts
                     # cpAD Tools/HTMLTool/TOOL130 $gsosDir/System/Tools
