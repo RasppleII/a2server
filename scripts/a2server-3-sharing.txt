@@ -525,12 +525,12 @@ if [[ -f "/lib/modules/$kernelRelease/kernel/drivers/net/appletalk/ipddp.ko" ]];
     sudo /etc/init.d/netatalk stop &> /dev/null
     sudo rmmod ipddp 2> /dev/null
     sudo rmmod appletalk 2> /dev/null
-    echo "A2SERVER: Attempting to replace AppleTalk kernel module for MacIP use..."
+    echo "A2SERVER: Replacing AppleTalk kernel module (IPDDP disabled) for MacIP use..."
 
     sudo mv /lib/modules/$kernelRelease/kernel/net/appletalk/appletalk.ko /tmp 2> /dev/null
 
     if [[ ${arch%_*} == "debian" ]]; then
-        echo "A2SERVER: Attempting to fetch AppleTalk kernel module for Debian..."
+        echo "A2SERVER: Fetching AppleTalk kernel module for Debian..."
         wget -qO /tmp/appletalk.tgz ${binaryURL}precompiled/appletalk-$kernelRelease-${arch}.tgz
         if [[ $? -eq 0 ]]; then
             # if we found a prebuilt one on a2server site, install it and load it
@@ -558,7 +558,7 @@ if [[ -f "/lib/modules/$kernelRelease/kernel/drivers/net/appletalk/ipddp.ko" ]];
 
         # kernel module compile adapted from from: http://askubuntu.com/a/338403/288003
         for i in 1; do
-            echo "A2SERVER: Attempting to build AppleTalk kernel module..."
+            echo "A2SERVER: Building AppleTalk kernel module..."
             [[ -f /boot/config-$kernelRelease ]] || break
             sudo apt-get -y install linux-headers-$kernelRelease linux-source-$kernelMajorMinor || break
             sudo apt-get -y install build-essential
@@ -642,7 +642,7 @@ if [[ ( ! $(ps aux | grep [a]talkd) ) && ( $isRpi ) ]]; then
 
     # if no AppleTalk module, try to download it from a2server site
     if [[ ! -f /lib/modules/$kernelRelease/kernel/net/appletalk/appletalk.ko ]]; then # check for rpi kernel module
-        echo "A2SERVER: Attempting to install AppleTalk kernel module for Raspbian..."
+        echo "A2SERVER: Installing AppleTalk kernel module for Raspbian..."
         wget -qO /tmp/appletalk.ko.gz ${binaryURL}appletalk-$kernelRelease-rpi.ko.gz
         if [[ $? -eq 0 ]]; then
             # if we found a prebuilt one on a2server site, install it and load it
