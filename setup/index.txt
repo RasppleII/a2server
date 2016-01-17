@@ -9,7 +9,7 @@
 # to download and execute, type:
 # wget ivanx.com/a2server/setup; source setup
 
-a2serverVersion="133"
+a2serverVersion="150"
 
 # Ensure URL we'll use ends in a /
 case "$A2SERVER_SCRIPT_URL" in

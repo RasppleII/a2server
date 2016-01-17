@@ -48,31 +48,50 @@
 
 1.2.3: May 2015: changed Apple software links to Internet Archive
 
-1.2.4: Jul 2015: install option for ProTERM, Z.Link, ADTPro, Spectrum images
+1.2.4: Jul 2015: offer to download A2CLOUD disk contents onto A2FILES volume
 
-1.2.5: Nov 2015: netboot install option for GS/OS 6.0.2/3; install HFS.FST
-                 during netboot install
+1.2.4+:Oct 2015: support for using A2SERVER scripts from a location other than
+[unannounced]    ivanx.com/a2server for development purposes
 
-1.2.6: Nov 2015: full, ready to use install of Spectrum
-                 [unannounced; released briefly, then withdrawn]
+1.2.5: Nov 2015: netboot install option for GS/OS 6.0.2/3
+                 netboot always downloads GS/OS disk images even if present
+                 provides error if a2setup doesn't have internet
+                 remove persisting a2server-setup options after aborted install
+                 fixed installer bug that omits first and last script elements
+                 download images from Apple, with Internet Archive as a backup
+                 install HFS.FST during netboot install
 
-1.5.0: Jan 2016: case insensitive file system for A2FILES; remove GSFILES
-                 if empty; install DOS3.3 and TEACH; remove Ubuntu support;
-                 install Marinetti 3.0b8 with internet access via MacIP;
-                 fully install Spectrum, SAFE2, SAM2, SNAP, MountIt;
-                 move /media/A2SHARED/* to /srv/A2SERVER; faster install
-                 (precompiled binaries) on 64-bit Debian; cppo supports
-                 ShrinkIt, DOS 3.3, DSK, 2MG; nulib2 handles empty forks
-                 (thanks Andy); -c installer option compiles all (no binaries);
-                 -i installer option reinstalls A2SERVER; patch Prodos 8
-                 Thunderclock year table based on current date;
-                 support for installing from any host URL for development;
-                 source code is properly hosted at GitHub (thanks Joseph)
+1.2.5+:Nov 2015: Merged Ivan's 1.2.5 release, removed support for Ubuntu for
+[unannounced]    now (see RasppleII/a2server#11), patched ProDOS 8 in boot
+                 files for current year table, install unar from a package if
+                 it exists.
 
-Big thanks to: Anthony Martino, Henry Courbis, Joseph Carter, Jason King,
-Andy McFadden, Steven Hirsch, Geoff Body, Peter Wong, Tony Diaz, David Schmidt,
-David Schmenk, Ewen Wannop, Andrew Roughan, Antoine Vignau, Martin Haye,
-Ken Gagne, Peter Neubauer, James Littlejohn, Ninjaforce; the creators of
-Netatalk, The Unarchiver, ciopfs, macipgw; and the entire Apple II community.
-Redistribution of Spectrum, SAFE2, SAM2, SNAP by permission of Ewen Wannop.
-Thanks for using A2SERVER!
+1.2.6: Nov 2015: full, ready to use install of Spectrum; install unzip
+[unannounced]
+                 
+1.2.6+:Nov 2015: merged Ivan's 1.2.6 (into github master branch)
+[unannounced]
+
+1.2.7: Dec 2015: preliminary Jessie support; case insensitive file system for
+[unannounced]    A2FILES; removes GSFILES if empty; DOS3.3.FST and TEACH are
+                 installed with netboot installation; minor bug fixes and
+                 tweaks; Ubuntu support removed; branches unified
+
+1.2.8: Dec 2015: can specify alternate host for binaries and external files;
+[unannounced]    64-bit Debian precompiled binaries; move /media/A2SHARED/*
+                 to /srv/A2SERVER; internet access (MacIP support);
+                 
+1.2.9: Jan 2016: cppo supports ShrinkIt, DOS 3.3, DSK, 2MG; MountIt fully
+[unannounced]    installed; nulib2 fixes handling empty forks (thanks Andy);
+                 -c installer option compiles all software (no binaries)
+                 
+1.3.0: Jan 2016: Marinetti 3.0b8 installed, with preconfigured MacIP
+[unannounced]
+
+1.3.1: Jan 2016: patch Prodos 8 Thunderclock year table based on current date
+[unannounced]
+
+1.3.2: Jan 2016: install SAFE2, SAM2, and SNAP, configured for Apple II sites;
+[unannounced]    -i installer option reinstalls A2SERVER
+                 
+1.5.0: Jan 2016: defaults to GitHub for location of installer scripts
