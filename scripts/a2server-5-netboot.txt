@@ -607,6 +607,9 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
                     cd /tmp/netboot/mountit
                     if [[ $useExternalURL ]]; then
                         wget -q -O MOUNTIT.SHK http://www.brutaldeluxe.fr/products/apple2gs/MOUNTIT.SHK
+                        if (( $? != 0 )); then
+                            wget -q -O http://web.archive.org/web/20150201044930/http://brutaldeluxe.fr/products/apple2gs/MOUNTIT.SHK
+                        fi
                         cppo -s -ad MOUNTIT.SHK System:System.Setup:MountIt . &> /dev/null
                         cppo -s -ad MOUNTIT.SHK ReadMe . &> /dev/null
                     fi
