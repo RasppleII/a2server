@@ -58,14 +58,14 @@
 
 1.5.0: Jan 2016: mixed case filenames for A2FILES; remove GSFILES if empty; 
                  install Marinetti 3.0b8 with internet access via MacIP;
-                 fully install Spectrum, SAFE2, SAM2, SNAP, MountIt;
-                 install DOS3.3 and TEACH; remove Ubuntu support;
-                 move /media/A2SHARED/* to /srv/A2SERVER; faster install
-                 (precompiled binaries) on 64-bit Debian; cppo supports
-                 ShrinkIt, DOS 3.3, DSK, 2MG; nulib2 handles empty forks
-                 (thanks Andy); new installer options; patch P8 Thunderclock
-                 driver year table for current date; install from any host URL
-                 for development; source code at GitHub (thanks Joseph)
+                 fully install Spectrum, SAFE2, SAM2, SNAP, MountIt; install
+                 DOS3.3 and TEACH; remove Ubuntu support; move/media/A2SHARED/*
+                 to /srv/A2SERVER; faster install (precompiled binaries) on
+                 64-bit Debian; cppo supports ShrinkIt, DOS 3.3, DSK, 2MG,mixed
+                 case filenames; nulib2 handles empty forks (thanks Andy);
+                 new installer options; patch P8 Thunderclock driver year table
+                 for current date; install from any host URL for development;
+                 source code at GitHub (thanks Joseph)
 
 Big thanks to: Anthony Martino, Henry Courbis, Joseph Carter, Jason King,
 Andy McFadden, Steven Hirsch, Geoff Body, Peter Wong, Tony Diaz, David Schmidt,
