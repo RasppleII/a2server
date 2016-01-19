@@ -100,7 +100,7 @@ while True:                                     # 999  REM  get the user's input
         if (mo == 4 or                          # 1162  IF (MO = 4 OR MO = 6 OR MO = 9 OR MO = 11) AND DA > 30 THEN 1050
             mo == 6 or
             mo == 9 or
-            mo == 11): x = -1; continue
+            mo == 11) and da > 30: x = -1; continue
                                                 # 1170  REM  Convert year string into numeric value
         yr = int(day)                           # 1180 YR =  VAL (DAY$)
         if yr < 0 or yr > 99: x = -1; continue  # 1190  IF YR < 0 OR YR > 99 THEN 1050: REM Only allow 0-99
