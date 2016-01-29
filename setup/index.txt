@@ -29,10 +29,11 @@ isRpi=
 isDebian=
 lsb_release -a 2> /dev/null | grep -q 'Distributor ID:.Debian' && [[ ( -f /etc/debian_version ) && ( $(cut -c 1 < /etc/debian_version) -ge "7" ) ]] && isDebian=1
 
-if [[ -f /usr/local/etc/A2SERVER-version ]]; then
-    echo "A2SERVER version available: $a2serverVersion"
-    echo "A2SERVER version installed: $(cat /usr/local/etc/A2SERVER-version)"
+if [ -f /usr/local/etc/A2SERVER-version ]; then
+    installedVersion="$(cat /usr/local/etc/A2SERVER-version)"
 fi
+echo "A2SERVER version available: $a2serverVersion"
+echo "A2SERVER version installed: ${installedVersion:=None}"
 
 echo
 [[ $scriptURL != *"ivanx.com"* && $scriptURL != *"rawgit.com/RasppleII/a2server"* ]] && echo "Using script URL: $scriptURL"
@@ -77,10 +78,7 @@ while [[ $1 ]]; do
         updateRasppleII=1
     elif [[ $1 == "-v" ]]; then
         shift
-        if [[ ! -f /usr/local/etc/A2SERVER-version ]]; then
-            echo "A2SERVER version available: $a2serverVersion"
-            echo "A2SERVER version installed: none"
-        fi
+        # Version was already printed
         [[ $0 == "-bash" ]] && return 1 || exit 1
     elif [[ $1 ]]; then
         echo "options:"
