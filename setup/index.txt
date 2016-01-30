@@ -27,7 +27,7 @@ isRpi=
 [[ -f /usr/bin/raspi-config ]] && isRpi=1
 
 isDebian=
-lsb_release -a 2> /dev/null | grep -q 'Distributor ID:.Debian' && [[ ( -f /etc/debian_version ) && ( $(cut -c 1 < /etc/debian_version) -ge "7" ) ]] && isDebian=1
+lsb_release -a 2> /dev/null | grep -q 'Distributor ID:.Debian' && [[ ( -f /etc/debian_version ) && ( $(cut -d . -f 1 < /etc/debian_version) -ge "7" ) ]] && isDebian=1
 
 if [ -f /usr/local/etc/A2SERVER-version ]; then
     installedVersion="$(cat /usr/local/etc/A2SERVER-version)"
