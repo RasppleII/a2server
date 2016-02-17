@@ -282,9 +282,10 @@ if (( $doSetup )); then
             echo "via the AppleShare control panel."
             if [[ -f /srv/A2SERVER/A2FILES/System/Start.GS.OS ]]; then
                 echo                
-                echo "You can network boot GS/OS. On a ROM 01 IIgs, set slot 1 or 2, and slot 7,"
-                echo 'to AppleTalk, and Startup Slot to 7 or "Scan". On a ROM 3 IIgs, set'
-                echo "slot 1 or 2, and Startup Slot, to AppleTalk."
+                echo "You can network boot GS/OS."
+                echo "On a ROM 01 IIgs, set slot 1 (printer port), or slot 2 (modem port)"
+                echo "to Your Card, and slot 7 to AppleTalk, and Startup Slot to 7 or Scan."
+                echo "On a ROM 3 IIgs, set slot 1 or 2, and Startup Slot, to AppleTalk."
             fi
             if [[ -f /srv/A2SERVER/A2FILES/BASIC.System ]]; then
                 echo
