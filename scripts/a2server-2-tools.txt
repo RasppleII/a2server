@@ -22,7 +22,7 @@ arch=
 if [[ -f /usr/bin/raspi-config ]]; then
     isRpi=1
     arch='rpi'
-elif lsb_release -a 2> /dev/null | grep -q 'Distributor ID:.Debian' && [[ $(cut -c 1 <<< $debianVersion) -ge "7" ]]; then
+elif lsb_release -a 2> /dev/null | grep -q 'Distributor ID:.Debian' && [[ $(cut -d . -f 1 <<< $debianVersion) -ge "7" ]]; then
     uname_m="$(uname -m)"
     if [[ $uname_m == "i686" ]]; then
         arch='debian_x86'
@@ -33,10 +33,10 @@ fi
 
 debianName=
 if [[ $debianVersion ]]; then
-    debianMajor=$(cut -c 1-2 <<< $debianVersion)
-    if [[ $debianMajor == "8." ]]; then
+    debianMajor=$(cut -d . -f 1 <<< $debianVersion)
+    if [[ $debianMajor == "8" ]]; then
         debianName="jessie"
-    elif [[ $debianMajor == "7." ]]; then
+    elif [[ $debianMajor == "7" ]]; then
         debianName="wheezy"
     else
         debianName="unknown"

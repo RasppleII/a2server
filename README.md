@@ -46,7 +46,7 @@ Once you have those:
 export A2SERVER_NO_EXTERNAL=1
 ~~~
 
-You may want to put the above exports into ~/.bashrc or ~/.bash_profile.
+You may want to put the above exports into `~/.bashrc` or `~/.bash_profile`.
 
 If you want to host scripts locally installed on your own machine or another
 computer on your LAN, type the following, and export "http://localhost:8000/"

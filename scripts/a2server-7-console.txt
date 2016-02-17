@@ -14,7 +14,7 @@ password="your password"
 [[ $isRaspberryPw ]] && password="'raspberry'"
 
 isDebian=
-[[ ( -f /etc/debian_version ) && ( $(cut -c 1-2 < /etc/debian_version) == "7." ) && ( $(uname -m) == "i686" ) ]] && isDebian=1
+b_release -a 2> /dev/null | grep -q 'Distributor ID:.Debian' && [[ ( -f /etc/debian_version ) && ( $(cut -d . -f 1 < /etc/debian_version) -ge "7" ) ]] && isDebian=1
 
 if [[ $isDebian ]]; then
     if { lspci 2> /dev/null | grep -q VirtualBox; }; then

@@ -340,11 +340,22 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 
         if [[ $gsosReinstall ]]; then
             if [[ ! $autoAnswerYes ]]; then
+                echo
                 echo "You can set up GS/OS for network boot. This may take a while."
-                echo "0: don't install GS/OS"
-                echo "1: GS/OS 6.0.1 (official Apple release, May 1993)"
-                echo "2: GS/OS 6.0.2 (community release by Antoine Vignau, July 2015)"
-                echo "3: GS/OS 6.0.3 (community release by Tony Diaz, August 2015)"
+                echo
+                echo "  0: don't install GS/OS"
+                echo "  1: GS/OS 6.0.1 (May 1993) [official release]"
+                echo "     The final version authorized by Apple.  It has a few bugs,"
+                echo "     but most of these can be patched.  Predictable and might be"
+                echo "     required if you use certain patches."
+                echo "  2: GS/OS 6.0.2 (Jul 2015)"
+                echo "     A community effort released by Antoine Vignau with fixes for"
+                echo "     some serious bugs and a few other enhancements."
+                echo "  3: GS/OS 6.0.3 (Aug 2015)"
+                echo "     Continuing community effort released by Tony Diaz. Includes"
+                echo "     previous work along with additional fixes/changes. Better"
+                echo "     documentation of changes. Most will prefer this or Apple's"
+                echo "     release above."
                 echo
                 echo -n "Which flavor would you like? "
                 read
