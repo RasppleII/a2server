@@ -750,9 +750,9 @@ def quitNow(exitCode=0):
               "If the directory")
         print("is shared by Netatalk, please type 'afpsync' now.")
     if g.SHK: # clean up
-        for file in os.listdir(tempfile.gettempdir()):
+        for file in os.listdir('/tmp'):
             if file.startswith("cppo-"):
-                shutil.rmtree(tempfile.gettempdir() + "/" + file)
+                shutil.rmtree('/tmp' + "/" + file)
     sys.exit(exitCode)
 
 def usage(exitcode=1):
@@ -1176,11 +1176,27 @@ if (g.SHK or
 if (len(args) == 4):
     g.extractFile = args[2]
 
+if g.extractFile:
+    targetPath = args[3]
+    if os.path.isdir(targetPath):
+        g.targetDir = targetPath
+    elif (targetPath.rsplit("/", 1) > 1):
+        g.targetDir = targetPath.rsplit("/", 1)[0]
+        g.targetName = targetPath.rsplit("/", 1)[1]
+    if not os.path.isdir(g.targetDir):
+        print("Target directory not found.")
+        quitNow(2)
+else:
+    if not g.CAT:
+        if not os.path.isdir(args[2]):
+            print("Target directory not found.")
+            quitNow(2)
+    
 if g.SHK:
     g.PNAME = 0
     if not g.CAT:
         targetDir = (args[3] if g.extractFile else args[2])
-    unshkdir = (tempfile.gettempdir() + "/cppo-" + str(uuid.uuid4()))
+    unshkdir = ('/tmp' + "/cppo-" + str(uuid.uuid4()))
     makedirs(unshkdir)
     result = os.system("/bin/bash -c 'cd " + unshkdir + "; " +
                        "result=$(nulib2 -xse " + os.path.abspath(g.imageFile) +
@@ -1202,7 +1218,7 @@ if g.SHK:
         extractPath = (unshkdir + "/" + g.extractFile)
         extractPathDir = os.path.dirname(extractPath)
         # move the extracted file to the root
-        newunshkdir = (tempfile.gettempdir() + "/cppo-" + str(uuid.uuid4()))
+        newunshkdir = ('/tmp' + "/cppo-" + str(uuid.uuid4()))
         makedirs(newunshkdir)
         for filename in os.listdir(extractPathDir):
             shutil.move(extractPathDir + "/" + filename, newunshkdir)
@@ -1341,22 +1357,6 @@ if (not g.SHK and
     (slyce(args[2],0,1) != ":")):
     usage()
 
-if g.extractFile:
-    targetPath = args[3]
-    if os.path.isdir(targetPath):
-        g.targetDir = targetPath
-    else:
-        g.targetDir = targetPath.rsplit("/", 1)[0]
-        g.targetName = targetPath.rsplit("/", 1)[1]
-    if not os.path.isdir(g.targetDir):
-        print("Target directory not found.")
-        quitNow(2)
-else:
-    if not g.CAT:
-        if not os.path.isdir(args[2]):
-            print("Target directory not found.")
-            quitNow(2)
-    
 if g.D33:
     diskName = os.path.basename(g.imageFile)
     if (diskName[-4:].lower() == ".dsk" or
