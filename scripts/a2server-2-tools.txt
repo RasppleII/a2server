@@ -120,7 +120,7 @@ if ! hash unar &> /dev/null; then
     fi
 
     # jessie and later: Just use the unar package
-    if [[ $debianName == "jessie" ]]; then
+    if [[ $debianMajor -ge 8 ]]; then
         sudo apt-get -y install unar
         sudo apt-get clean
     fi
