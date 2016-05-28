@@ -95,3 +95,7 @@
 [unannounced]    -i installer option reinstalls A2SERVER
                  
 1.5.0: Jan 2016: defaults to GitHub for location of installer scripts
+[unannounced]
+
+1.5.1: May 2016: changed URLs from rawgit.com to raw.githubusercontent.com
+                 to resolve https problems during install
