@@ -67,7 +67,7 @@
                  for current date; install from any host URL for development;
                  source code at GitHub (thanks Joseph)
 
-1.5.1: Jan 2016: fixed GitHub URLs to prevent https errors during installation
+1.5.0r2: Jan 16: fixed GitHub URLs to prevent https errors during installation
                  (thanks to http://blogs.yahoo.co.jp/ushi_cow/57459736.html)
 
 Big thanks to: Anthony Martino, Henry Courbis, Joseph Carter, Jason King,
