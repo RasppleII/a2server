@@ -62,7 +62,7 @@ if ! hash nulib2 &> /dev/null; then
     if [[ $arch && ! -f /tmp/a2server-compileAlways ]]; then
         { wget -qO- "${binaryURL}precompiled/nulib2-3.1.0a2-${arch}.tgz" | sudo tar Pzx; } &> /dev/null
     fi
-        
+
     if ! hash nulib2 &> /dev/null; then
 
         if [[ ! -f /tmp/a2server-packageReposUpdated ]]; then
@@ -124,7 +124,7 @@ if ! hash unar &> /dev/null; then
         sudo apt-get -y install unar
         sudo apt-get clean
     fi
-    
+
     if ! hash unar &> /dev/null; then
         if [[ $arch && ! -f /tmp/a2server-compileAlways ]]; then
             # Dependencies: for unar

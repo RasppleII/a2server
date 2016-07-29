@@ -12,7 +12,7 @@ if [[ -d /media/A2SHARED ]]; then
     sudo mv /media/A2SHARED /srv/A2SERVER
     sudo sed -i 's|/media/A2SHARED|/srv/A2SERVER|g' /usr/local/etc/netatalk/AppleVolumes.default
     [[ -f /etc/samba/smbd.conf ]] && sudo sed -i 's|/media/A2SHARED|/srv/A2SERVER|g' /etc/samba/smbd.conf
-    
+
 fi
 
 # skip if we're already set up

@@ -22,7 +22,7 @@ if [[ ${REPLY:0:1} == "y" || ${REPLY:0:1} == "Y" ]]; then
         echo -n "Press return to continue..."; read; echo
 
         ls -1 /dev/sd? > /tmp/sd2 2> /dev/null
-        
+
         # if exactly one drive has been inserted, exit loop
         if { ! diff /tmp/sd1 /tmp/sd2 &> /dev/null; }; then
             # files are different, get dev name
@@ -47,9 +47,9 @@ if [[ ${REPLY:0:1} == "y" || ${REPLY:0:1} == "Y" ]]; then
             echo "No SD card found. Trying again..."
             echo
         fi
-        
+
     done
-    
+
     mkdir -p /tmp/sd
     sudo mount ${devName}6 /tmp/sd
 
@@ -92,7 +92,7 @@ if [[ ${REPLY:0:1} == "y" || ${REPLY:0:1} == "Y" ]]; then
             fi
         done <<< "$(ls -1 /tmp/sd/lib/modules | sort -V)"
         sudo umount /tmp/sd
-        
+
         echo kern:$kernelReplaced
         if [[ $kernelReplaced ]]; then
             echo
@@ -104,7 +104,7 @@ if [[ ${REPLY:0:1} == "y" || ${REPLY:0:1} == "Y" ]]; then
             echo
             echo "Okey doke. Half done. Remove your SD card, and put it back in your Pi."
             echo "After it boots, log in and type 'a2server-setup' to complete the fix."
-        fi        
+        fi
         echo "See the A2SERVER web site at http://ivanx.com/a2server for more help."
         echo "(You can type 'sudo shutdown -h now' if you're done on this machine.)"
         echo

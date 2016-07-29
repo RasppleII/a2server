@@ -57,17 +57,17 @@ fi
 if [[ -f /usr/local/etc/A2SERVER-version ]] && (( $(head -c 3 /usr/local/etc/A2SERVER-version) >= 101 )); then
 
     echo "A2SERVER: Netatalk is already installed."
-    
+
 else
 
     echo "A2SERVER: Installing Netatalk (this will take a while)..."
-    
+
     # stop Netatalk and samba if running (during upgrade)
     if [[ $(ps --no-headers -C afpd) ]]; then
         sudo /etc/init.d/netatalk stop &> /dev/null
         sudo /etc/init.d/samba stop &> /dev/null
     fi
-    
+
     if [[ ! -f /tmp/a2server-packageReposUpdated ]]; then
         # prepare for installing packages
         sudo apt-get -y update
@@ -75,7 +75,7 @@ else
     fi
 
     # not being used as of 1.2.9, but it's available if full URL to .deb package is supplied
-    getOldPackage () { 
+    getOldPackage () {
         for url in $@; do
             pkgFile=${url##*/}
             pkgName=${pkgFile%%_*}
@@ -112,7 +112,7 @@ else
         else
             break
         fi
-        
+
         if [[ $(apt-cache search '^libgcrypt11$') ]]; then # Wheezy
             # Dependencies: netatalk 2.2.4
             sudo apt-get -y install libgcrypt11
@@ -122,13 +122,13 @@ else
         else
             break
         fi
-        
+
         # install Netatalk
         if [[ $arch && ! -f /tmp/a2server-compileAlways ]]; then
             { wget -qO- "${binaryURL}precompiled/netatalk224-${arch}_${debianName}.tgz" | sudo tar Pzx; } &> /dev/null
         fi
         sudo mandb &> /dev/null
-        
+
         [[ -f /usr/local/sbin/atalkd ]] && compileFromSource=
 
         break
@@ -157,12 +157,12 @@ else
             sudo apt-get -y install $(apt-cache search '^libgcrypt.*dev$' | sort -r | head -1 | cut -d ' ' -f 1)
         fi
         sudo apt-get clean
-        
+
         # get Netatalk
         rm -rf /tmp/netatalk &> /dev/null
         mkdir /tmp/netatalk
         cd /tmp/netatalk
-        
+
         if [[ $useExternalURL ]]; then
             wget -qO netatalk-2.2.4.tar.gz "http://downloads.sourceforge.net/project/netatalk/netatalk/2.2.4/netatalk-2.2.4.tar.gz"
             tar zxf netatalk-2.2.4.tar.gz &> /dev/null
@@ -172,38 +172,38 @@ else
             tar zxf netatalk-2.2.4.tar.gz &> /dev/null
         fi
         cd netatalk-2.2.4
-        
+
         # Patch the source so file dates are preserved during a GS/OS folder copy,
         #   and the AsanteTalk bridge consistently starts up in AppleTalk Phase 2
         #   and the Dayna bridge doesn't crash GS/OS
         # props to Steven Hirsch for these
         sed -i ':a;N;$!ba;s/case FILPBIT_ATTR :\n *change_mdate = 1;\n/case FILPBIT_ATTR :\n/g' etc/afpd/file.c
         sed -i 's/rtmp->rt_iface == iface/rtmp->rt_iface != iface/g' etc/atalkd/main.c
-    
+
         # prepare to build Netatalk
         ./configure --enable-debian --enable-ddp --enable-a2boot
-    
+
         # uninstall Netatalk if already installed
         [[ -f /usr/local/sbin/afpd ]] && sudo make uninstall
-        
+
         # compile and install Netatalk
         make
         sudo make install
-        
+
         # to remove the Netatalk source code (optional), type:
         cd
         rm -rf /tmp/netatalk
-    fi    
+    fi
 fi
 
 # --- Install MacIPgw
 if ! hash macipgw &> /dev/null; then
     echo "A2SERVER: Installing TCP over AppleTalk (MacIP)..."
-    
+
     if [[ $arch && ! -f /tmp/a2server-compileAlways ]]; then
         { wget -qO- "${binaryURL}precompiled/macipgw-${arch}.tgz" | sudo tar Pzx; } 2> /dev/null
     fi
-    
+
     if ! hash macipgw &> /dev/null; then
         wd="$PWD"
         sudo apt-get -y install build-essential
@@ -229,7 +229,7 @@ if ! hash macipgw &> /dev/null; then
 else
     echo "A2SERVER: TCP over AppleTalk (MacIP) has already been installed."
 fi
-    
+
 # --- Configuring Netatalk
 
 echo "A2SERVER: Configuring Netatalk..."
@@ -448,7 +448,7 @@ if [[ ! -d /srv/A2SERVER/A2FILES/.AppleDesktop ]]; then
     mkdir .AppleDesktop
 fi
 
-# set up ADTDISKS share (ADTPro disk image folder, if A2CLOUD is installed)    
+# set up ADTDISKS share (ADTPro disk image folder, if A2CLOUD is installed)
 # classic Mac OS file names are allowed (31 chars, mixed case, everything but colons)
 if [[ -d /usr/local/adtpro/disks ]]; then # A2CLOUD/ADTPro installed
     if [[ ! -d /srv/A2SERVER/ADTDISKS ]]; then
@@ -479,7 +479,7 @@ else
     echo
     echo "A2SERVER: Setting up AFP password 'apple2' for Apple II and Mac clients..."
     # echo "A2SERVER: Enter 'apple2' or another password of up to eight characters."
-    echo    
+    echo
     # set registered user login using RandNum authentication
     sudo afppasswd -c
     sudo sed -i "s/^\(${USER}\).*$/\1:6170706C65320000:****************:********/" /usr/local/etc/netatalk/afppasswd
@@ -625,8 +625,8 @@ echo "A2SERVER: Netatalk is installed, configured, and running."
 echo
 
 # if atalkd isn't running (no AppleTalk), and this is a Rasbperry Pi:
-if [[ ( ! $(ps aux | grep [a]talkd) ) && ( $isRpi ) ]]; then    
-    
+if [[ ( ! $(ps aux | grep [a]talkd) ) && ( $isRpi ) ]]; then
+
     # if AppleTalk module exists, try to load it
     if [[ -f /lib/modules/$kernelRelease/kernel/net/appletalk/appletalk.ko ]]; then # module present, but not loaded?
         sudo depmod

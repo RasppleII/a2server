@@ -48,7 +48,7 @@ if [[ \
   ${partitions[1]:0:14} == "/dev/mmcblk0p2" && ${partitions[1]:57:2} == "85" &&
   ${partitions[2]:0:14} == "/dev/mmcblk0p3" && ${partitions[2]:57:2} == "83" &&
   ${partitions[3]:0:14} == "/dev/mmcblk0p5" && ${partitions[3]:57:2} == " c" &&
-  ${partitions[4]:0:14} == "/dev/mmcblk0p6" && ${partitions[4]:57:2} == "83" ]]; then    
+  ${partitions[4]:0:14} == "/dev/mmcblk0p6" && ${partitions[4]:57:2} == "83" ]]; then
     noobs=" and the NOOBS install manager"
 fi
 
@@ -82,7 +82,7 @@ if [[ ! $noobsOnly ]]; then
     { cd /tmp; sudo apt-get -y autoremove; sudo apt-get -y autoclean; sudo apt-get -y clean; } > /dev/null
     freeSpace=$(df / | tail -1 | awk '{ print $4 }')
     if (( $freeSpace < 400000 )); then
-        if dpkg -l | grep -q wolfram-engine; then    
+        if dpkg -l | grep -q wolfram-engine; then
             if [[ ! $autoYes ]]; then
                 echo "In order to create enough space on your SD card to upgrade,"
                 echo "the Wolfram Language and Mathematica software packages must be removed."
@@ -179,7 +179,7 @@ if [[ $noobs ]]; then
     grep -q 'disablesafemode' /tmp/p1/recovery.cmdline || sudo sed -i '1 s/^\(.*\)$/\1 disablesafemode/' /tmp/p1/recovery.cmdline
     sudo umount /tmp/p1
     rmdir /tmp/p1
-        
+
     sudo sed -i 's/\(Raspple II release.*[^u]$\)/\1u/' /etc/issue
 fi
 

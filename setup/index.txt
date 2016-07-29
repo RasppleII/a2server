@@ -279,7 +279,7 @@ if (( $doSetup )); then
             echo "Workstation Card software. For IIgs users, it should be accessible"
             echo "via the AppleShare control panel."
             if [[ -f /srv/A2SERVER/A2FILES/System/Start.GS.OS ]]; then
-                echo                
+                echo
                 echo "You can network boot GS/OS."
                 echo "On a ROM 01 IIgs, set slot 1 (printer port), or slot 2 (modem port)"
                 echo "to Your Card, and slot 7 to AppleTalk, and Startup Slot to 7 or Scan."
@@ -327,7 +327,7 @@ if (( $doSetup )); then
             echo "by typing 'appletalk-on'."
             echo
         fi
-        
+
         if [[ -f /tmp/noMacIP ]]; then
             echo
             echo "MacIP connections may be unavailable. If you know how, try"

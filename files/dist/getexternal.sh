@@ -39,7 +39,7 @@ wget -O files/external/appleii/snap.bxy "$snapUrl"
 for gsosInstall in {1..3}; do
     activeDisk=0
     mkdir -p files/external/appleii/gsos60${gsosInstall}
-    
+
     diskNames=( Install System.Disk SystemTools1 SystemTools2 Fonts synthLAB )
     if (( $gsosInstall == 1 )); then
         gsosURL="http://download.info.apple.com/Apple_Support_Area/Apple_Software_Updates/English-North_American/Apple_II/Apple_IIGS_System_6.0.1/"

@@ -66,13 +66,13 @@ atalk_startup() {
 
 	echo -n " atalkd"
 	fi
-	
+
 	# prepare startup of file services
 	if [ "x$CNID_METAD_RUN" = "xyes" -a -x /usr/local/sbin/cnid_metad ] ; then
 		echo -n " cnid_metad"
         /usr/local/sbin/cnid_metad $CNID_CONFIG
     fi
-	
+
 	if [ x"$AFPD_RUN" = x"yes" ]; then
 	/usr/local/sbin/afpd $AFPD_UAMLIST -g $AFPD_GUEST -c $AFPD_MAX_CLIENTS \
 		-n "$ATALK_NAME$ATALK_ZONE"
@@ -111,12 +111,12 @@ case "$1" in
 
 		echo -n " cnid_metad"
 		start-stop-daemon --stop --quiet --oknodo --exec /usr/local/sbin/cnid_metad
-	
+
 		if test -x /usr/local/sbin/papd; then
                     echo -n " papd"
 		    start-stop-daemon --stop --quiet --oknodo --exec /usr/local/sbin/papd
 	        fi
-	
+
 		if test -x /usr/local/sbin/timelord; then
                     echo -n " timelord"
 		    start-stop-daemon --stop --quiet --oknodo --exec /usr/local/sbin/timelord
@@ -126,10 +126,10 @@ case "$1" in
                     echo -n " atalkd"
 		    start-stop-daemon --stop --quiet --oknodo --exec /usr/local/sbin/atalkd
 	        fi
-	
+
 		echo "."
 	;;
-	
+
 	restart)
 		$0 force-reload
 	;;
@@ -144,7 +144,7 @@ case "$1" in
 			echo "done."
 		fi
 	;;
-  
+
 	*)
 		echo "Usage: $0 {start|stop|restart|force-reload}" >&2
 		exit 1

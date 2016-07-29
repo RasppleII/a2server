@@ -13,7 +13,7 @@ options:
 -e  : Nulib2-compatible filenames with type/auxtype and resource forks.
 -uc : Copy GS/OS mixed case filenames as uppercase.
 -pro: Adapt DOS 3.3 names to ProDOS and remove addr/len from file data.
-      
+
 /extract/path examples:
     /FULL/PRODOS/PATH (ProDOS image source)
     "MY FILENAME" (DOS 3.3 image source)
@@ -125,7 +125,7 @@ def unixDateToADDate(arg1):
 # returns byte position in disk image file
 def getStartPos(arg1, arg2):
     if g.D33:
-        return (ts(arg1) + (35 * (arg2 % 7)) + 11)        
+        return (ts(arg1) + (35 * (arg2 % 7)) + 11)
     else: # ProDOS
         return ( (arg1 * 512) +
                  (39 * ((arg2 + (arg2 > 11)) % 13)) +
@@ -154,7 +154,7 @@ def getFileName(arg1, arg2):
             for i in range(0, len(fileName)):
                 if (caseMask[i] == "1"):
                     fileName = (fileName[:i] +
-                                fileName[i:i+1].lower() + 
+                                fileName[i:i+1].lower() +
                                 fileName[i+1:])
     return fileName
 
@@ -208,7 +208,7 @@ def getKeyPointer(arg1, arg2):
     start = getStartPos(arg1, arg2)
     if g.D33:
         return [readcharDec(g.imageData, start+0),
-                readcharDec(g.imageData, start+1)]        
+                readcharDec(g.imageData, start+1)]
     else: # ProDOS
         return (readcharDec(g.imageData, start+17) +
                 readcharDec(g.imageData, start+18)*256)
@@ -228,7 +228,7 @@ def getFileLength(arg1, arg2):
         elif (fileType == 'FC' or fileType == 'FA'): # BAS (A) or INT (I)
             # file length is in first two bytes of file data
             return ((readcharDec(g.imageData, ts(fileStart)+0) +
-                     readcharDec(g.imageData, ts(fileStart)+1)*256) + 2)            
+                     readcharDec(g.imageData, ts(fileStart)+1)*256) + 2)
         else: # TXT (T) or other
             # sadly, we have to walk the whole file
             # length is determined by sectors in TSlist, minus wherever
@@ -338,7 +338,7 @@ def getWorkingDirName(arg1, arg2=None):
         for i in range(0, len(workingDirName)):
             if (caseMask[i] == "1"):
                 workingDirName = (workingDirName[:i] +
-                                  workingDirName[i:i+1].lower() + 
+                                  workingDirName[i:i+1].lower() +
                                   workingDirName[i+1:])
     return workingDirName
 
@@ -399,7 +399,7 @@ def ts(track, sector=None):
     if isinstance(sector, type("".encode("L1").decode("L1"))): # hex-ustr
         sector = int(sector, 16)
     return (track*16*256)+(sector*256)
-    
+
 # --- main logic functions
 
 def copyFile(arg1, arg2):
@@ -409,7 +409,7 @@ def copyFile(arg1, arg2):
     #  ShrinkIt: directory path   / file name
     # copies file or dfork to g.outFileData, rfork if any to g.exFileData
     g.activeFileBytesCopied = 0
-    
+
     if g.SHK:
         with open(os.path.join(arg1, arg2), 'rb') as infile:
             g.outFileData += infile.read()
@@ -523,7 +523,7 @@ def processEntry(arg1, arg2):
           getFileLength(arg1, arg2), getAuxType(arg1, arg2),
           getCreationDate(arg1, arg2), getModifiedDate(arg1, arg2))
     '''
-    
+
     eTargetName = None
     g.exFileData = None
     g.outFileData = bytearray(b'')
@@ -541,7 +541,7 @@ def processEntry(arg1, arg2):
 
     if (not g.PDOSPATH_INDEX or
         g.activeFileName.upper() == g.PDOSPATH_SEGMENT.upper()):
-            
+
         # if ProDOS directory, not file
         if (not g.SHK and getStorageType(arg1, arg2) == 13):
             if not g.PDOSPATH_INDEX:
@@ -620,7 +620,7 @@ def processEntry(arg1, arg2):
                     writecharsHex(g.exFileData,
                                   654,
                                   getFileType(arg1, arg2) +
-                                  getAuxType(arg1, arg2))                                   
+                                  getAuxType(arg1, arg2))
                     writechars(g.exFileData, 657, b'pdos')
                     saveFile(ADfilePath, g.exFileData)
                 touch(saveName, modifiedDate)
@@ -632,7 +632,7 @@ def processEntry(arg1, arg2):
                    (g.extractFile and
                    (g.extractFile.lower() == origFileName.lower()))):
                     quitNow(0)
-                g.targetName = None    
+                g.targetName = None
     #else:
         #print(g.activeFileName + " doesn't match " + g.PDOSPATH_SEGMENT)
 
@@ -791,7 +791,7 @@ def binToDec(arg1):
 # arg: binary string up to 8 bits
 # out: decimal value
     return to_dec([arg1])
-    
+
 def binToHex(arg1):
 # converts single-byte binary string (8 bits) value to hex
 # warning: no error checking
@@ -994,10 +994,10 @@ def to_bytes(val):
     else:
         raise Exception(
           "to_bytes() requires hex-ustr, int/long, or [bin-ustr]")
-    
+
 def shift(items):
     """Shift list items to left, losing the first item.
-    
+
     in : list
     out: list
     """
@@ -1005,7 +1005,7 @@ def shift(items):
         items[i] = items[i+1]
     del items[-1]
     return items
-    
+
 def s(string):
     """Perform local variable substution, e.g. 'total: {num} items'"""
     # http://stackoverflow.com/questions/2960772/
@@ -1101,14 +1101,14 @@ while True: # breaks when there are no more arguments starting with dash
 
     if (len(args) == 1):
         usage()
-        
+
     if (slyce(args[1],0,1) != "-"):
         break
 
     if (args[1] == "-s"):
         g.nomsg = 1
         args = args[1:] #shift
-    
+
     elif (args[1] == "-n"):
         g.nodir = 1
         args = args[1:] #shift
@@ -1121,7 +1121,7 @@ while True: # breaks when there are no more arguments starting with dash
         g.AD = 1
         g.PNAME = 1
         args = args[1:] #shift
-    
+
     elif (args[1] == "-shk"):
         g.SHK = 1
         args = args[1:] #shift
@@ -1191,7 +1191,7 @@ else:
         if not os.path.isdir(args[2]):
             print("Target directory not found.")
             quitNow(2)
-    
+
 if g.SHK:
     g.PNAME = 0
     if not g.CAT:
@@ -1284,7 +1284,7 @@ if g.SHK:
     quitNow(0)
 
 # end script if SHK
-            
+
 g.imageData = loadFile(g.imageFile)
 
 # detect if image is 2mg and remove 64-byte header if so
@@ -1345,7 +1345,7 @@ if (len(g.imageData) == 143360):
         #print("saving fixed order file as outfile.dsk")
         #saveFile("outfile.dsk", g.imageData)
         #print("saved")
-        
+
     if not prodosDisk and not g.D33:
         print("Warning: Unable to determine disk format, assuming ProDOS.")
 

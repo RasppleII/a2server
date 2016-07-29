@@ -71,7 +71,7 @@ def find_slash_pos(day):                        # 799  REM  Finds position of / 
     for i in range(0,3):                        # 810  FOR I = 1 TO 3
         if day[i:i+1] == "/": x = i; break      # 820  IF  MID$ (DAY$,I,1) = "/" THEN X = I:I = 3
                                                 # 830  NEXT I
-    return x                                    # 840  RETURN 
+    return x                                    # 840  RETURN
 
 while True:                                     # 999  REM  get the user's input and convert
     if not day:
@@ -110,7 +110,7 @@ while True:                                     # 999  REM  get the user's input
             mo == 2 and
             da > 28): x = -1; continue
         input_ok = True
-    if x != -1: break        
+    if x != -1: break
     else: dow_str = ""; day = ""
 
 while True:

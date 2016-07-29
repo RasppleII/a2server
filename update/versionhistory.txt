@@ -56,7 +56,7 @@
 1.2.6: Nov 2015: full, ready to use install of Spectrum
                  [unannounced; released briefly, then withdrawn]
 
-1.5.0: Jan 2016: mixed case filenames for A2FILES; remove GSFILES if empty; 
+1.5.0: Jan 2016: mixed case filenames for A2FILES; remove GSFILES if empty;
                  install Marinetti 3.0b8 with internet access via MacIP;
                  fully install Spectrum, SAFE2, SAM2, SNAP, MountIt; install
                  DOS3.3 and TEACH; remove Ubuntu support; move/media/A2SHARED/*
