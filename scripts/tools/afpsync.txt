@@ -1,5 +1,5 @@
 #! /bin/bash
-# vim: set tabstop=4 shiftwidth=4 expandtab filetype=sh:
+# vim: set tabstop=4 shiftwidth=4 noexpandtab filetype=sh:
 
 # afpsync: updates .AppleDouble components of files on shared volumes
 
@@ -15,102 +15,102 @@
 # /usr/local/etc/netatalk/AppleVolumes.default are synced.
 
 processPath () {
-    if [[ ! -d $sharepath ]]; then
-        echo "$sharepath does not exist."
-    else
-        volinfo="$sharepath/.AppleDesktop/.volinfo"
-        if [[ ! -f $volinfo ]]; then
-            if [[ ! $force ]]; then
-                echo "Cannot update AppleDouble files for volume $sharepath,"
-                echo "because its .volinfo file does not exist. To create it, log"
-                echo "into the volume from an Apple II or Mac client computer,"
-                echo "or use \"afpsync -v\"."
-            else
-                if (( $1 )); then
-                    mkvolinfo -f -c $sharepath
-                else
-                    mkvolinfo -f $sharepath
-                fi
-                $0 $sharepath
-            fi
-        else
-            IFS=''
-            result=$(sudo dbd -r $sharepath | grep encoding)
-            f=$(wc -l <<< $result)
-            [[ $(wc -w <<< $result) == 0 ]] && f=0
-            [[ $f -eq 1 && $(grep AppleDesktop <<< "$result") && $(grep MTOULOWER $sharepath/.AppleDesktop/.volinfo) ]] && (( f-- ))
-            if (( f == 0 )); then
-                echo "AppleDouble files have been updated for volume $sharepath."
-            else
-                [[ ! $renameLower ]] && echo "Could not update all files on volume $sharepath."
-                if [[ $showerrors ]]; then
-                    echo $result \
-                        | while read LINE; do
-                        [[ ! $(echo $LINE | grep APPLEDESKTOP) ]] && echo $LINE
-                    done
-                elif [[ $renameLower ]]; then
-                    echo $result \
-                        | while read LINE; do
-                        if [[ ! $(echo $LINE | grep APPLEDESKTOP) ]]; then
-                            filepath=$(echo $LINE | sed "s/^Bad\ encoding\ for\ '//" | sed s/\'//)
-                            filename=${filepath##*/}
-                            filedir=${filepath%/*}
-                            mv $filepath $filedir/${filename^^}
-                            echo "Renamed $filedir/${filename^^}."
-                        fi
-                    done
-                    $0 $sharepath
-                else
-                    echo "Use afpsync -e to see error details."
-                fi
-            fi
-            unset IFS
-        fi
-    fi
+	if [[ ! -d $sharepath ]]; then
+		echo "$sharepath does not exist."
+	else
+		volinfo="$sharepath/.AppleDesktop/.volinfo"
+		if [[ ! -f $volinfo ]]; then
+			if [[ ! $force ]]; then
+				echo "Cannot update AppleDouble files for volume $sharepath,"
+				echo "because its .volinfo file does not exist. To create it, log"
+				echo "into the volume from an Apple II or Mac client computer,"
+				echo "or use \"afpsync -v\"."
+			else
+				if (( $1 )); then
+					mkvolinfo -f -c $sharepath
+				else
+					mkvolinfo -f $sharepath
+				fi
+				$0 $sharepath
+			fi
+		else
+			IFS=''
+			result=$(sudo dbd -r $sharepath | grep encoding)
+			f=$(wc -l <<< $result)
+			[[ $(wc -w <<< $result) == 0 ]] && f=0
+			[[ $f -eq 1 && $(grep AppleDesktop <<< "$result") && $(grep MTOULOWER $sharepath/.AppleDesktop/.volinfo) ]] && (( f-- ))
+			if (( f == 0 )); then
+				echo "AppleDouble files have been updated for volume $sharepath."
+			else
+				[[ ! $renameLower ]] && echo "Could not update all files on volume $sharepath."
+				if [[ $showerrors ]]; then
+					echo $result \
+						| while read LINE; do
+						[[ ! $(echo $LINE | grep APPLEDESKTOP) ]] && echo $LINE
+					done
+				elif [[ $renameLower ]]; then
+					echo $result \
+						| while read LINE; do
+						if [[ ! $(echo $LINE | grep APPLEDESKTOP) ]]; then
+							filepath=$(echo $LINE | sed "s/^Bad\ encoding\ for\ '//" | sed s/\'//)
+							filename=${filepath##*/}
+							filedir=${filepath%/*}
+							mv $filepath $filedir/${filename^^}
+							echo "Renamed $filedir/${filename^^}."
+						fi
+					done
+					$0 $sharepath
+				else
+					echo "Use afpsync -e to see error details."
+				fi
+			fi
+			unset IFS
+		fi
+	fi
 }
 
 while [[ $1 == "-r" || $1 == "-e" || $1 = "-v" ]]; do
 
-    if [[ $1 == "-v" ]]; then
-        force=1
-        shift
-    fi
+	if [[ $1 == "-v" ]]; then
+		force=1
+		shift
+	fi
 
-    if [[ $1 == "-e" ]]; then
-        showerrors=1
-        shift
-    fi
+	if [[ $1 == "-e" ]]; then
+		showerrors=1
+		shift
+	fi
 
-    if [[ $1 == "-r" ]]; then
-        renameLower=1
-        shift
-    fi
+	if [[ $1 == "-r" ]]; then
+		renameLower=1
+		shift
+	fi
 
 done
 
 if [[ ${1:0:1} == "-" ]]; then
-    echo "Usage: afpsync [-e|-r] [-v] [shared volume path]"
-    echo
-    echo "-e: show error details"
-    echo "-r: rename lowercase filenames to uppercase"
-    echo "-v: create .volinfo file if none exists"
-    echo "If no directory is specified, all found in"
-    echo "  /usr/local/etc/netatalk/AppleVolumes.default are processed."
-    echo
+	echo "Usage: afpsync [-e|-r] [-v] [shared volume path]"
+	echo
+	echo "-e: show error details"
+	echo "-r: rename lowercase filenames to uppercase"
+	echo "-v: create .volinfo file if none exists"
+	echo "If no directory is specified, all found in"
+	echo "  /usr/local/etc/netatalk/AppleVolumes.default are processed."
+	echo
 else
-    sudo true
-    if [[ $1 ]]; then
-        sharepath=$(readlink -m $1)
-        # behavior change in 1.3.0: now defaults to mixed case
-        #   on a volume when specifying a folder and -v
-        #   (as opposed to defaulting to casefold:toupper previously)
-        processPath 1
-    else
-        grep ^/srv/A2SERVER /usr/local/etc/netatalk/AppleVolumes.default | \
-            while read line; do
-            [[ $(echo $line | grep toupper) ]]; nocasefold=$?
-            sharepath=$(echo $line | cut -d" " -f1)
-            processPath nocasefold
-        done
-    fi
+	sudo true
+	if [[ $1 ]]; then
+		sharepath=$(readlink -m $1)
+		# behavior change in 1.3.0: now defaults to mixed case
+		#   on a volume when specifying a folder and -v
+		#   (as opposed to defaulting to casefold:toupper previously)
+		processPath 1
+	else
+		grep ^/srv/A2SERVER /usr/local/etc/netatalk/AppleVolumes.default | \
+			while read line; do
+			[[ $(echo $line | grep toupper) ]]; nocasefold=$?
+			sharepath=$(echo $line | cut -d" " -f1)
+			processPath nocasefold
+		done
+	fi
 fi

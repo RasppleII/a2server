@@ -1,5 +1,5 @@
 #! /bin/bash
-# vim: set tabstop=4 shiftwidth=4 expandtab filetype=sh:
+# vim: set tabstop=4 shiftwidth=4 noexpandtab filetype=sh:
 
 alias a2server-help="more /usr/local/etc/a2server-help.txt"
 alias a2server-setup='wget -q -O /tmp/a2server-setup ${A2SERVER_SCRIPT_URL:-https://raw.githubusercontent.com/RasppleII/a2server/current/}setup/index.txt || { echo "Can'"'"'t download A2SERVER setup scripts. Do you has internet?"; false; } && source /tmp/a2server-setup'

@@ -1,5 +1,5 @@
 #! /bin/bash
-# vim: set tabstop=4 shiftwidth=4 expandtab filetype=sh:
+# vim: set tabstop=4 shiftwidth=4 noexpandtab filetype=sh:
 
 # Set up A2SERVER to support Samba (Windows File Sharing)
 # this script can also be used if new shares are introduced
@@ -8,79 +8,79 @@
 
 if [[ ! $autoAnswerYes || -f /tmp/a2server-setupWindowsSharing ]]; then
 
-    if [[ ! $autoAnswerYes ]]; then
-        echo
-        echo -n "Should Windows computers be able to connect to A2SERVER? "
-        read
-    fi
-    if [[ $autoAnswerYes || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
+	if [[ ! $autoAnswerYes ]]; then
+		echo
+		echo -n "Should Windows computers be able to connect to A2SERVER? "
+		read
+	fi
+	if [[ $autoAnswerYes || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
 
-        echo "A2SERVER: Setting up Windows file sharing..."
-        sudo true
+		echo "A2SERVER: Setting up Windows file sharing..."
+		sudo true
 
-        sudo update-rc.d samba defaults &> /dev/null
-        [[ ! -f /etc/init.d/samba ]] && installSamba=1
+		sudo update-rc.d samba defaults &> /dev/null
+		[[ ! -f /etc/init.d/samba ]] && installSamba=1
 
-        if (( $installSamba )); then
-            if [[ ! -f /tmp/a2server-packageReposUpdated ]]; then
-                # prepare for installing packages
-                sudo apt-get -y update
-                touch /tmp/a2server-packageReposUpdated
-            fi
+		if (( $installSamba )); then
+			if [[ ! -f /tmp/a2server-packageReposUpdated ]]; then
+				# prepare for installing packages
+				sudo apt-get -y update
+				touch /tmp/a2server-packageReposUpdated
+			fi
 
-            # Dependency: samba for Windows/modern Macs
-            # FIXME: Figure out when smbpasswd moved and adjust this as necessary
-            sudo apt-get -y install samba
-            hash smbpasswd &> /dev/null || sudo apt-get -y install samba-common-bin
-            sudo apt-get clean
-        fi
+			# Dependency: samba for Windows/modern Macs
+			# FIXME: Figure out when smbpasswd moved and adjust this as necessary
+			sudo apt-get -y install samba
+			hash smbpasswd &> /dev/null || sudo apt-get -y install samba-common-bin
+			sudo apt-get clean
+		fi
 
-        sudo /etc/init.d/samba start &> /dev/null
+		sudo /etc/init.d/samba start &> /dev/null
 
-        workgroup=$(grep -o "^   workgroup = .*$" /etc/samba/smb.conf 2> /dev/null | cut -c 16-)
-        [[ $workgroup ]] || workgroup="WORKGROUP"
-        if [[ ! $autoAnswerYes ]]; then
-            echo
-            echo "Enter workgroup name (or press return for '${workgroup}'): "
-            read
-            [[ $REPLY ]] && workgroup=$REPLY
-        fi
-        sudo sed -i 's/^   workgroup = .*$/   workgroup = '$workgroup'/' /etc/samba/smb.conf 2> /dev/null
-        sudo sed -i 's/^#   security = user/   security = user/' /etc/samba/smb.conf 2> /dev/null
+		workgroup=$(grep -o "^       workgroup = .*$" /etc/samba/smb.conf 2> /dev/null | cut -c 16-)
+		[[ $workgroup ]] || workgroup="WORKGROUP"
+		if [[ ! $autoAnswerYes ]]; then
+			echo
+			echo "Enter workgroup name (or press return for '${workgroup}'): "
+			read
+			[[ $REPLY ]] && workgroup=$REPLY
+		fi
+		sudo sed -i 's/^   workgroup = .*$/   workgroup = '$workgroup'/' /etc/samba/smb.conf 2> /dev/null
+		sudo sed -i 's/^#   security = user/   security = user/' /etc/samba/smb.conf 2> /dev/null
 
-        # remove GSFILES if no longer serving it
-        if ! grep ^/srv/A2SERVER/GSFILES /usr/local/etc/netatalk/AppleVolumes.default; then
-            sudo sed -i ':a;N;$!ba;s#\n\[GSFILES\].*\[#\n[#' /etc/samba/smb.conf
-            sudo sed -i ':a;N;$!ba;s#\n\[GSFILES\].*$#\n#' /etc/samba/smb.conf
-        fi
+		# remove GSFILES if no longer serving it
+		if ! grep ^/srv/A2SERVER/GSFILES /usr/local/etc/netatalk/AppleVolumes.default; then
+			sudo sed -i ':a;N;$!ba;s#\n\[GSFILES\].*\[#\n[#' /etc/samba/smb.conf
+			sudo sed -i ':a;N;$!ba;s#\n\[GSFILES\].*$#\n#' /etc/samba/smb.conf
+		fi
 
-        grep ^/srv/A2SERVER /usr/local/etc/netatalk/AppleVolumes.default | cut -d" " -f2 \
-            | while read sharename; do
-            if [[ $(grep $sharename /etc/samba/smb.conf) ]]; then
-                echo "A2SERVER: $sharename is already set up for Windows file sharing."
-            else
-                echo "[$sharename]" | sudo tee -a /etc/samba/smb.conf > /dev/null
-                echo "    path = /srv/A2SERVER/$sharename" | sudo tee -a /etc/samba/smb.conf > /dev/null
-                echo "    browsable = yes" | sudo tee -a /etc/samba/smb.conf > /dev/null
-                echo "    guest ok = yes" | sudo tee -a /etc/samba/smb.conf > /dev/null
-                echo "    read only = no" | sudo tee -a /etc/samba/smb.conf > /dev/null
-                echo "    create mask = 0666" | sudo tee -a /etc/samba/smb.conf > /dev/null
-                echo "    force user = $USER" | sudo tee -a /etc/samba/smb.conf > /dev/null
-                echo "A2SERVER: $sharename has been set up for Windows file sharing."
-            fi
-        done
+		grep ^/srv/A2SERVER /usr/local/etc/netatalk/AppleVolumes.default | cut -d" " -f2 \
+			| while read sharename; do
+			if [[ $(grep $sharename /etc/samba/smb.conf) ]]; then
+				echo "A2SERVER: $sharename is already set up for Windows file sharing."
+			else
+				echo "[$sharename]" | sudo tee -a /etc/samba/smb.conf > /dev/null
+				echo "    path = /srv/A2SERVER/$sharename" | sudo tee -a /etc/samba/smb.conf > /dev/null
+				echo "    browsable = yes" | sudo tee -a /etc/samba/smb.conf > /dev/null
+				echo "    guest ok = yes" | sudo tee -a /etc/samba/smb.conf > /dev/null
+				echo "    read only = no" | sudo tee -a /etc/samba/smb.conf > /dev/null
+				echo "    create mask = 0666" | sudo tee -a /etc/samba/smb.conf > /dev/null
+				echo "    force user = $USER" | sudo tee -a /etc/samba/smb.conf > /dev/null
+				echo "A2SERVER: $sharename has been set up for Windows file sharing."
+			fi
+		done
 
-        echo
-        echo "A2SERVER: Setting Windows file sharing password to 'apple2'."
-        echo -e 'apple2\napple2' | sudo smbpasswd -s -a $USER
+		echo
+		echo "A2SERVER: Setting Windows file sharing password to 'apple2'."
+		echo -e 'apple2\napple2' | sudo smbpasswd -s -a $USER
 
-        echo
-        echo "A2SERVER: Windows file sharing is now running."
-    else
-        sudo /etc/init.d/samba stop &> /dev/null
-        sudo update-rc.d -f samba remove &> /dev/null
-        echo "A2SERVER: Windows file sharing has been turned off."
-    fi
+		echo
+		echo "A2SERVER: Windows file sharing is now running."
+	else
+		sudo /etc/init.d/samba stop &> /dev/null
+		sudo update-rc.d -f samba remove &> /dev/null
+		echo "A2SERVER: Windows file sharing has been turned off."
+	fi
 
-    echo
+	echo
 fi

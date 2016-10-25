@@ -45,7 +45,7 @@ HOSTNAME=`/bin/hostname`
 
 # Read in netatalk configuration.
 if [ -f /etc/default/netatalk ]; then
-    . /etc/default/netatalk
+	. /etc/default/netatalk
 fi
 
 # Start Netatalk servers.
@@ -53,9 +53,9 @@ atalk_startup() {
 	if [ x"$ATALKD_RUN" = x"yes" ]; then
 
 	# Try to load the AppleTalk kernel module if it was intended.
-    if grep -q '^appletalk$' /etc/modules; then
+	if grep -q '^appletalk$' /etc/modules; then
 		/sbin/modprobe appletalk || echo "[could not load appletalk module]"
-    fi
+	fi
 
 	# Start atalkd server.
 	/usr/local/sbin/atalkd
@@ -70,8 +70,8 @@ atalk_startup() {
 	# prepare startup of file services
 	if [ "x$CNID_METAD_RUN" = "xyes" -a -x /usr/local/sbin/cnid_metad ] ; then
 		echo -n " cnid_metad"
-        /usr/local/sbin/cnid_metad $CNID_CONFIG
-    fi
+		/usr/local/sbin/cnid_metad $CNID_CONFIG
+	fi
 
 	if [ x"$AFPD_RUN" = x"yes" ]; then
 	/usr/local/sbin/afpd $AFPD_UAMLIST -g $AFPD_GUEST -c $AFPD_MAX_CLIENTS \
@@ -79,17 +79,17 @@ atalk_startup() {
 	echo -n " afpd"
 	fi
 
-    if [ "x$ATALKD_RUN" = "xyes" ]; then
-        if [ "x$PAPD_RUN" = "xyes" ]; then
-            /usr/local/sbin/papd
-            echo -n " papd"
-        fi
+	if [ "x$ATALKD_RUN" = "xyes" ]; then
+		if [ "x$PAPD_RUN" = "xyes" ]; then
+			/usr/local/sbin/papd
+			echo -n " papd"
+		fi
 
-        if [ x"$TIMELORD_RUN" = x"yes" ]; then
-            /usr/local/sbin/timelord
-            echo -n " timelord"
-        fi
-    fi
+		if [ x"$TIMELORD_RUN" = x"yes" ]; then
+			/usr/local/sbin/timelord
+			echo -n " timelord"
+		fi
+	fi
 }
 
 case "$1" in
@@ -113,19 +113,19 @@ case "$1" in
 		start-stop-daemon --stop --quiet --oknodo --exec /usr/local/sbin/cnid_metad
 
 		if test -x /usr/local/sbin/papd; then
-                    echo -n " papd"
-		    start-stop-daemon --stop --quiet --oknodo --exec /usr/local/sbin/papd
-	        fi
+					echo -n " papd"
+			start-stop-daemon --stop --quiet --oknodo --exec /usr/local/sbin/papd
+			fi
 
 		if test -x /usr/local/sbin/timelord; then
-                    echo -n " timelord"
-		    start-stop-daemon --stop --quiet --oknodo --exec /usr/local/sbin/timelord
-	        fi
+					echo -n " timelord"
+			start-stop-daemon --stop --quiet --oknodo --exec /usr/local/sbin/timelord
+			fi
 
 		if test -x /usr/local/sbin/atalkd; then
-                    echo -n " atalkd"
-		    start-stop-daemon --stop --quiet --oknodo --exec /usr/local/sbin/atalkd
-	        fi
+					echo -n " atalkd"
+			start-stop-daemon --stop --quiet --oknodo --exec /usr/local/sbin/atalkd
+			fi
 
 		echo "."
 	;;

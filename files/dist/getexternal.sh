@@ -1,8 +1,8 @@
 #! /bin/bash
-# vim: set tabstop=4 shiftwidth=4 expandtab filetype=sh:
+# vim: set tabstop=4 shiftwidth=4 noexpandtab filetype=sh:
 
 if ! hash wget; then
-    echo "wget is not installed. On a Mac, install it with MacPorts or Homebrew."
+	echo "wget is not installed. On a Mac, install it with MacPorts or Homebrew."
 fi
 
 echo "Downloading items..."
@@ -37,30 +37,30 @@ wget -O files/external/appleii/sam2.bxy "$samUrl"
 wget -O files/external/appleii/snap.bxy "$snapUrl"
 
 for gsosInstall in {1..3}; do
-    activeDisk=0
-    mkdir -p files/external/appleii/gsos60${gsosInstall}
+	activeDisk=0
+	mkdir -p files/external/appleii/gsos60${gsosInstall}
 
-    diskNames=( Install System.Disk SystemTools1 SystemTools2 Fonts synthLAB )
-    if (( $gsosInstall == 1 )); then
-        gsosURL="http://download.info.apple.com/Apple_Support_Area/Apple_Software_Updates/English-North_American/Apple_II/Apple_IIGS_System_6.0.1/"
-        wget --max-redirect 0 -O files/external/appleii/gsos601/Disk_7_of_7-Apple_II_Setup.sea.bin http://download.info.apple.com/Apple_Support_Area/Apple_Software_Updates/English-North_American/Apple_II/Apple_IIGS_System_6.0.1/Disk_7_of_7-Apple_II_Setup.sea.bin
-    elif (( $gsosInstall == 2 )); then
-        gsosURL="http://mirrors.apple2.org.za/Apple%20II%20Documentation%20Project/Software/Operating%20Systems/Apple%20IIGS%20System/Disk%20Images/"
-        diskNames=( Install System.Disk SystemTools1 SystemTools2 SystemTools3 Fonts1 Fonts2 synthLAB )
-        diskWebNames=( Install System%20disk System%20tools%201 System%20tools%202 System%20tools%203 Fonts%201 Fonts%202 Synthlab )
-    elif (( $gsosInstall == 3 )); then
-        gsosURL="ftp://ftp.apple.asimov.net/pub/apple_II/images/gs/os/gsos/Apple_IIGS_System_6.0.3/"
-    fi
+	diskNames=( Install System.Disk SystemTools1 SystemTools2 Fonts synthLAB )
+	if (( $gsosInstall == 1 )); then
+		gsosURL="http://download.info.apple.com/Apple_Support_Area/Apple_Software_Updates/English-North_American/Apple_II/Apple_IIGS_System_6.0.1/"
+		wget --max-redirect 0 -O files/external/appleii/gsos601/Disk_7_of_7-Apple_II_Setup.sea.bin http://download.info.apple.com/Apple_Support_Area/Apple_Software_Updates/English-North_American/Apple_II/Apple_IIGS_System_6.0.1/Disk_7_of_7-Apple_II_Setup.sea.bin
+	elif (( $gsosInstall == 2 )); then
+		gsosURL="http://mirrors.apple2.org.za/Apple%20II%20Documentation%20Project/Software/Operating%20Systems/Apple%20IIGS%20System/Disk%20Images/"
+		diskNames=( Install System.Disk SystemTools1 SystemTools2 SystemTools3 Fonts1 Fonts2 synthLAB )
+		diskWebNames=( Install System%20disk System%20tools%201 System%20tools%202 System%20tools%203 Fonts%201 Fonts%202 Synthlab )
+	elif (( $gsosInstall == 3 )); then
+		gsosURL="ftp://ftp.apple.asimov.net/pub/apple_II/images/gs/os/gsos/Apple_IIGS_System_6.0.3/"
+	fi
 
-    for diskname in ${diskNames[@]}; do
-        outfile="files/external/appleii/gsos60${gsosInstall}/$diskname.po"
-        (( activeDisk++ ))
-        if (( $gsosInstall == 1 )); then
-            wget --max-redirect 0 -O files/external/appleii/gsos601/"Disk_${activeDisk}_of_7-${diskname}.sea.bin" "${gsosURL}Disk_${activeDisk}_of_7-${diskname}.sea.bin"
-        elif (( $gsosInstall == 2 )); then
-            wget -O $outfile "$gsosURL/IIGS%20System%206.0.2%20-%20Disk%20${activeDisk}%20${diskWebNames[$activeDisk-1]}.po"
-        elif (( $gsosInstall == 3 )); then
-            wget -O $outfile "$gsosURL/$diskname.po"
-        fi
-    done
+	for diskname in ${diskNames[@]}; do
+		outfile="files/external/appleii/gsos60${gsosInstall}/$diskname.po"
+		(( activeDisk++ ))
+		if (( $gsosInstall == 1 )); then
+			wget --max-redirect 0 -O files/external/appleii/gsos601/"Disk_${activeDisk}_of_7-${diskname}.sea.bin" "${gsosURL}Disk_${activeDisk}_of_7-${diskname}.sea.bin"
+		elif (( $gsosInstall == 2 )); then
+			wget -O $outfile "$gsosURL/IIGS%20System%206.0.2%20-%20Disk%20${activeDisk}%20${diskWebNames[$activeDisk-1]}.po"
+		elif (( $gsosInstall == 3 )); then
+			wget -O $outfile "$gsosURL/$diskname.po"
+		fi
+	done
 done

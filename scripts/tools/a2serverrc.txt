@@ -1,5 +1,5 @@
 #! /bin/bash
-# vim: set tabstop=4 shiftwidth=4 expandtab filetype=sh:
+# vim: set tabstop=4 shiftwidth=4 noexpandtab filetype=sh:
 
 export A2SERVER_SCRIPT_URL="${A2SERVER_SCRIPT_URL:-https://raw.githubusercontent.com/RasppleII/a2server/current/}"
 export A2SERVER_BINARY_URL="${A2SERVER_BINARY_URL:-http://ivanx.com/a2server/files/}"

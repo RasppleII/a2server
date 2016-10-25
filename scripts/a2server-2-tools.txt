@@ -1,5 +1,5 @@
 #! /bin/bash
-# vim: set tabstop=4 shiftwidth=4 expandtab filetype=sh:
+# vim: set tabstop=4 shiftwidth=4 noexpandtab filetype=sh:
 
 # download and install a2server tools:
 # mkatinit, mkvolinfo, afptype, afpsync, aliases, nulib2
@@ -20,90 +20,90 @@ debianVersion=$(cat /etc/debian_version 2> /dev/null)
 isRpi=
 arch=
 if [[ -f /usr/bin/raspi-config ]]; then
-    isRpi=1
-    arch='rpi'
+	isRpi=1
+	arch='rpi'
 elif lsb_release -a 2> /dev/null | grep -q 'Distributor ID:.Debian' && [[ $(cut -d . -f 1 <<< $debianVersion) -ge "7" ]]; then
-    uname_m="$(uname -m)"
-    if [[ $uname_m == "i686" ]]; then
-        arch='debian_x86'
-    elif [[ $uname_m == "x86_64" ]]; then
-        arch='debian_x64'
-    fi
+	uname_m="$(uname -m)"
+	if [[ $uname_m == "i686" ]]; then
+		arch='debian_x86'
+	elif [[ $uname_m == "x86_64" ]]; then
+		arch='debian_x64'
+	fi
 fi
 
 debianName=
 if [[ $debianVersion ]]; then
-    debianMajor=$(cut -d . -f 1 <<< $debianVersion)
-    if [[ $debianMajor == "8" ]]; then
-        debianName="jessie"
-    elif [[ $debianMajor == "7" ]]; then
-        debianName="wheezy"
-    else
-        debianName="unknown"
-    fi
+	debianMajor=$(cut -d . -f 1 <<< $debianVersion)
+	if [[ $debianMajor == "8" ]]; then
+		debianName="jessie"
+	elif [[ $debianMajor == "7" ]]; then
+		debianName="wheezy"
+	else
+		debianName="unknown"
+	fi
 fi
 
 echo "A2SERVER: Installing A2SERVER tools..."
 
 # delete older nulib2 which doesn't correctly handle zero-length forks in GSHK-created archives
 if hash nulib2 &> /dev/null; then
-    nulib2version=$(nulib2 | sed -n 2p | sed 's|^.*v\([0-9]\)\.\([0-9]\)\.\([0-9]\).*$|\1\2\3|' 2> /dev/null)
-    if (( $nulib2version < 310 )); then
-        sudo apt-get -y purge nulib2 &> /dev/null
-        sudo rm $(command -v nulib2) &> /dev/null
-    fi
+	nulib2version=$(nulib2 | sed -n 2p | sed 's|^.*v\([0-9]\)\.\([0-9]\)\.\([0-9]\).*$|\1\2\3|' 2> /dev/null)
+	if (( $nulib2version < 310 )); then
+		sudo apt-get -y purge nulib2 &> /dev/null
+		sudo rm $(command -v nulib2) &> /dev/null
+	fi
 fi
 
 if ! hash nulib2 &> /dev/null; then
 
-    echo "A2SERVER: Installing nulib2..."
+	echo "A2SERVER: Installing nulib2..."
 
-    cd /tmp
-    if [[ $arch && ! -f /tmp/a2server-compileAlways ]]; then
-        { wget -qO- "${binaryURL}precompiled/nulib2-3.1.0a2-${arch}.tgz" | sudo tar Pzx; } &> /dev/null
-    fi
+	cd /tmp
+	if [[ $arch && ! -f /tmp/a2server-compileAlways ]]; then
+		{ wget -qO- "${binaryURL}precompiled/nulib2-3.1.0a2-${arch}.tgz" | sudo tar Pzx; } &> /dev/null
+	fi
 
-    if ! hash nulib2 &> /dev/null; then
+	if ! hash nulib2 &> /dev/null; then
 
-        if [[ ! -f /tmp/a2server-packageReposUpdated ]]; then
-            # prepare for installing packages
-            sudo apt-get -y update
-            touch /tmp/a2server-packageReposUpdated
-        fi
+		if [[ ! -f /tmp/a2server-packageReposUpdated ]]; then
+			# prepare for installing packages
+			sudo apt-get -y update
+			touch /tmp/a2server-packageReposUpdated
+		fi
 
-        # Dependencies: build-dep for nulib
-        sudo apt-get -y install build-essential zlib1g-dev
-        sudo apt-get -y clean
+		# Dependencies: build-dep for nulib
+		sudo apt-get -y install build-essential zlib1g-dev
+		sudo apt-get -y clean
 
-        cd /tmp
-        rm -rf /tmp/nulib2 &> /dev/null
-        mkdir /tmp/nulib2
-        cd /tmp/nulib2
-        if [[ $useExternalURL ]]; then
-            wget -q -O nulib2-3.1.0a2.zip "https://github.com/fadden/nulib2/archive/20fe7efb4d37fedf807416c16d74d51d893ea48a.zip"
-            unzip nulib2-3.1.0a2.zip 2> /dev/null
-            rm nulib2-3.1.0a2.zip &> /dev/null
-        fi
-        if [ ! -d nulib2* ]; then
-            wget -q -O nulib2-3.1.0a2.zip "${binaryURL}external/source/nulib2-3.1.0a2.zip"
-            unzip nulib2-3.1.0a2.zip 2> /dev/null
-            rm nulib2-3.1.0a2.zip &> /dev/null
-        fi
-        cd nulib2*
-        cd nufxlib
-        ./configure
-        make
-        sudo make install
-        cd ../nulib2
-        ./configure
-        make
-        sudo make install
-        cd
-        rm -rf /tmp/nulib2
-    fi
+		cd /tmp
+		rm -rf /tmp/nulib2 &> /dev/null
+		mkdir /tmp/nulib2
+		cd /tmp/nulib2
+		if [[ $useExternalURL ]]; then
+			wget -q -O nulib2-3.1.0a2.zip "https://github.com/fadden/nulib2/archive/20fe7efb4d37fedf807416c16d74d51d893ea48a.zip"
+			unzip nulib2-3.1.0a2.zip 2> /dev/null
+			rm nulib2-3.1.0a2.zip &> /dev/null
+		fi
+		if [ ! -d nulib2* ]; then
+			wget -q -O nulib2-3.1.0a2.zip "${binaryURL}external/source/nulib2-3.1.0a2.zip"
+			unzip nulib2-3.1.0a2.zip 2> /dev/null
+			rm nulib2-3.1.0a2.zip &> /dev/null
+		fi
+		cd nulib2*
+		cd nufxlib
+		./configure
+		make
+		sudo make install
+		cd ../nulib2
+		./configure
+		make
+		sudo make install
+		cd
+		rm -rf /tmp/nulib2
+	fi
 
 else
-    echo "A2SERVER: Nulib2 has already been installed."
+	echo "A2SERVER: Nulib2 has already been installed."
 fi
 
 # download and install The Unarchiver, for expanding Apple disk images
@@ -111,73 +111,73 @@ fi
 
 if ! hash unar &> /dev/null; then
 
-    echo "A2SERVER: Installing The Unarchiver..."
+	echo "A2SERVER: Installing The Unarchiver..."
 
-    if [[ ! -f /tmp/a2server-packageReposUpdated ]]; then
-        # prepare for installing packages
-        sudo apt-get -y update
-        touch /tmp/a2server-packageReposUpdated
-    fi
+	if [[ ! -f /tmp/a2server-packageReposUpdated ]]; then
+		# prepare for installing packages
+		sudo apt-get -y update
+		touch /tmp/a2server-packageReposUpdated
+	fi
 
-    # jessie and later: Just use the unar package
-    if [[ $debianMajor -ge 8 ]]; then
-        sudo apt-get -y install unar
-        sudo apt-get clean
-    fi
+	# jessie and later: Just use the unar package
+	if [[ $debianMajor -ge 8 ]]; then
+		sudo apt-get -y install unar
+		sudo apt-get clean
+	fi
 
-    if ! hash unar &> /dev/null; then
-        if [[ $arch && ! -f /tmp/a2server-compileAlways ]]; then
-            # Dependencies: for unar
-            sudo apt-get -y install libgnustep-base1.22
-            sudo apt-get clean
-            { wget -qO- "${binaryURL}precompiled/unar-${arch}_${debianName}.tgz" | sudo tar Pzx; } &> /dev/null
-        fi
+	if ! hash unar &> /dev/null; then
+		if [[ $arch && ! -f /tmp/a2server-compileAlways ]]; then
+			# Dependencies: for unar
+			sudo apt-get -y install libgnustep-base1.22
+			sudo apt-get clean
+			{ wget -qO- "${binaryURL}precompiled/unar-${arch}_${debianName}.tgz" | sudo tar Pzx; } &> /dev/null
+		fi
 
-        # If all else fails, compile from source.
-        if ! hash unar &> /dev/null; then
+		# If all else fails, compile from source.
+		if ! hash unar &> /dev/null; then
 
-            # Dependencies: build-deps for unar
-            sudo apt-get -y install build-essential libgnustep-base-dev libz-dev libbz2-dev libssl-dev libicu-dev unzip
-            sudo apt-get clean
+			# Dependencies: build-deps for unar
+			sudo apt-get -y install build-essential libgnustep-base-dev libz-dev libbz2-dev libssl-dev libicu-dev unzip
+			sudo apt-get clean
 
-            rm -rf /tmp/unar &> /dev/null
-            mkdir /tmp/unar
-            cd /tmp/unar
-            if [[ $useExternalURL ]]; then
-                wget -O unar-1.8.1.zip https://github.com/incbee/Unarchiver/archive/unar-1.8.1.zip
-                unzip -o unar-1.8.1.zip &> /dev/null
-            fi
-            if [ ! -d *Unarchiver*/XADMaster ]; then # need single bracket for glob
-                wget -O unar-1.8.1.zip ${binaryURL}external/source/unar-1.8.1.zip
-                unzip -o unar-1.8.1.zip &> /dev/null
-            fi
-            cd *Unarchiver*/XADMaster
-            make -f Makefile.linux
-            sudo mv lsar unar /usr/local/bin
-            cd ../Extra
-            sudo mv lsar.1 unar.1 /usr/local/man/man1
-            cd
-            rm -rf /tmp/unar
-        fi
-        sudo mandb &> /dev/null
-    fi
+			rm -rf /tmp/unar &> /dev/null
+			mkdir /tmp/unar
+			cd /tmp/unar
+			if [[ $useExternalURL ]]; then
+				wget -O unar-1.8.1.zip https://github.com/incbee/Unarchiver/archive/unar-1.8.1.zip
+				unzip -o unar-1.8.1.zip &> /dev/null
+			fi
+			if [ ! -d *Unarchiver*/XADMaster ]; then # need single bracket for glob
+				wget -O unar-1.8.1.zip ${binaryURL}external/source/unar-1.8.1.zip
+				unzip -o unar-1.8.1.zip &> /dev/null
+			fi
+			cd *Unarchiver*/XADMaster
+			make -f Makefile.linux
+			sudo mv lsar unar /usr/local/bin
+			cd ../Extra
+			sudo mv lsar.1 unar.1 /usr/local/man/man1
+			cd
+			rm -rf /tmp/unar
+		fi
+		sudo mandb &> /dev/null
+	fi
 else
-    echo "A2SERVER: The Unarchiver has already been installed."
+	echo "A2SERVER: The Unarchiver has already been installed."
 fi
 
 if ! hash unzip &> /dev/null; then
-    echo "A2SERVER: Installing unzip..."
-    if [[ ! -f /tmp/a2server-packageReposUpdated ]]; then
-        # prepare for installing packages
-        sudo apt-get -y update
-        touch /tmp/a2server-packageReposUpdated
-    fi
+	echo "A2SERVER: Installing unzip..."
+	if [[ ! -f /tmp/a2server-packageReposUpdated ]]; then
+		# prepare for installing packages
+		sudo apt-get -y update
+		touch /tmp/a2server-packageReposUpdated
+	fi
 
-    # Dependencies: unzip
-    sudo apt-get -y install unzip
-    sudo apt-get clean
+	# Dependencies: unzip
+	sudo apt-get -y install unzip
+	sudo apt-get clean
 else
-    echo "A2SERVER: unzip has already been installed."
+	echo "A2SERVER: unzip has already been installed."
 fi
 
 sudo wget -q -O /usr/local/bin/afpsync "${scriptURL}scripts/tools/afpsync.txt"
@@ -203,9 +203,9 @@ echo "source /usr/local/etc/a2serverrc" | sudo tee -a /etc/bash.bashrc > /dev/nu
 
 motd="/etc/motd"
 if [[ ! $(grep A2SERVER $motd) ]]; then
-    echo | sudo tee -a $motd > /dev/null
-    echo "Type 'system-shutdown' to turn off A2SERVER." | sudo tee -a $motd > /dev/null
-    echo "Type 'a2server-setup' to configure network boot." | sudo tee -a $motd > /dev/null
-    echo "Type 'a2server-help' for a list of other commands." | sudo tee -a $motd > /dev/null
-    echo | sudo tee -a $motd > /dev/null
+	echo | sudo tee -a $motd > /dev/null
+	echo "Type 'system-shutdown' to turn off A2SERVER." | sudo tee -a $motd > /dev/null
+	echo "Type 'a2server-setup' to configure network boot." | sudo tee -a $motd > /dev/null
+	echo "Type 'a2server-help' for a list of other commands." | sudo tee -a $motd > /dev/null
+	echo | sudo tee -a $motd > /dev/null
 fi

@@ -1,5 +1,5 @@
 #! /bin/bash
-# vim: set tabstop=4 shiftwidth=4 expandtab filetype=sh:
+# vim: set tabstop=4 shiftwidth=4 noexpandtab filetype=sh:
 
 # This script helps when running on the Linux console within a VirtualBox VM.
 
@@ -17,11 +17,11 @@ isDebian=
 b_release -a 2> /dev/null | grep -q 'Distributor ID:.Debian' && [[ ( -f /etc/debian_version ) && ( $(cut -d . -f 1 < /etc/debian_version) -ge "7" ) ]] && isDebian=1
 
 if [[ $isDebian ]]; then
-    if { lspci 2> /dev/null | grep -q VirtualBox; }; then
-        echo "A2SERVER: Disabling VirtualBox console screen blanking..."
-        sudo sed -i 's/^BLANK_DPMS=off/BLANK_DPMS=on/' /etc/kbd/config
-        sudo sed -i 's/^BLANK_TIME=[^0].$/BLANK_TIME=0/' /etc/kbd/config
-        sudo /etc/init.d/kbd restart &> /dev/null
-        sudo /etc/init.d/console-setup restart &> /dev/null
-    fi
+	if { lspci 2> /dev/null | grep -q VirtualBox; }; then
+		echo "A2SERVER: Disabling VirtualBox console screen blanking..."
+		sudo sed -i 's/^BLANK_DPMS=off/BLANK_DPMS=on/' /etc/kbd/config
+		sudo sed -i 's/^BLANK_TIME=[^0].$/BLANK_TIME=0/' /etc/kbd/config
+		sudo /etc/init.d/kbd restart &> /dev/null
+		sudo /etc/init.d/console-setup restart &> /dev/null
+	fi
 fi
