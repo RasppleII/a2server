@@ -1,6 +1,15 @@
 #! /bin/bash
 # vim: set tabstop=4 shiftwidth=4 noexpandtab filetype=sh:
 
+a2server_devel="$( dirname "${BASH_SOURCE[0]}" )/.."
+if [[ -f "$a2server_devel/.a2server_source" ]]; then
+	pushd $a2server_devel >/dev/null
+	a2server_devel="$PWD"
+	popd >/dev/null
+else
+	a2server_devel=
+fi
+
 # Ensure URL we'll use ends in a /
 case "$A2SERVER_SCRIPT_URL" in
 	*/) scriptURL="$A2SERVER_SCRIPT_URL" ;;
