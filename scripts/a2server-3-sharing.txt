@@ -49,7 +49,7 @@ debianName=$(lsb_release -cs)
 if [[ -f /usr/local/etc/A2SERVER-version ]]; then
 	read a2sVersion </usr/local/etc/A2SERVER-version
 fi
-if [[ "$a2sVersion" != *.*.* || "$a2sVersion" -lt 101 ]]; then
+if [[ "$a2sVersion" != *.*.* && "$a2sVersion" -lt 101 ]]; then
 	echo "A2SERVER: Installing Netatalk (this will take a while)..."
 	# stop Netatalk and samba if running (during upgrade)
 	if [[ $(ps --no-headers -C afpd) ]]; then
