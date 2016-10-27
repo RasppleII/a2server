@@ -4,6 +4,15 @@
 # download and install a2server tools:
 # mkatinit, mkvolinfo, afptype, afpsync, aliases, nulib2
 
+a2sDevel="$( dirname "${BASH_SOURCE[0]}" )/.."
+if [[ -f "$a2sDevel/.a2server_source" ]]; then
+	pushd $a2sDevel >/dev/null
+	a2sDevel="$PWD"
+	popd >/dev/null
+else
+	a2sDevel=
+fi
+
 # Ensure URL we'll use ends in a /
 case "$A2SERVER_SCRIPT_URL" in
 	*/) scriptURL="$A2SERVER_SCRIPT_URL" ;;
@@ -173,19 +182,30 @@ else
 	echo "A2SERVER: unzip has already been installed."
 fi
 
-sudo wget -q -O /usr/local/bin/afpsync "${scriptURL}scripts/tools/afpsync.txt"
-sudo chmod ugo+x /usr/local/bin/afpsync
-sudo wget -q -O /usr/local/bin/afptype "${scriptURL}scripts/tools/afptype.txt"
-sudo chmod ugo+x /usr/local/bin/afptype
-sudo wget -q -O /usr/local/bin/mkatinit "${scriptURL}scripts/tools/mkatinit.txt"
-sudo chmod ugo+x /usr/local/bin/mkatinit
-sudo wget -q -O /usr/local/bin/mkvolinfo "${scriptURL}scripts/tools/mkvolinfo.txt"
-sudo chmod ugo+x /usr/local/bin/mkvolinfo
-sudo wget -q -O /usr/local/bin/cppo "${scriptURL}scripts/tools/cppo.txt"
-sudo chmod ugo+x /usr/local/bin/cppo
-sudo wget -q -O /usr/local/etc/a2server-help.txt "${scriptURL}scripts/tools/a2server-help.txt"
-sudo wget -q -O /usr/local/etc/a2server-aliases "${scriptURL}scripts/tools/a2server-aliases.txt"
-sudo wget -q -O /usr/local/etc/a2serverrc "${scriptURL}scripts/tools/a2serverrc.txt"
+a2sTools="afpsync afptype mkatinit mkvolinfo cppo"
+a2sHelp="a2server-help.txt"
+a2sConfScripts="a2server-aliases a2serverrc"
+if [[ -z "$a2sDevel" ]]; then
+	a2sToolDir="/tmp/a2server-install/tools"
+	mkdir -p "$a2sToolDir"
+	for _tool in $a2sTools $a2sHelp $a2sConfScripts; do
+		sudo wget -q -O "$a2sToolDir/$_tool" "${scriptURL}scripts/tools/$_tool"
+	done
+else
+	a2sToolDir="$a2sDevel/scripts/tools"
+fi
+for _tool in $a2sTools; do
+	sudo install -m 755 "$a2sToolDir/$_tool" "/usr/local/bin/$_tool"
+done
+for _help in $a2sTools; do
+	sudo install -m 644 "$a2sToolDir/$_help" "/usr/local/etc/$_help"
+done
+for _confscript in $a2sConfScripts; do
+	sudo install -m 755 "$a2sToolDir/$_confscript" "/usr/local/etc/$_tool"
+done
+if [[ -z "$a2sDevel" ]]; then
+	rm -rf "$a2sToolDir"
+fi
 
 # 1.3.0: a2serverrc is now called from /etc/bash.bashrc,
 #   which in turn calls a2server-aliases

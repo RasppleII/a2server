@@ -11,13 +11,13 @@
 
 a2serverVersion="1.5.1"
 
-a2server_devel="$( dirname "${BASH_SOURCE[0]}" )/.."
-if [[ -f "$a2server_devel/.a2server_source" ]]; then
-	pushd $a2server_devel >/dev/null
-	a2server_devel="$PWD"
+a2sDevel="$( dirname "${BASH_SOURCE[0]}" )/.."
+if [[ -f "$a2sDevel/.a2server_source" ]]; then
+	pushd $a2sDevel >/dev/null
+	a2sDevel="$PWD"
 	popd >/dev/null
 else
-	a2server_devel=
+	a2sDevel=
 fi
 
 # Ensure URL we'll use ends in a /
@@ -125,6 +125,7 @@ setupNetBoot=
 setupWindowsSharing=
 compileAlways=
 updateRasppleII=
+rm -rf /tmp/a2server-install
 rm /tmp/a2server-* 2> /dev/null
 while [[ $1 ]]; do
 	if [[ $1 == "-r" ]]; then
@@ -309,7 +310,7 @@ if (( $doSetup )); then
 		echo
 		echo "A2SERVER: Downloading scripts..."
 
-		read -d '' a2serverSubScripts <<-EOF
+		read -d '' a2sSubScripts <<-EOF
 			a2server-1-storage.txt
 			a2server-2-tools.txt
 			a2server-3-sharing.txt
@@ -318,33 +319,30 @@ if (( $doSetup )); then
 			a2server-7-console.txt
 		EOF
 
-		if [[ -z "$a2server_devel" ]]; then
-			for _script in $a2serverSubScripts; do
-				wget -q -O "/tmp/a2server-install/$_script" "${scriptURL}scripts/$_script"
-				chmod ugo+x "/tmp/a2server-install/$_script"
+		if [[ -n "$a2sDevel" ]]; then
+			a2sScriptDir="$a2sDevel/scripts"
+		else
+			a2sScriptDir="/tmp/a2server-install/scripts"
+			mkdir -p "$a2sScriptDir"
+			for _script in $a2sSubScripts; do
+				wget -q -O "$a2sScriptDir/$_script" "${scriptURL}scripts/$_script"
+				chmod ugo+x "$a2sScriptDir/$_script"
 			done
 
 			echo "A2SERVER: Scripts have been downloaded. Installing..."
+		fi
 
-			if [[ $installAll ]]; then
-				sudo rm -f /usr/local/etc/A2SERVER-version /usr/local/bin/nulib2 /usr/local/bin/unar /usr/local/sbin/macipgw /usr/local/bin/ciopfs /usr/local/etc/netatalk/afppasswd /usr/local/etc/netatalk/a2boot/p8 /usr/local/etc/netatalk/a2boot/ProDOS16\ Image
-			fi
+		if [[ $installAll ]]; then
+			sudo rm -f /usr/local/etc/A2SERVER-version /usr/local/bin/nulib2 /usr/local/bin/unar /usr/local/sbin/macipgw /usr/local/bin/ciopfs /usr/local/etc/netatalk/afppasswd /usr/local/etc/netatalk/a2boot/p8 /usr/local/etc/netatalk/a2boot/ProDOS16\ Image
+		fi
 
-			for _script in $a2serverSubScripts; do
-				"/tmp/a2server-install/$_script"
-			done
-			for _script in $a2serverSubScripts; do
-				rm -f "/tmp/a2server-install/$_script"
-			done
+		for _script in $a2sSubScripts; do
+			"$a2sScriptDir/$_script"
+		done
 
-		else
-			# Local development scripts just run them
-			if [[ $installAll ]]; then
-				sudo rm -f /usr/local/etc/A2SERVER-version /usr/local/bin/nulib2 /usr/local/bin/unar /usr/local/sbin/macipgw /usr/local/bin/ciopfs /usr/local/etc/netatalk/afppasswd /usr/local/etc/netatalk/a2boot/p8 /usr/local/etc/netatalk/a2boot/ProDOS16\ Image
-			fi
-
-			for _script in $a2serverSubScripts; do
-				"$a2server_devel/scripts/$_script"
+		if [[ -z "$a2sDevel" ]]; then
+			for _script in $a2sSubScripts; do
+				rm -f "$a2sScriptDir/$_script"
 			done
 		fi
 

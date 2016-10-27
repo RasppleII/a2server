@@ -7,13 +7,13 @@
 # program (for Apple IIe users, and IIgs users in ProDOS network mode).
 # It also can download and install GS/OS for a network boot configuration.
 
-a2server_devel="$( dirname "${BASH_SOURCE[0]}" )/.."
-if [[ -f "$a2server_devel/.a2server_source" ]]; then
-	pushd $a2server_devel >/dev/null
-	a2server_devel="$PWD"
+a2sDevel="$( dirname "${BASH_SOURCE[0]}" )/.."
+if [[ -f "$a2sDevel/.a2server_source" ]]; then
+	pushd $a2sDevel >/dev/null
+	a2sDevel="$PWD"
 	popd >/dev/null
 else
-	a2server_devel=
+	a2sDevel=
 fi
 
 # Ensure URL we'll use ends in a /
@@ -267,15 +267,16 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 		|| [[ ! -f /usr/local/bin/mkvolinfo ]] \
 		|| [[ ! -f /usr/local/bin/afpsync ]] \
 		|| [[ ! -f /usr/local/bin/cppo ]]; then
-			if [[ -z "$a2server_devel" ]]; then
-				mkdir -p /tmp/a2server-install
-				rm -f /tmp/a2server-install/a2server-2-tools.txt &>/dev/null
-				wget -q -O /tmp/a2server-install/a2server-2-tools.txt "${scriptURL}scripts/a2server-2-tools.txt"
-				chmod ugo+x /tmp/a2server-install/a2server-2-tools.txt
-				/tmp/a2server-install/a2server-2-tools.txt
+			if [[ -z "$a2sDevel" ]]; then
+				a2sScriptDir="/tmp/a2server-install/scripts"
+				mkdir -p "$a2sScriptDir"
+				rm -f "$a2sScriptDir/a2server-2-tools.txt" &>/dev/null
+				wget -q -O "$a2sScriptDir/a2server-2-tools.txt" "${scriptURL}scripts/a2server-2-tools.txt"
+				chmod ugo+x "$a2sScriptDir/a2server-2-tools.txt"
+			fi
+			"$a2sScriptDir/a2server-2-tools.txt"
+			if [[ -z "$a2sDevel" ]]; then
 				rm -f /tmp/a2server-install/a2server-2-tools.txt
-			else
-				"$a2server_devel/scripts/a2server-install/a2server-2-tools.txt"
 			fi
 		fi
 
@@ -537,8 +538,13 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 		echo "A2SERVER: Updating ProDOS 8 Thunderclock driver year table..."
 		mkdir -p /tmp/netboot
 		rm -r /tmp/netboot/* 2> /dev/null
-		wget -qO /tmp/netboot/clock.patch.py "${scriptURL}scripts/clock.patch.py"
-		updateP8YearTables $(python /tmp/netboot/clock.patch.py $(LANG=C date +"%a %m/%d/%y"))
+		if [[ -z $a2sDevel ]]; then
+			p8ClockPatch="/tmp/netboot/clock.patch.py"
+			wget -qO "$p8ClockPatch" "${scriptURL}scripts/clock.patch.py"
+		else
+			p8ClockPatch="$a2sDevel/scripts/clock.patch.py"
+		fi
+		updateP8YearTables $(python $p8ClockPatch $(LANG=C date +"%a %m/%d/%y"))
 
 		gsosInstalled=""
 		if [[ -f "$gsosDir/System/Start.GS.OS" ]]; then
