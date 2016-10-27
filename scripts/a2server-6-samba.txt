@@ -43,7 +43,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupWindowsSharing ]]; then
 		sudo /etc/init.d/samba start &> /dev/null
 
 		workgroup=$(grep -o "^       workgroup = .*$" /etc/samba/smb.conf 2> /dev/null | cut -c 16-)
-		if [[ $workgroup ]]; then
+		if [[ -z "$workgroup" ]]; then
 			workgroup="WORKGROUP"
 		fi
 		if [[ ! $autoAnswerYes ]]; then
