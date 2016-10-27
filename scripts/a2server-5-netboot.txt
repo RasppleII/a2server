@@ -7,6 +7,15 @@
 # program (for Apple IIe users, and IIgs users in ProDOS network mode).
 # It also can download and install GS/OS for a network boot configuration.
 
+a2server_devel="$( dirname "${BASH_SOURCE[0]}" )/.."
+if [[ -f "$a2server_devel/.a2server_source" ]]; then
+	pushd $a2server_devel >/dev/null
+	a2server_devel="$PWD"
+	popd >/dev/null
+else
+	a2server_devel=
+fi
+
 # Ensure URL we'll use ends in a /
 case "$A2SERVER_SCRIPT_URL" in
 	*/) scriptURL="$A2SERVER_SCRIPT_URL" ;;
@@ -258,11 +267,16 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 		|| [[ ! -f /usr/local/bin/mkvolinfo ]] \
 		|| [[ ! -f /usr/local/bin/afpsync ]] \
 		|| [[ ! -f /usr/local/bin/cppo ]]; then
-			rm /tmp/2.tools &> /dev/null
-			wget -q -O /tmp/2.tools "${scriptURL}scripts/a2server-2-tools.txt"
-			chmod ugo+x /tmp/2.tools
-			/tmp/2.tools
-			rm /tmp/2.tools
+			if [[ -z "$a2server_devel" ]]; then
+				mkdir -p /tmp/a2server-install
+				rm -f /tmp/a2server-install/a2server-2-tools.txt &>/dev/null
+				wget -q -O /tmp/a2server-install/a2server-2-tools.txt "${scriptURL}scripts/a2server-2-tools.txt"
+				chmod ugo+x /tmp/a2server-install/a2server-2-tools.txt
+				/tmp/a2server-install/a2server-2-tools.txt
+				rm -f /tmp/a2server-install/a2server-2-tools.txt
+			else
+				"$a2server_devel/scripts/a2server-install/a2server-2-tools.txt"
+			fi
 		fi
 
 		# put BASIC.SYSTEM at root for ProDOS 8 startup
