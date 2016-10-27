@@ -6,18 +6,28 @@
 echo
 
 userPw=$(sudo grep "^$USER" /etc/shadow | cut -f 2 -d ':')
-[[ $userPw == "$(echo 'apple2' | perl -e '$_ = <STDIN>; chomp; print crypt($_, $ARGV[0])' "${userPw%"${userPw#\$*\$*\$}"}")" ]] && isApple2Pw=1 || isApple2Pw=
-[[ $userPw == "$(echo 'raspberry' | perl -e '$_ = <STDIN>; chomp; print crypt($_, $ARGV[0])' "${userPw%"${userPw#\$*\$*\$}"}")" ]] && isRaspberryPw=1 || isRaspberryPw=
+isApple2Pw=
+if [[ $userPw == "$(echo 'apple2' | perl -e '$_ = <STDIN>; chomp; print crypt($_, $ARGV[0])' "${userPw%"${userPw#\$*\$*\$}"}")" ]]; then
+	isApple2Pw=1
+fi
+isRaspberryPw=
+if [[ $userPw == "$(echo 'raspberry' | perl -e '$_ = <STDIN>; chomp; print crypt($_, $ARGV[0])' "${userPw%"${userPw#\$*\$*\$}"}")" ]]; then
+	isRaspberryPw=1
+fi
 
 password="your password"
 [[ $isApple2Pw ]] && password="'apple2'"
 [[ $isRaspberryPw ]] && password="'raspberry'"
 
 isDebian=
-b_release -a 2> /dev/null | grep -q 'Distributor ID:.Debian' && [[ ( -f /etc/debian_version ) && ( $(cut -d . -f 1 < /etc/debian_version) -ge "7" ) ]] && isDebian=1
+if lsb_release -a 2> /dev/null | grep -q 'Distributor ID:.Debian'; then
+	if [[ $(cut -d . -f 1 < /etc/debian_version) -ge "7" ]]; then
+		isDebian=1
+	fi
+fi
 
 if [[ $isDebian ]]; then
-	if { lspci 2> /dev/null | grep -q VirtualBox; }; then
+	if lspci 2>/dev/null | grep -q VirtualBox; then
 		echo "A2SERVER: Disabling VirtualBox console screen blanking..."
 		sudo sed -i 's/^BLANK_DPMS=off/BLANK_DPMS=on/' /etc/kbd/config
 		sudo sed -i 's/^BLANK_TIME=[^0].$/BLANK_TIME=0/' /etc/kbd/config

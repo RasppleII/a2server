@@ -148,27 +148,30 @@ updateP8YearTables () {
 	else
 		# perform patch
 		while (( $i < ${#files[@]} )); do
-			[[ ! -f "${files[$i]}" ]] && { (( i++ )); continue; }
-			[[ $patch1 ]] && echo -n -e ${patch1} | sudo dd of="${files[$i]}" seek=${offset1[$i]} bs=1 conv=notrunc 2> /dev/null
-			[[ $patch2 ]] && echo -n -e ${patch2} | sudo dd of="${files[$i]}" seek=${offset2[$i]} bs=1 conv=notrunc 2> /dev/null
+			if [[ ! -f "${files[$i]}" ]]; then
+				(( i++ ))
+				continue
+			fi
+			if [[ $patch1 ]]; then
+				echo -n -e ${patch1} | sudo dd of="${files[$i]}" seek=${offset1[$i]} bs=1 conv=notrunc 2>/dev/null
+			fi
+			if [[ $patch2 ]]; then
+				echo -n -e ${patch2} | sudo dd of="${files[$i]}" seek=${offset2[$i]} bs=1 conv=notrunc 2>/dev/null
+			fi
 			(( i++ ))
 		done
 		patched=0 # 0 is true
 	fi
 	return $patched
 
-	# echo -n -e "\xb0\xb2\xad\xc1\xf5\xe7\xad\xb1\xb5" | sudo dd of="p8" bs=38 seek=1 conv=notrunc 2> /dev/null
-	# echo -n -e "\x12\x11\x0b\x10\x0f\x0e\x0d" | sudo dd of="p8" bs=3958 seek=1 conv=notrunc 2> /dev/null
-	# echo -n -e "\xb0\xb2\xad\xc1\xf5\xe7\xad\xb1\xb5" | sudo dd of="ProDOS16 Image" bs=3110 seek=1 conv=notrunc 2> /dev/null
-	# echo -n -e "\x12\x11\x0b\x10\x0f\x0e\x0d" | sudo dd of="ProDOS16 Image" bs=7030 seek=1 conv=notrunc 2> /dev/null
-	# echo -n -e "\xb0\xb2\xad\xc1\xf5\xe7\xad\xb1\xb5" | sudo dd of="Apple :2f:2fe Boot Blocks" bs=79 seek=1 conv=notrunc 2> /dev/null
-	# echo -n -e "\x12\x11\x0b\x10\x0f\x0e\x0d" | sudo dd of="Apple :2f:2fe Boot Blocks" bs=7071 seek=1 conv=notrunc 2> /dev/null
-
 	cd "$wd"
 }
 
 # bail out on automated netboot setup unless -b is also specified
-[[ -f /tmp/a2server-autoAnswerYes ]] && autoAnswerYes=1 || autoAnswerYes=
+autoAnswerYes=
+if [[ -f /tmp/a2server-autoAnswerYes ]]; then
+	autoAnswerYes=1
+fi
 
 netbootInstalled=
 if [[ -f /usr/local/etc/netatalk/a2boot/ProDOS16\ Boot\ Blocks && \
@@ -455,7 +458,9 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 						# echo $entryIndex $entryCount ${scriptEntry[@]}
 						action=${scriptEntry[1]:0:1}
 						sourcePathMixed=$(tr ':' '/' <<<  ${scriptEntry[5]})
-						[[ ${sourcePathMixed:0:1} != '/' ]] && sourcePathMixed="${pathPrefix}/$sourcePathMixed"
+						if [[ ${sourcePathMixed:0:1} != '/' ]]; then
+							sourcePathMixed="${pathPrefix}/$sourcePathMixed"
+						fi
 						sourcePath=$sourcePathMixed
 						targetPath=$gsosDir/$(tr ':' '/' <<< ${scriptEntry[6]})
 						# volumeName=$(cut -d/ -f 2 <<< $sourcePath)
@@ -469,15 +474,17 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 							echo "copying: $sourcePathMixed"
 							echo "     to: $targetPath"
 							echo
-							[[ ! -d $targetParent ]] && mkdir -p $targetParent
+							mkdir -p $targetParent
 							cp -p ${gsosDir%/*}$sourcePath $targetPath
-							[[ ! -d $targetParent/.AppleDouble ]] && mkdir -p $targetParent/.AppleDouble
+							mkdir -p $targetParent/.AppleDouble
 							cp -p ${gsosDir%/*}$sourceParent/.AppleDouble/$sourceFile $targetParent/.AppleDouble/$targetFile
 						elif [[ $action == 3 || $action == 4 ]]; then
 							if [[ -f "$targetPath" ]]; then
 								echo "deleting $targetPath"
 								rm "$targetPath"
-								[[ -f $targetParent/.AppleDouble/$targetFile ]] && rm "$targetParent/.AppleDouble/$targetFile"
+								if [[ -f $targetParent/.AppleDouble/$targetFile ]]; then
+									rm "$targetParent/.AppleDouble/$targetFile"
+								fi
 							fi
 						fi
 						(( entryIndex++ ))
@@ -511,17 +518,6 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 			fi
 		fi
 
-		# if [[ ! $autoAnswerYes && (! $gsosInstall || $gsosInstall -lt 2) ]] && ! checkP8YearTables 603; then
-		# 	echo
-		# 	echo -n "Do you want to update the ProDOS 8 Thunderclock year table? "
-		# 	read
-		# fi
-		# if [[ $autoAnswerYes || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
-		# 	updateP8YearTables 603
-		# elif [[ $gsosInstall -ge 2 ]]; then
-		# 	updateP8YearTables 60${gsosInstall}
-		# fi
-
 		# patch ProDOS 8 Thunderclock driver year table based on today's date
 		echo
 		echo "A2SERVER: Updating ProDOS 8 Thunderclock driver year table..."
@@ -531,14 +527,26 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 		updateP8YearTables $(python /tmp/netboot/clock.patch.py $(LANG=C date +"%a %m/%d/%y"))
 
 		gsosInstalled=""
-		[[ -f "$gsosDir/System/Start.GS.OS" ]] && gsosInstalled="GS/OS and "
+		if [[ -f "$gsosDir/System/Start.GS.OS" ]]; then
+			gsosInstalled="GS/OS and "
+		fi
 		p8ToolsInstalled=
-		[[ -f $diskToolsP8Dir/SHRINKIT && -f $diskToolsP8Dir/DSK2FILE && -f $diskToolsP8Dir/SYSUTIL ]] && p8ToolsInstalled=1
+		if [[ -f $diskToolsP8Dir/SHRINKIT && \
+				-f $diskToolsP8Dir/DSK2FILE && \
+				-f $diskToolsP8Dir/SYSUTIL ]]; then
+			p8ToolsInstalled=1
+		fi
 		gsosToolsInstalled=
-		[[ -f $imageToolsDir/Asimov && -f $gsosDir/System/System.Setup/MountIt && -f $imageToolsDir/GSHK ]] && gsosToolsInstalled=1
+		if [[ -f $imageToolsDir/Asimov && \
+				-f $gsosDir/System/System.Setup/MountIt && \
+				-f $imageToolsDir/GSHK ]]; then
+			gsosToolsInstalled=1
+		fi
 		toolsInstalled=
 		if [[ $gsosInstalled ]]; then
-			[[ $gsosToolsInstalled && $p8ToolsInstalled ]] && toolsInstalled=1
+			if [[ $gsosToolsInstalled && $p8ToolsInstalled ]]; then
+				toolsInstalled=1
+			fi
 		else
 			toolsInstalled=$p8ToolsInstalled
 		fi
@@ -713,12 +721,25 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 		fi
 
 		p8CommInstalled=
-		[[ -f $commDir/ProTERM/PROTERM && -f $commDir/Z.Link/Z.LINK && -f $commDir/ADTPro/ADTPRO && -f $commDir/ADTPro/VSDRIVE ]] && p8CommInstalled=1
+		if [[ -f $commDir/ProTERM/PROTERM && \
+				-f $commDir/Z.Link/Z.LINK && \
+				-f $commDir/ADTPro/ADTPRO && \
+				-f $commDir/ADTPro/VSDRIVE ]]; then
+			p8CommInstalled=1
+		fi
 		gsosCommInstalled=
-		[[ -f $commDir/Spectrum/Spectrum && -f $commDir/SAM2/SAM2 && -f $commDir/SAFE2/SAFE2 && -f $commDir/SNAP/SNAP && -f $gsosDir/System/CDevs/TCPIP ]] && gsosCommInstalled=1
+		if [[ -f $commDir/Spectrum/Spectrum && \
+				-f $commDir/SAM2/SAM2 && \
+				-f $commDir/SAFE2/SAFE2 && \
+				-f $commDir/SNAP/SNAP && \
+				-f $gsosDir/System/CDevs/TCPIP ]]; then
+			gsosCommInstalled=1
+		fi
 		commInstalled=
 		if [[ $gsosInstalled ]]; then
-			[[ $gsosCommInstalled && $p8CommInstalled ]] && commInstalled=1
+			if [[ $gsosCommInstalled && $p8CommInstalled ]]; then
+				commInstalled=1
+			fi
 		else
 			commInstalled=$p8CommInstalled
 		fi
@@ -871,7 +892,9 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 					mkdir -p /tmp/netboot/safe2
 					cd /tmp/netboot/safe2
 					if [[ $useExternalURL ]]; then
-						[[ ! $safeUrl ]] && safeUrl="http://www.speccie.co.uk/speccie/software/safe229.bxy"
+						if [[ ! $safeUrl ]]; then
+							safeUrl="http://www.speccie.co.uk/speccie/software/safe229.bxy"
+						fi
 						wget -qO safe2.bxy "$safeUrl"
 						cppo -s -ad safe2.bxy . &> /dev/null
 					fi
@@ -905,7 +928,9 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 					mkdir -p /tmp/netboot/sam2
 					cd /tmp/netboot/sam2
 					if [[ $useExternalURL ]]; then
-						[[ ! $samUrl ]] && samUrl="http://www.speccie.co.uk/speccie/software/sam205.bxy"
+						if [[ ! $samUrl ]]; then
+							samUrl="http://www.speccie.co.uk/speccie/software/sam205.bxy"
+						fi
 						wget -qO sam2.bxy "$samUrl"
 						cppo -s -ad sam2.bxy . &> /dev/null
 					fi
@@ -942,7 +967,9 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 					mkdir -p /tmp/netboot/snap
 					cd /tmp/netboot/snap
 					if [[ $useExternalURL ]]; then
-						[[ ! $snapUrl ]] && snapUrl="http://www.speccie.co.uk/speccie/software/snap118.bxy"
+						if [[ ! $snapUrl ]]; then
+							snapUrl="http://www.speccie.co.uk/speccie/software/snap118.bxy"
+						fi
 						wget -qO snap.bxy "$snapUrl"
 						cppo -s -ad snap.bxy . &> /dev/null
 					fi

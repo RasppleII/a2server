@@ -4,7 +4,10 @@
 # Set up A2SERVER to support Samba (Windows File Sharing)
 # this script can also be used if new shares are introduced
 
-[[ -f /tmp/a2server-autoAnswerYes ]] && autoAnswerYes=1 || autoAnswerYes=
+autoAnswerYes=
+if [[ -f /tmp/a2server-autoAnswerYes ]]; then
+	autoAnswerYes=1
+fi
 
 if [[ ! $autoAnswerYes || -f /tmp/a2server-setupWindowsSharing ]]; then
 
@@ -19,7 +22,9 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupWindowsSharing ]]; then
 		sudo true
 
 		sudo update-rc.d samba defaults &> /dev/null
-		[[ ! -f /etc/init.d/samba ]] && installSamba=1
+		if [[ ! -f /etc/init.d/samba ]]; then
+			installSamba=1
+		fi
 
 		if (( $installSamba )); then
 			if [[ ! -f /tmp/a2server-packageReposUpdated ]]; then
@@ -38,12 +43,17 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupWindowsSharing ]]; then
 		sudo /etc/init.d/samba start &> /dev/null
 
 		workgroup=$(grep -o "^       workgroup = .*$" /etc/samba/smb.conf 2> /dev/null | cut -c 16-)
-		[[ $workgroup ]] || workgroup="WORKGROUP"
+		if [[ $workgroup ]]; then
+			workgroup="WORKGROUP"
+		fi
 		if [[ ! $autoAnswerYes ]]; then
 			echo
 			echo "Enter workgroup name (or press return for '${workgroup}'): "
 			read
-			[[ $REPLY ]] && workgroup=$REPLY
+			# FIXME validation?
+			if [[ $REPLY ]]; then
+				workgroup=$REPLY
+			fi
 		fi
 		sudo sed -i 's/^   workgroup = .*$/   workgroup = '$workgroup'/' /etc/samba/smb.conf 2> /dev/null
 		sudo sed -i 's/^#   security = user/   security = user/' /etc/samba/smb.conf 2> /dev/null
@@ -59,13 +69,15 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupWindowsSharing ]]; then
 			if [[ $(grep $sharename /etc/samba/smb.conf) ]]; then
 				echo "A2SERVER: $sharename is already set up for Windows file sharing."
 			else
-				echo "[$sharename]" | sudo tee -a /etc/samba/smb.conf > /dev/null
-				echo "    path = /srv/A2SERVER/$sharename" | sudo tee -a /etc/samba/smb.conf > /dev/null
-				echo "    browsable = yes" | sudo tee -a /etc/samba/smb.conf > /dev/null
-				echo "    guest ok = yes" | sudo tee -a /etc/samba/smb.conf > /dev/null
-				echo "    read only = no" | sudo tee -a /etc/samba/smb.conf > /dev/null
-				echo "    create mask = 0666" | sudo tee -a /etc/samba/smb.conf > /dev/null
-				echo "    force user = $USER" | sudo tee -a /etc/samba/smb.conf > /dev/null
+				sudo tee -a /etc/samba/smb.conf >/dev/null <<EOF
+[$sharename]
+    path = /srv/A2SERVER/$sharename
+    browsable = yes
+    guest ok = yes
+    read only = no
+    create mask = 0666
+    force user = $USER
+EOF
 				echo "A2SERVER: $sharename has been set up for Windows file sharing."
 			fi
 		done

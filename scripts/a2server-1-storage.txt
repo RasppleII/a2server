@@ -11,21 +11,15 @@ if [[ -d /media/A2SHARED ]]; then
 	[[ ! -d /srv ]] && sudo mkdir -p /srv
 	sudo mv /media/A2SHARED /srv/A2SERVER
 	sudo sed -i 's|/media/A2SHARED|/srv/A2SERVER|g' /usr/local/etc/netatalk/AppleVolumes.default
-	[[ -f /etc/samba/smbd.conf ]] && sudo sed -i 's|/media/A2SHARED|/srv/A2SERVER|g' /etc/samba/smbd.conf
-
+	if [[ -f /etc/samba/smbd.conf ]]; then
+		sudo sed -i 's|/media/A2SHARED|/srv/A2SERVER|g' /etc/samba/smbd.conf
+	fi
 fi
 
-# skip if we're already set up
-if [[ -d /srv/A2SERVER ]]; then
-
-	echo "A2SERVER: Shared volume is already prepared for use."
-
-else
-
+if [[ ! -d /srv/A2SERVER ]]; then
 	echo "A2SERVER: Preparing the shared files volume..."
-
 	sudo mkdir -p /srv/A2SERVER
-
 	sudo chown $USER:$USER /srv/A2SERVER
-
+else
+	echo "A2SERVER: Shared volume is already prepared for use."
 fi

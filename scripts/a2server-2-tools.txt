@@ -22,12 +22,14 @@ arch=
 if [[ -f /usr/bin/raspi-config ]]; then
 	isRpi=1
 	arch='rpi'
-elif lsb_release -a 2> /dev/null | grep -q 'Distributor ID:.Debian' && [[ $(cut -d . -f 1 <<< $debianVersion) -ge "7" ]]; then
-	uname_m="$(uname -m)"
-	if [[ $uname_m == "i686" ]]; then
-		arch='debian_x86'
-	elif [[ $uname_m == "x86_64" ]]; then
-		arch='debian_x64'
+elif lsb_release -a 2> /dev/null | grep -q 'Distributor ID:.Debian'; then
+	if [[ $(cut -d . -f 1 <<< $debianVersion) -ge "7" ]]; then
+		uname_m="$(uname -m)"
+		if [[ $uname_m == "i686" ]]; then
+			arch='debian_x86'
+		elif [[ $uname_m == "x86_64" ]]; then
+			arch='debian_x64'
+		fi
 	fi
 fi
 
@@ -197,16 +199,20 @@ sudo wget -q -O /usr/local/etc/a2serverrc "${scriptURL}scripts/tools/a2serverrc.
 
 # 1.3.0: a2serverrc is now called from /etc/bash.bashrc,
 #   which in turn calls a2server-aliases
-grep 'a2server-aliases' /etc/bash.bashrc > /dev/null && \
-sudo sed -i 's/a2server-aliases/a2serverrc/' /etc/bash.bashrc
-grep 'a2serverrc' /etc/bash.bashrc > /dev/null || \
-echo "source /usr/local/etc/a2serverrc" | sudo tee -a /etc/bash.bashrc > /dev/null
+if grep 'a2server-aliases' /etc/bash.bashrc >/dev/null; then
+	sudo sed -i 's/a2server-aliases/a2serverrc/' /etc/bash.bashrc
+fi
+if ! grep 'a2serverrc' /etc/bash.bashrc >/dev/null; then
+	echo "source /usr/local/etc/a2serverrc" | sudo tee -a /etc/bash.bashrc >/dev/null
+fi
 
 motd="/etc/motd"
 if [[ ! $(grep A2SERVER $motd) ]]; then
-	echo | sudo tee -a $motd > /dev/null
-	echo "Type 'system-shutdown' to turn off A2SERVER." | sudo tee -a $motd > /dev/null
-	echo "Type 'a2server-setup' to configure network boot." | sudo tee -a $motd > /dev/null
-	echo "Type 'a2server-help' for a list of other commands." | sudo tee -a $motd > /dev/null
-	echo | sudo tee -a $motd > /dev/null
+	sudo tee -a $motd >/dev/null <<EOF
+
+Type 'system-shutdown' to turn off A2SERVER.
+Type 'a2server-setup' to configure network boot.
+Type 'a2server-help' for a list of other commands.
+
+EOF
 fi

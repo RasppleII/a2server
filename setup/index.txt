@@ -9,7 +9,7 @@
 # to download and execute, type:
 # wget ivanx.com/a2server/setup; source setup
 
-a2serverVersion="150"
+a2serverVersion="151"
 
 # Ensure URL we'll use ends in a /
 case "$A2SERVER_SCRIPT_URL" in
@@ -27,7 +27,13 @@ isRpi=
 [[ -f /usr/bin/raspi-config ]] && isRpi=1
 
 isDebian=
-lsb_release -a 2> /dev/null | grep -q 'Distributor ID:.Debian' && [[ ( -f /etc/debian_version ) && ( $(cut -d . -f 1 < /etc/debian_version) -ge "7" ) ]] && isDebian=1
+if lsb_release -a 2> /dev/null | grep -q 'Distributor ID:.Debian'; then
+	if [[ -f /etc/debian_version ]]; then
+		if [[ $(cut -d . -f 1 < /etc/debian_version) -ge "7" ]]; then
+			isDebian=1
+		fi
+	fi
+fi
 
 if [ -f /usr/local/etc/A2SERVER-version ]; then
 	installedVersion="$(cat /usr/local/etc/A2SERVER-version)"
@@ -73,13 +79,16 @@ while [[ $1 ]]; do
 		compileAlways="-c"
 		touch /tmp/a2server-compileAlways
 	elif [[ $1 == "-os" || $1 == "os" ]]; then
-		# elif [[ ${1,,} == "rasppleii" || ${1,,} == "raspple" || ${1,,} == "rasappleii" || ${1,,} == "rasapple" || ${1,,} == "raspple2" || ${1,,} == "rasapple2" ]]; then
 		shift
 		updateRasppleII=1
 	elif [[ $1 == "-v" ]]; then
 		shift
 		# Version was already printed
-		[[ $0 == "-bash" ]] && return 1 || exit 1
+		if [[ $0 == "-bash" ]]; then
+			return 1
+		else
+			exit 1
+		fi
 	elif [[ $1 ]]; then
 		echo "options:"
 		echo "-v: display installed and available versions, then exit"
@@ -92,7 +101,11 @@ while [[ $1 ]]; do
 		if [[ $isRpi ]]; then
 			echo "-os: update Raspbian OS, A2CLOUD, A2SERVER, and Apple II Pi"
 		fi
-		[[ $0 == "-bash" ]] && return 1 || exit 1
+		if [[ $0 == "-bash" ]]; then
+			return 1
+		else
+			exit 1
+		fi
 	fi
 done
 
@@ -100,10 +113,14 @@ if [[ $updateRasppleII ]]; then
 	echo "A2SERVER: Updating Raspple II (takes up to an hour)..."
 	wget -qO /tmp/raspbian-update "${A2SERVER_SCRIPT_URL}scripts/raspbian-update.txt"
 	source /tmp/raspbian-update a2cloud a2server $autoAnswerYes $skipRepoUpdate
-	[[ $0 == "-bash" ]] && return 0 || exit 0
+	if [[ $0 == "-bash" ]]; then
+		return 0
+	else
+		exit 0
+	fi
 fi
 
-if { [[ -f /usr/local/etc/A2SERVER-version ]] && (( $(head -c 3 /usr/local/etc/A2SERVER-version) < 110 )); }; then
+if [[ -f /usr/local/etc/A2SERVER-version && $(head -c 3 /usr/local/etc/A2SERVER-version) -lt 110 ]]; then
 	echo
 	echo "WARNING: The current A2SERVER installer scripts haven't been tested for"
 	echo "updating the earlier version of A2SERVER that you have. A fresh install"
@@ -114,7 +131,7 @@ fi
 a2server_update=0
 doSetup=1
 
-if { [[ -f /usr/local/etc/A2SERVER-version ]] && (( $(head -c 3 /usr/local/etc/A2SERVER-version) < 150 )); }; then
+if [[ -f /usr/local/etc/A2SERVER-version && $(head -c 3 /usr/local/etc/A2SERVER-version) -lt 150 ]]; then
 	a2server_update=1
 fi
 
@@ -126,7 +143,6 @@ if [[ $isRpi ]]; then #supported Raspbian? (16-Feb-15, 20-Jun-14, 09-Jan-14, etc
 			-960832a6c2590635216c296b6ee0bebf67b21d50-
 			-2a329e0c7d8ea19c085bac5633aa4fccee0f21be-"
 	[[ "$fwsupported" == *-$fwhash-* ]] && unsupportedOS=
-	# [[ ($fwhash == "8aca5762") || ($fwhash == "462f3e3f476f7b6") || ($fwhash == "c32bc633039cd9") || ($fwhash == "9d34d0475f9") || ($fwhash == "d4f5315cfac4e") || ($fwhash == "6f4a90c8cb8817f") || ($fwhash == "5dd9b4962e") || ($fwhash == "17c8799375") ]] && unsupportedOS=
 elif [[ $isDebian ]]; then # supported Debian?
 	 debianVersion=$(cat /etc/debian_version)
 	 debianSupported="-8.2- -7.9- -7.8- -7.6- -7.3-"
@@ -180,9 +196,11 @@ if (( $doSetup )); then
 
 	if (( $doSetup )); then
 
+		isApple2Pw=
+		isRaspberryPw=
 		userPw=$(sudo grep "^$USER" /etc/shadow | cut -f 2 -d ':')
-		[[ $userPw == "$(echo 'apple2' | perl -e '$_ = <STDIN>; chomp; print crypt($_, $ARGV[0])' "${userPw%"${userPw#\$*\$*\$}"}")" ]] && isApple2Pw=1 || isApple2Pw=
-		[[ $userPw == "$(echo 'raspberry' | perl -e '$_ = <STDIN>; chomp; print crypt($_, $ARGV[0])' "${userPw%"${userPw#\$*\$*\$}"}")" ]] && isRaspberryPw=1 || isRaspberryPw=
+		[[ $userPw == "$(echo 'apple2' | perl -e '$_ = <STDIN>; chomp; print crypt($_, $ARGV[0])' "${userPw%"${userPw#\$*\$*\$}"}")" ]] && isApple2Pw=1
+		[[ $userPw == "$(echo 'raspberry' | perl -e '$_ = <STDIN>; chomp; print crypt($_, $ARGV[0])' "${userPw%"${userPw#\$*\$*\$}"}")" ]] && isRaspberryPw=1
 
 		password="your password"
 		[[ $isApple2Pw ]] && password="'apple2'"

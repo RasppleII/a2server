@@ -32,12 +32,14 @@ arch=
 if [[ -f /usr/bin/raspi-config ]]; then
 	isRpi=1
 	arch='rpi'
-elif lsb_release -a 2> /dev/null | grep -q 'Distributor ID:.Debian' && [[ $(cut -d . -f 1 <<< $debianVersion) -ge "7" ]]; then
+elif lsb_release -a 2> /dev/null | grep -q 'Distributor ID:.Debian'; then
+	if [[ $(cut -d . -f 1 <<< $debianVersion) -ge "7" ]]; then
 	uname_m="$(uname -m)"
-	if [[ $uname_m == "i686" ]]; then
-		arch='debian_x86'
-	elif [[ $uname_m == "x86_64" ]]; then
-		arch='debian_x64'
+		if [[ $uname_m == "i686" ]]; then
+			arch='debian_x86'
+		elif [[ $uname_m == "x86_64" ]]; then
+			arch='debian_x64'
+		fi
 	fi
 fi
 
@@ -54,14 +56,10 @@ if [[ $debianVersion ]]; then
 fi
 
 # skip this if already done
-if [[ -f /usr/local/etc/A2SERVER-version ]] && (( $(head -c 3 /usr/local/etc/A2SERVER-version) >= 101 )); then
-
+if [[ -f /usr/local/etc/A2SERVER-version && $(head -c 3 /usr/local/etc/A2SERVER-version) -ge 101 ]]; then
 	echo "A2SERVER: Netatalk is already installed."
-
 else
-
 	echo "A2SERVER: Installing Netatalk (this will take a while)..."
-
 	# stop Netatalk and samba if running (during upgrade)
 	if [[ $(ps --no-headers -C afpd) ]]; then
 		sudo /etc/init.d/netatalk stop &> /dev/null
@@ -73,25 +71,6 @@ else
 		sudo apt-get -y update
 		touch /tmp/a2server-packageReposUpdated
 	fi
-
-	# not being used as of 1.2.9, but it's available if full URL to .deb package is supplied
-	getOldPackage () {
-		for url in $@; do
-			pkgFile=${url##*/}
-			pkgName=${pkgFile%%_*}
-			if ! dpkg -l $pkgName 2> /dev/null | grep -q '^ii'; then
-				if [[ $useExternalURL ]]; then
-					wget -qO "/tmp/${url##*/}" "$url"
-				fi
-				if [[ $? -ne 0 || ! -f "/tmp/${url##*/}" ]]; then
-					wget -qO "/tmp/${url##*/}" "${binaryURL}external/deb/${url##*/}"
-				fi
-				sudo dpkg -i "/tmp/${url##*/}"
-				sudo apt-get clean
-				rm "/tmp/${url##*/}"
-			fi
-		done
-	}
 
 	compileFromSource=1
 	urls=
@@ -185,7 +164,9 @@ else
 		./configure --enable-debian --enable-ddp --enable-a2boot
 
 		# uninstall Netatalk if already installed
-		[[ -f /usr/local/sbin/afpd ]] && sudo make uninstall
+		if [[ -f /usr/local/sbin/afpd ]]; then
+			sudo make uninstall
+		fi
 
 		# compile and install Netatalk
 		make
@@ -198,7 +179,7 @@ else
 fi
 
 # --- Install MacIPgw
-if ! hash macipgw &> /dev/null; then
+if ! hash macipgw &>/dev/null; then
 	echo "A2SERVER: Installing TCP over AppleTalk (MacIP)..."
 
 	if [[ $arch && ! -f /tmp/a2server-compileAlways ]]; then
@@ -282,12 +263,13 @@ sudo sed -i "s/#AFPD_GUEST=nobody/AFPD_GUEST=$USER/" /etc/default/netatalk
 if [[ ! $(grep '^- -ddp.*uams_randnum.so' /usr/local/etc/netatalk/afpd.conf) ]]; then
 	# set up to allow Guest, Cleartext, RandNum, DHX, and DHX2 login
 	# disable DHX (DHCAST128) on Raspberry Pi, which refuses uams if the config string is too long
-	[[ -f /usr/bin/raspi-config ]] && dhx="" || dhx="uams_dhx.so,"
-	echo -n -e \
-	"- -ddp -tcp -uamlist uams_guest.so,uams_clrtxt.so,uams_randnum.so" \
-	| sudo tee -a /usr/local/etc/netatalk/afpd.conf > /dev/null
-	echo -e ",${dhx}uams_dhx2.so" \
-	| sudo tee -a /usr/local/etc/netatalk/afpd.conf > /dev/null
+	dhx=
+	if [[ ! -f /usr/bin/raspi-config ]]; then
+		dhx="uams_dhx.so,"
+	fi
+	sudo tee -a /usr/local/etc/netatalk/afpd.conf >/dev/null <<EOF
+- -ddp -tcp -uamlist uams_guest.so,uams_clrtxt.so,uams_randnum.so",${dhx}uams_dhx2.so
+EOF
 fi
 
 # replace home folder share and end of file mark with share placeholders
@@ -298,7 +280,6 @@ sudo sed -i 's/^~/#share1\n\n#share2/' \
 sudo sed -i 's/^:DEFAULT/#:DEFAULT/' \
 /usr/local/etc/netatalk/AppleVolumes.default
 
-# if [[ ! $(grep ^eth0 /usr/local/etc/netatalk/atalkd.conf) && ! $(grep ^wlan0 /usr/local/etc/netatalk/atalkd.conf) ]]; then
 if [[ $(tac /usr/local/etc/netatalk/atalkd.conf | sed '/./,$!d' | head -1 | cut -c 1) == "#" ]]; then
 	# enable netatalk on the default network interface
 	# needs -router and -zone to prevent GS/OS AppleShare CDEV crash when used
@@ -310,6 +291,7 @@ fi
 if [[ $isRpi ]]; then
 	# blink LED upon netatalk startup
 	if [[ ! $(grep 'led0' /etc/init.d/netatalk) ]]; then
+		# FIXME Do this ... readably.
 		sudo sed -i ':a;N;$!ba;s/fi\n}/fi\n\n	 # blink LED on Raspberry Pi\n	  ([[ -e \/sys\/class\/leds\/ACT ]] \&\& led=ACT || led=led0; echo none > \/sys\/class\/leds\/$led\/trigger; for i in {1..20}; do echo 1 > \/sys\/class\/leds\/$led\/brightness; sleep 0.25; echo 0 > \/sys\/class\/leds\/$led\/brightness; sleep 0.25; done; echo mmc0 > \/sys\/class\/leds\/$led\/trigger) \&\n}/' /etc/init.d/netatalk
 	fi
 fi
@@ -323,7 +305,7 @@ fi
 
 # 1.3.0: if GSFILES is being shared, make directory if not there
 if grep -q '^/srv/A2SERVER/GSFILES' /usr/local/etc/netatalk/AppleVolumes.default; then
-	[[ -d /srv/A2SERVER/GSFILES ]] || mkdir -p /srv/A2SERVER/GSFILES;
+	mkdir -p /srv/A2SERVER/GSFILES
 fi
 
 # prior to 1.3.0:
@@ -388,8 +370,8 @@ fi
 sudo sed -i \
 	's/^#share2/\/srv\/A2SERVER\/A2FILES\ A2FILES options:prodos\ ea:ad/' \
 		/usr/local/etc/netatalk/AppleVolumes.default
-[[ -d /srv/A2SERVER/A2FILES ]] || mkdir -p /srv/A2SERVER/A2FILES
-[[ -d /srv/A2SERVER/.a2files ]] || mkdir -p /srv/A2SERVER/.a2files
+mkdir -p /srv/A2SERVER/A2FILES
+mkdir -p /srv/A2SERVER/.a2files
 
 # set up ciopfs
 if ! hash ciopfs &> /dev/null; then
@@ -628,7 +610,7 @@ echo "A2SERVER: Netatalk is installed, configured, and running."
 echo
 
 # if atalkd isn't running (no AppleTalk), and this is a Rasbperry Pi:
-if [[ ( ! $(ps aux | grep [a]talkd) ) && ( $isRpi ) ]]; then
+if [[ ( ! $(pgrep atalkd) ) && $isRpi ]]; then
 
 	# if AppleTalk module exists, try to load it
 	if [[ -f /lib/modules/$kernelRelease/kernel/net/appletalk/appletalk.ko ]]; then # module present, but not loaded?
