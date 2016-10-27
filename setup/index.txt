@@ -36,11 +36,10 @@ isRpi=
 [[ -f /usr/bin/raspi-config ]] && isRpi=1
 
 isDebian=
-if lsb_release -a 2> /dev/null | grep -q 'Distributor ID:.Debian'; then
-	if [[ -f /etc/debian_version ]]; then
-		if [[ $(cut -d . -f 1 < /etc/debian_version) -ge "7" ]]; then
-			isDebian=1
-		fi
+if [[ "$(lsb_release -ds)" = Debian* ]]; then
+	debianVersion="$(lsb_release -rs)"
+	if [[ "$debianVersion" -ge 7 || $debianVersion == [a-z]* ]]; then
+		isDebian=1
 	fi
 fi
 

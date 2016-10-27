@@ -16,14 +16,14 @@ esac
 useExternalURL=1
 [[ $A2SERVER_NO_EXTERNAL ]] && useExternalURL=
 
-debianVersion=$(cat /etc/debian_version 2> /dev/null)
+debianVersion="$(lsb_release -rs)"
 isRpi=
 arch=
 if [[ -f /usr/bin/raspi-config ]]; then
 	isRpi=1
 	arch='rpi'
-elif lsb_release -a 2> /dev/null | grep -q 'Distributor ID:.Debian'; then
-	if [[ $(cut -d . -f 1 <<< $debianVersion) -ge "7" ]]; then
+elif [[ "$(lsb_release -ds)" = Debian* ]]; then
+	if [[ "$debianVersion" -ge 7 || $debianVersion == [a-z]* ]]; then
 		uname_m="$(uname -m)"
 		if [[ $uname_m == "i686" ]]; then
 			arch='debian_x86'
@@ -33,17 +33,7 @@ elif lsb_release -a 2> /dev/null | grep -q 'Distributor ID:.Debian'; then
 	fi
 fi
 
-debianName=
-if [[ $debianVersion ]]; then
-	debianMajor=$(cut -d . -f 1 <<< $debianVersion)
-	if [[ $debianMajor == "8" ]]; then
-		debianName="jessie"
-	elif [[ $debianMajor == "7" ]]; then
-		debianName="wheezy"
-	else
-		debianName="unknown"
-	fi
-fi
+debianName=$(lsb_release -cs)
 
 echo "A2SERVER: Installing A2SERVER tools..."
 
@@ -123,7 +113,7 @@ if ! hash unar &> /dev/null; then
 	fi
 
 	# jessie and later: Just use the unar package
-	if [[ $debianMajor -ge 8 ]]; then
+	if [[ "$debianName" != "wheezy" ]]; then
 		sudo apt-get -y install unar
 		sudo apt-get clean
 	fi

@@ -19,9 +19,8 @@ password="your password"
 [[ $isApple2Pw ]] && password="'apple2'"
 [[ $isRaspberryPw ]] && password="'raspberry'"
 
-isDebian=
-if lsb_release -a 2> /dev/null | grep -q 'Distributor ID:.Debian'; then
-	if [[ $(cut -d . -f 1 < /etc/debian_version) -ge "7" ]]; then
+if [[ "$(lsb_release -ds)" = Debian* ]]; then
+	if [[ "$debianVersion" -ge 7 || $debianVersion == [a-z]* ]]; then
 		isDebian=1
 	fi
 fi
