@@ -47,6 +47,7 @@ echo "A2SERVER: Installing A2SERVER tools..."
 
 # delete older nulib2 which doesn't correctly handle zero-length forks in GSHK-created archives
 if hash nulib2 &> /dev/null; then
+	# FIXME make this sed more robust
 	nulib2version=$(nulib2 | sed -n 2p | sed 's|^.*v\([0-9]\)\.\([0-9]\)\.\([0-9]\).*$|\1\2\3|' 2> /dev/null)
 	if (( $nulib2version < 310 )); then
 		sudo apt-get -y purge nulib2 &> /dev/null

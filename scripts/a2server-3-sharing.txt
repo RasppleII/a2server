@@ -177,6 +177,7 @@ else
 		#	and the AsanteTalk bridge consistently starts up in AppleTalk Phase 2
 		#	and the Dayna bridge doesn't crash GS/OS
 		# props to Steven Hirsch for these
+		# FIXME do this as a patch file
 		sed -i ':a;N;$!ba;s/case FILPBIT_ATTR :\n *change_mdate = 1;\n/case FILPBIT_ATTR :\n/g' etc/afpd/file.c
 		sed -i 's/rtmp->rt_iface == iface/rtmp->rt_iface != iface/g' etc/atalkd/main.c
 
@@ -246,6 +247,7 @@ sudo sed -i 's/bin\/sh/bin\/bash/' /etc/init.d/netatalk
 # enable AppleTalk networking support in Netatalk, and run in background
 sudo sed -i 's/#ATALKD_RUN=no/ATALKD_RUN=yes/' /etc/default/netatalk
 sudo sed -i 's/#ATALK_BGROUND=no/ATALK_BGROUND=yes/' /etc/default/netatalk
+# FIXME do this as a patch file
 if [[ ! $(grep 'kernelRelease' /etc/init.d/netatalk) ]]; then
 	sudo sed -i 's@\(\tif \[ x\"$ATALKD_RUN\)@\n\t# check for valid AppleTalk kernel module\n\t[[ $ATALKD_RUN == "yes" ]] \&\& { kernelRelease=$(uname -r); kernelMajor=$(cut -d "." -f 1  <<< $kernelRelease); kernelMinor=$(cut -d "." -f 2  <<< $kernelRelease | sed '"'"'s/\\(^[0-9]*\\)[^0-9].*$/\\1/'"'"'); kernelPatch=$(cut -d "." -f 3- <<< $kernelRelease | sed '"'"'s/\\(^[0-9]*\\)[^0-9].*$/\\1/'"'"'); [[ ( $kernelMajor -eq 3 \&\& $kernelMinor -ge 12 \&\& $kernelMinor -le 15 ) \&\& ( ! ( -f /usr/bin/raspi-config \&\& $kernelMinor -eq 12 \&\& $kernelPatch -ge 25 ) ) \&\& ( ( ! -f /lib/modules/$kernelRelease/kernel/net/appletalk/appletalk.ko ) || $(sha1sum /lib/modules/$kernelRelease/kernel/net/appletalk/appletalk.ko | cut -f 1 -d " ") != "ecb239fc084c36de93f6926e7749b80f6024f269" ) ]] \&\& { ATALKD_RUN=no; echo "[AppleTalk networking is not available.]" 1>\&2; } }\n\n\1@' /etc/init.d/netatalk
 fi
@@ -255,6 +257,7 @@ sudo sed -i 's/-n "Restarting Netatalk Daemons (this will take a while)"/"Restar
 
 # enable MacIPgw support after launching atalkd
 if ! grep -q -i 'macipgw' /etc/init.d/netatalk; then
+	# FIXME do this as a patch file
 	sudo sed -i ':a;N;$!ba;s@\(echo -n " atalkd"\)\(.*# prepare\)@\1\n\n\t\t# start MacIPgw (TCP over AppleTalk) service\n\t\tps aux | grep -q "[m]acipgw" \&\& sudo killall macipgw 2> /dev/null || :\n\t\tatalkd_interface=$(grep "^[^ #]" /etc/netatalk/atalkd.conf | tail -1 | cut -d " " -f 1)\n\t\tsysctl -w net.ipv4.ip_forward=1 > /dev/null\n\t\tmacipgw -n 8.8.8.8 192.168.151.0 255.255.255.0\n\t\t/sbin/iptables -t nat -A POSTROUTING -o ${atalkd_interface} -j MASQUERADE\n\t\t/sbin/iptables -A FORWARD -i ${atalkd_interface} -o tun0 -m state --state RELATED,ESTABLISHED -j ACCEPT\n\t\t/sbin/iptables -A FORWARD -i tun1 -o ${atalkd_interface} -j ACCEPT\n\n\t\techo -n " macipgw"\n\2@' /etc/init.d/netatalk
 	sudo sed -i 's@\(start-stop-daemon --stop --quiet --oknodo --exec /usr/local/sbin/atalkd.*$\)@\1\n					  echo -n " macipgw"\n			  sudo killall macipgw 2> /dev/null@' /etc/init.d/netatalk
 fi
@@ -714,6 +717,21 @@ if [[ ! $(dpkg -l avahi-daemon 2> /dev/null | grep ^ii) || ! $(dpkg -l libnss-md
 fi
 sudo sed -i 's/^\(hosts.*\)$/\1 mdns/' /etc/nsswitch.conf
 if [[ ! -f /etc/avahi/services/afpd.service && ! -f /etc/avahi/services/afpd.service_disabled ]]; then
-	echo -e '<?xml version="1.0" standalone="no"?><!--*-nxml-*-->\n<!DOCTYPE service-group SYSTEM "avahi-service.dtd">\n<service-group>\n	 <name replace-wildcards="yes">%h</name>\n	  <service>\n		 <type>_afpovertcp._tcp</type>\n		<port>548</port>\n	  </service>\n	  <service>\n		 <type>_device-info._tcp</type>\n		 <port>0</port>\n		 <txt-record>model=MacPro</txt-record>\n	</service>\n</service-group>' | sudo tee /etc/avahi/services/afpd.service > /dev/null
+	sudo tee /etc/avahi/services/afpd.service >/dev/null <<EOF
+<?xml version="1.0" standalone="no"?><!--*-nxml-*-->
+<!DOCTYPE service-group SYSTEM "avahi-service.dtd">
+<service-group>
+<name replace-wildcards="yes">%h</name>
+  <service>
+    <type>_afpovertcp._tcp</type>
+    <port>548</port>
+  </service>
+    <service>
+    <type>_device-info._tcp</type>
+    <port>0</port>
+    <txt-record>model=MacPro</txt-record>
+  </service>
+</service-group>
+EOF
 fi
 sudo /etc/init.d/avahi-daemon restart &> /dev/null
