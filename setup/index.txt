@@ -9,7 +9,7 @@
 # to download and execute, type:
 # wget ivanx.com/a2server/setup; source setup
 
-a2serverVersion="151"
+a2serverVersion="1.5.1"
 
 # Ensure URL we'll use ends in a /
 case "$A2SERVER_SCRIPT_URL" in
@@ -35,8 +35,12 @@ if lsb_release -a 2> /dev/null | grep -q 'Distributor ID:.Debian'; then
 	fi
 fi
 
-if [ -f /usr/local/etc/A2SERVER-version ]; then
-	installedVersion="$(cat /usr/local/etc/A2SERVER-version)"
+if [[ -f /usr/local/etc/A2SERVER-version ]]; then
+	read installedVersion </usr/local/etc/A2SERVER-version
+    if [[ $installedVersion != *.*.* ]]; then
+		# Deal with old three-digit version
+        installedVersion="${installedVersion:0:1}.${installedVersion:1:1}.${installedVersion:2}"
+    fi
 fi
 echo "A2SERVER version available: $a2serverVersion"
 echo "A2SERVER version installed: ${installedVersion:=None}"

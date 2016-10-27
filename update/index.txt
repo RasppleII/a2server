@@ -10,9 +10,13 @@ esac
 currentVersion=$(wget -qO- "${scriptURL}setup/index.txt" | grep '^a2serverVersion' | cut -d '"' -f 2)
 
 if [[ -f /usr/local/etc/A2SERVER-version ]]; then
-	installedVersion=$(cat /usr/local/etc/A2SERVER-version)
+	read installedVersion </usr/local/etc/A2SERVER-version
+    if [[ $installedVersion != *.*.* ]]; then
+		# Deal with old three-digit version
+        installedVersion="${installedVersion:0:1}.${installedVersion:1:1}.${installedVersion:2}"
+    fi
 else
-	installedVersion=100
+	installedVersion="1.0.0"
 fi
 
 autoAnswerYes=

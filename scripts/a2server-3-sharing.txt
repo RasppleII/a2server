@@ -56,9 +56,10 @@ if [[ $debianVersion ]]; then
 fi
 
 # skip this if already done
-if [[ -f /usr/local/etc/A2SERVER-version && $(head -c 3 /usr/local/etc/A2SERVER-version) -ge 101 ]]; then
-	echo "A2SERVER: Netatalk is already installed."
-else
+if [[ -f /usr/local/etc/A2SERVER-version ]]; then
+	read a2sVersion </usr/local/etc/A2SERVER-version
+fi
+if [[ $a2sVersion = *.*.* || $a2sVersion -ge 101]]; then
 	echo "A2SERVER: Installing Netatalk (this will take a while)..."
 	# stop Netatalk and samba if running (during upgrade)
 	if [[ $(ps --no-headers -C afpd) ]]; then
@@ -176,7 +177,10 @@ else
 		cd
 		rm -rf /tmp/netatalk
 	fi
+else
+	echo "A2SERVER: Netatalk is already installed."
 fi
+unset a2sVersion
 
 # --- Install MacIPgw
 if ! hash macipgw &>/dev/null; then
