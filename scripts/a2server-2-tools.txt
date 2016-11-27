@@ -182,7 +182,7 @@ else
 	echo "A2SERVER: unzip has already been installed."
 fi
 
-a2sTools="afpsync afptype mkatinit mkvolinfo cppo"
+a2sTools="afpsync afptype mkatinit mkvolinfo cppo raspbian-update"
 a2sHelp="a2server-help.txt"
 a2sConfScripts="a2server-aliases a2serverrc"
 if [[ -z "$a2sDevel" ]]; then
