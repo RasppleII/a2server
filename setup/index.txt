@@ -6,9 +6,6 @@
 # netatalk configured for Apple II use on Debian or Raspbian.
 # more info is at http://ivanx.com/a2server
 
-# to download and execute, type:
-# wget ivanx.com/a2server/setup; source setup
-
 a2serverVersion="1.5.1"
 
 a2sDevel="$( dirname "${BASH_SOURCE[0]}" )/.."

@@ -224,15 +224,15 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 			cd /tmp/netboot
 
 			if [[ $useExternalURL ]]; then
-				wget --max-redirect 0 -qO Disk_7_of_7-Apple_II_Setup.sea.bin ${gsosURL}Disk_7_of_7-Apple_II_Setup.sea.bin
+				wget --max-redirect 0 -qO Disk_7_of_7-Apple_II_Setup.sea.bin "${gsosURL}Disk_7_of_7-Apple_II_Setup.sea.bin"
 				unar -k skip Disk_7_of_7-Apple_II_Setup.sea.bin &> /dev/null
 				if (( $? != 0 )); then
-					wget -qO Disk_7_of_7-Apple_II_Setup.sea.bin ${gsosBackupURL}Disk_7_of_7-Apple_II_Setup.sea.bin
+					wget -qO Disk_7_of_7-Apple_II_Setup.sea.bin "${gsosBackupURL}Disk_7_of_7-Apple_II_Setup.sea.bin"
 					unar -k skip Disk_7_of_7-Apple_II_Setup.sea.bin &> /dev/null
 				fi
 			fi
 			if [[ ! -f 'Disk 7 of 7-Apple II Setup.sea' ]]; then
-				wget -qO Disk_7_of_7-Apple_II_Setup.sea.bin ${binaryURL}external/appleii/gsos601/Disk_7_of_7-Apple_II_Setup.sea.bin
+				wget -qO Disk_7_of_7-Apple_II_Setup.sea.bin "${binaryURL}external/appleii/gsos601/Disk_7_of_7-Apple_II_Setup.sea.bin"
 				unar -k skip Disk_7_of_7-Apple_II_Setup.sea.bin &> /dev/null
 			fi
 			truncate -s 819284 'Disk 7 of 7-Apple II Setup.sea'
@@ -597,11 +597,11 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 					echo
 					cd /tmp/netboot
 					if [[ $useExternalURL ]]; then
-						wget -qO Asimov.shk http://www.ninjaforce.com/downloads/Asimov.shk
+						wget -qO Asimov.shk "http://www.ninjaforce.com/downloads/Asimov.shk"
 						nulib2 -x -s Asimov.shk &> /dev/null
 					fi
 					if [[ ! -d Asimov ]]; then
-						wget -qO Asimov.shk ${binaryURL}external/appleii/Asimov.shk
+						wget -qO Asimov.shk "${binaryURL}external/appleii/Asimov.shk"
 						nulib2 -x -s Asimov.shk &> /dev/null
 					fi
 					cp -p Asimov/Asimov $imageToolsDir/Asimov
@@ -619,14 +619,14 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 					mkdir -p /tmp/netboot/gshk
 					cd /tmp/netboot/gshk
 					if [[ $useExternalURL ]]; then
-						wget -qO gshk11.sea http://www.nulib.com/library/gshk11.sea
+						wget -qO gshk11.sea "http://www.nulib.com/library/gshk11.sea"
 						if (( $? != 0 )); then
-							wget -qO gshk11.sea http://web.archive.org/web/20131031160750/http://nulib.com/library/gshk11.sea
+							wget -qO gshk11.sea "http://web.archive.org/web/20131031160750/http://nulib.com/library/gshk11.sea"
 						fi
 						nulib2 -x -s gshk11.sea &> /dev/null
 					fi
 					if [[ ! -f GSHK ]]; then
-						wget -qO gshk11.sea ${binaryURL}external/appleii/gshk11.sea
+						wget -qO gshk11.sea "${binaryURL}external/appleii/gshk11.sea"
 						nulib2 -x -s gshk11.sea &> /dev/null
 					fi
 					cp -p GSHK $imageToolsDir/GSHK
@@ -645,15 +645,15 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 					mkdir -p /tmp/netboot/mountit
 					cd /tmp/netboot/mountit
 					if [[ $useExternalURL ]]; then
-						wget -q -O MOUNTIT.SHK http://www.brutaldeluxe.fr/products/apple2gs/MOUNTIT.SHK
+						wget -q -O MOUNTIT.SHK "http://www.brutaldeluxe.fr/products/apple2gs/MOUNTIT.SHK"
 						if (( $? != 0 )); then
-							wget -q -O http://web.archive.org/web/20150201044930/http://brutaldeluxe.fr/products/apple2gs/MOUNTIT.SHK
+							wget -q -O "http://web.archive.org/web/20150201044930/http://brutaldeluxe.fr/products/apple2gs/MOUNTIT.SHK"
 						fi
 						cppo -s -ad MOUNTIT.SHK System:System.Setup:MountIt . &> /dev/null
 						cppo -s -ad MOUNTIT.SHK ReadMe . &> /dev/null
 					fi
 					if [[ ! -f ReadMe ]]; then
-						wget -qO MOUNTIT.SHK ${binaryURL}external/appleii/MOUNTIT.SHK
+						wget -qO MOUNTIT.SHK "${binaryURL}external/appleii/MOUNTIT.SHK"
 						cppo -s -ad MOUNTIT.SHK System:System.Setup:MountIt . &> /dev/null
 						cppo -s -ad MOUNTIT.SHK ReadMe . &> /dev/null
 					fi
@@ -678,14 +678,14 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 				echo
 				cd /tmp/netboot
 				if [[ $useExternalURL ]]; then
-					wget -qO shrinkit.sdk http://www.nulib.com/library/shrinkit.sdk
+					wget -qO shrinkit.sdk "http://www.nulib.com/library/shrinkit.sdk"
 					if (( $? != 0 )); then
-						wget -qO shrinkit.sdk http://web.archive.org/web/20131031160750/http://www.nulib.com/library/shrinkit.sdk
+						wget -qO shrinkit.sdk "http://web.archive.org/web/20131031160750/http://www.nulib.com/library/shrinkit.sdk"
 					fi
 					nulib2 -x -s -e shrinkit.sdk &> /dev/null
 				fi
 				if [[ ! -f "SHRINKIT#000118i" ]]; then
-					wget -qO shrinkit.sdk ${binaryURL}external/appleii/shrinkit.sdk
+					wget -qO shrinkit.sdk "${binaryURL}external/appleii/shrinkit.sdk"
 					nulib2 -x -s -e shrinkit.sdk &> /dev/null
 				fi
 				cppo -s -ad "SHRINKIT#000118i" /SHRINKIT/SHRINKIT $diskToolsP8Dir &> /dev/null
@@ -700,11 +700,11 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 				echo
 				cd /tmp/netboot
 				if [[ $useExternalURL ]]; then
-					wget -q -O dsk2file.shk http://www.dwheeler.com/6502/oneelkruns/dsk2file.zip
+					wget -q -O dsk2file.shk "http://www.dwheeler.com/6502/oneelkruns/dsk2file.zip"
 					nulib2 -x -s dsk2file.shk &> /dev/null
 				fi
 				if [[ ! -f DSK2FILE58 ]]; then
-					wget -qO dsk2file.shk ${binaryURL}external/appleii/dsk2file.shk
+					wget -qO dsk2file.shk "${binaryURL}external/appleii/dsk2file.shk"
 					nulib2 -x -s dsk2file.shk &> /dev/null
 				fi
 				cp -p DSK2FILE58 $diskToolsP8Dir/DSK2FILE
@@ -719,14 +719,14 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 				echo
 				cd /tmp/netboot
 				if [[ $useExternalURL ]]; then
-					wget --max-redirect 0 -qO Apple_II_System_Disk_3.2.sea.bin http://download.info.apple.com/Apple_Support_Area/Apple_Software_Updates/English-North_American/Apple_II/Apple_II_Supplemental/Apple_II_System_Disk_3.2.sea.bin
+					wget --max-redirect 0 -qO Apple_II_System_Disk_3.2.sea.bin "http://download.info.apple.com/Apple_Support_Area/Apple_Software_Updates/English-North_American/Apple_II/Apple_II_Supplemental/Apple_II_System_Disk_3.2.sea.bin"
 					if (( $? != 0 )); then
-						wget -qO Apple_II_System_Disk_3.2.sea.bin http://archive.org/download/download.info.apple.com.2012.11/download.info.apple.com.2012.11.zip/download.info.apple.com%2FApple_Support_Area%2FApple_Software_Updates%2FEnglish-North_American%2FApple_II%2FApple_II_Supplemental%2FApple_II_System_Disk_3.2.sea.bin
+						wget -qO Apple_II_System_Disk_3.2.sea.bin "http://archive.org/download/download.info.apple.com.2012.11/download.info.apple.com.2012.11.zip/download.info.apple.com%2FApple_Support_Area%2FApple_Software_Updates%2FEnglish-North_American%2FApple_II%2FApple_II_Supplemental%2FApple_II_System_Disk_3.2.sea.bin"
 					fi
 					unar -k skip Apple_II_System_Disk_3.2.sea.bin &> /dev/null
 				fi
 				if [[ ! -f 'Apple II System Disk 3.2.sea' ]]; then
-					wget -qO Apple_II_System_Disk_3.2.sea.bin ${binaryURL}external/appleii/Apple_II_System_Disk_3.2.sea.bin
+					wget -qO Apple_II_System_Disk_3.2.sea.bin "${binaryURL}external/appleii/Apple_II_System_Disk_3.2.sea.bin"
 					unar -k skip Apple_II_System_Disk_3.2.sea.bin &> /dev/null
 				fi
 				truncate -s 819284 'Apple II System Disk 3.2.sea'
@@ -785,7 +785,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 
 				unset safeUrl samUrl snapUrl safeVer samVer snapVer
 				if [[ $useExternalURL ]]; then
-					html=$(wget -qO- http://speccie.co.uk/speccie/Site/Download_Centre_files/widget1_markup.html)
+					html=$(wget -qO- "http://speccie.co.uk/speccie/Site/Download_Centre_files/widget1_markup.html")
 					safeUrl=$(echo "$html" | grep -i 'safe2.*bxy' | tr '<>' '\n' | grep href | cut -d '=' -f 2 | tr -d '"')
 					samUrl=$(echo "$html" | grep -i 'sam2.*bxy' | tr '<>' '\n' | grep href | cut -d '=' -f 2 | tr -d '"')
 					snapUrl=$(echo "$html" | grep -i 'snap.*bxy' | tr '<>' '\n' | grep href | cut -d '=' -f 2 | tr -d '"')
@@ -809,11 +809,11 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 					mkdir -p /tmp/netboot/spectrum
 					cd /tmp/netboot/spectrum
 					if [[ $useExternalURL ]]; then
-						wget -qO spectrum_gold_2mg.zip http://www.speccie.co.uk/speccie/software/spectrum_gold_2mg.zip
+						wget -qO spectrum_gold_2mg.zip "http://www.speccie.co.uk/speccie/software/spectrum_gold_2mg.zip"
 						unzip spectrum_gold_2mg.zip Spectrum.Gold.2mg &> /dev/null
 					fi
 					if [[ ! -f Spectrum.Gold.2mg || $(wc -c < Spectrum.Gold.2mg) -eq 0 ]]; then
-						wget -qO spectrum_gold_2mg.zip ${binaryURL}external/appleii/spectrum_gold_2mg.zip
+						wget -qO spectrum_gold_2mg.zip "${binaryURL}external/appleii/spectrum_gold_2mg.zip"
 						unzip spectrum_gold_2mg.zip Spectrum.Gold.2mg &> /dev/null
 					fi
 					cppo -s -ad Spectrum.Gold.2mg . &> /dev/null
@@ -851,25 +851,25 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 					cd /tmp/netboot/marinetti
 
 					# Marinetti 3.0b1 -- had to repackage because installer is GS/OS self-contained app
-					wget -qO MarinettiB1.SHK ${binaryURL}appleii/MarinettiB1.SHK
+					wget -qO MarinettiB1.SHK "${binaryURL}appleii/MarinettiB1.SHK"
 					cppo -ad -s -n MarinettiB1.SHK $gsosDir > /dev/null
 
 					# TCP/IP update (3.0b8)
 					if [[ $useExternalURL ]]; then
-						wget -qO Marinetti3.0b8.po http://www.a2retrosystems.com/downloads/Marinetti3.0b8.po
+						wget -qO Marinetti3.0b8.po "http://www.a2retrosystems.com/downloads/Marinetti3.0b8.po"
 					fi
 					if [[ $? != 0 || ! -f Marinetti3.0b8.po || $(wc -c < Marinetti3.0b8.po) != "819200" ]]; then
-						wget -qO Marinetti3.0b8.po ${binaryURL}external/appleii/Marinetti3.0b8.po
+						wget -qO Marinetti3.0b8.po "${binaryURL}external/appleii/Marinetti3.0b8.po"
 					fi
 					cppo -ad Marinetti3.0b8.po /MARINETTI3.0B8/TCPIP $gsosDir/System/System.Setup > /dev/null
 					cppo -ad Marinetti3.0b8.po /MARINETTI3.0B8/CHANGELOG.3.0B8 $commDir/Marinetti > /dev/null
 
 					# PPP Scripted Link Layer update (1.3d4)
 					if [[ $useExternalURL ]]; then
-						wget -qO PPPX.1.3d4.SHK http://www.apple2.org/marinetti/PPPX.1.3d4.SHK
+						wget -qO PPPX.1.3d4.SHK "http://www.apple2.org/marinetti/PPPX.1.3d4.SHK"
 					fi
 					if [[ $? != 0 || ! -f PPPX.1.3d4.SHK || $(wc -c < PPPX.1.3d4.SHK) != "22068" ]]; then
-						wget -qO PPPX.1.3d4.SHK ${binaryURL}external/appleii/PPPX.1.3d4.SHK
+						wget -qO PPPX.1.3d4.SHK "${binaryURL}external/appleii/PPPX.1.3d4.SHK"
 					fi
 					cppo -ad -s PPPX.1.3d4.SHK . > /dev/null
 					cd PPPX.1.3d4
@@ -881,24 +881,24 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 
 					# Uthernet Link Layer
 					if [[ $useExternalURL ]]; then
-						wget -qO uthernetll.bxy http://www.speccie.co.uk/speccie/software/uthernetll.bxy
+						wget -qO uthernetll.bxy "http://www.speccie.co.uk/speccie/software/uthernetll.bxy"
 					fi
 					if [[ $? != 0 || ! -f uthernetll.bxy || $(wc -c < uthernetll.bxy) -eq 0 ]]; then
-						wget -qO uthernetll.bxy ${binaryURL}external/appleii/uthernetll.bxy
+						wget -qO uthernetll.bxy "${binaryURL}external/appleii/uthernetll.bxy"
 					fi
 					cppo -ad -s -n uthernetll.bxy $gsosDir/System/TCPIP > /dev/null
 
 					# Uthernet II Link Layer
 					if [[ $useExternalURL ]]; then
-						wget -qO uthernet2ll.bxy http://www.speccie.co.uk/speccie/software/uthernet2ll.bxy
+						wget -qO uthernet2ll.bxy "http://www.speccie.co.uk/speccie/software/uthernet2ll.bxy"
 					fi
 					if [[ $? != 0 || ! -f uthernet2ll.bxy || $(wc -c < uthernet2ll.bxy) -eq 0 ]]; then
-						wget -qO uthernet2ll.bxy ${binaryURL}external/appleii/uthernet2ll.bxy
+						wget -qO uthernet2ll.bxy "${binaryURL}external/appleii/uthernet2ll.bxy"
 					fi
 					cppo -ad -s -n uthernet2ll.bxy $gsosDir/System/TCPIP > /dev/null
 
 					# MacIP Link Layer settings for A2SERVER
-					wget -qO- ${binaryURL}macip-prefs.tgz | tar Pxz
+					wget -qO- "${binaryURL}macip-prefs.tgz" | tar Pxz
 
 					afpsync -v $gsosDir > /dev/null
 				fi
@@ -919,7 +919,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 						cppo -s -ad safe2.bxy . &> /dev/null
 					fi
 					if [[ ! -f SAFE2.Archive/Safe2 ]]; then
-						wget -qO safe2.bxy ${binaryURL}external/appleii/safe2.bxy
+						wget -qO safe2.bxy "${binaryURL}external/appleii/safe2.bxy"
 						cppo -s -ad safe2.bxy . &> /dev/null
 					fi
 					cd SAFE2.Archive
@@ -933,7 +933,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 					cpAD TimeZone/Tool056 $gsosDir/System/Tools
 					rm -r $gsosDir/System/Desk.Accs/Help.Files/SAFE2 2> /dev/null
 					mv Help/Help.Files/SAFE2 $gsosDir/System/Desk.Accs/Help.Files
-					wget -qO- ${binaryURL}safe2-setup.tgz | tar Pzx
+					wget -qO- "${binaryURL}safe2-setup.tgz" | tar Pzx
 
 					afpsync -v $gsosDir > /dev/null
 				fi
@@ -955,7 +955,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 						cppo -s -ad sam2.bxy . &> /dev/null
 					fi
 					if [[ ! -f SAM2.Archive/SAM2/SAM2 ]]; then
-						wget -qO sam2.bxy ${binaryURL}external/appleii/sam2.bxy
+						wget -qO sam2.bxy "${binaryURL}external/appleii/sam2.bxy"
 						cppo -s -ad sam2.bxy . &> /dev/null
 					fi
 					cd SAM2.Archive
@@ -989,7 +989,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 						cppo -s -ad snap.bxy . &> /dev/null
 					fi
 					if [[ ! -f SNAP.Archive/SNAP ]]; then
-						wget -qO snap.bxy ${binaryURL}external/appleii/snap.bxy
+						wget -qO snap.bxy "${binaryURL}external/appleii/snap.bxy"
 						cppo -s -ad snap.bxy . &> /dev/null
 					fi
 					cd SNAP.Archive
@@ -1002,7 +1002,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 					cpAD Quick.Start $commDir/SNAP
 					rm -r $gsosDir/System/Desk.Accs/Help.Files/SNAP 2> /dev/null
 					mv Help/Help.Files/SNAP $gsosDir/System/Desk.Accs/Help.Files
-					wget -qO- ${binaryURL}snap-setup.tgz | tar Pzx
+					wget -qO- "${binaryURL}snap-setup.tgz" | tar Pzx
 
 					afpsync -v $gsosDir > /dev/null
 				fi

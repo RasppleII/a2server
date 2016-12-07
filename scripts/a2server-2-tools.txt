@@ -146,11 +146,11 @@ if ! hash unar &> /dev/null; then
 			mkdir /tmp/unar
 			cd /tmp/unar
 			if [[ $useExternalURL ]]; then
-				wget -O unar-1.8.1.zip https://github.com/incbee/Unarchiver/archive/unar-1.8.1.zip
+				wget -O unar-1.8.1.zip "https://github.com/incbee/Unarchiver/archive/unar-1.8.1.zip"
 				unzip -o unar-1.8.1.zip &> /dev/null
 			fi
 			if [ ! -d *Unarchiver*/XADMaster ]; then # need single bracket for glob
-				wget -O unar-1.8.1.zip ${binaryURL}external/source/unar-1.8.1.zip
+				wget -O unar-1.8.1.zip "${binaryURL}external/source/unar-1.8.1.zip"
 				unzip -o unar-1.8.1.zip &> /dev/null
 			fi
 			cd *Unarchiver*/XADMaster

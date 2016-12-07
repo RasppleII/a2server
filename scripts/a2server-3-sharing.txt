@@ -208,7 +208,7 @@ echo "A2SERVER: Configuring Netatalk..."
 # if missing Netatalk startup file, download a fresh one
 if [ ! -f /etc/init.d/netatalk ]; then
 	echo "A2SERVER: Downloading new Netatalk startup script..."
-	sudo wget -qO /etc/init.d/netatalk ${binaryURL}netatalk-init.d-clean.txt
+	sudo wget -qO /etc/init.d/netatalk "${binaryURL}netatalk-init.d-clean.txt"
 fi
 
 # make the Netatalk startup script work correctly
@@ -317,7 +317,7 @@ if [[ -d /srv/A2SERVER/A2FILES && ! -d /srv/A2SERVER/.a2files ]]; then
 	fi
 	rm /srv/A2SERVER/A2FILES/.APPLEDESKTOP 2> /dev/null
 	mkdir -p /tmp/netboot
-	wget -qO /tmp/A2FILES-list.txt ${binaryURL}A2FILES-list.txt
+	wget -qO /tmp/A2FILES-list.txt "${binaryURL}A2FILES-list.txt"
 	find /srv/A2SERVER/A2FILES -name '*' | tail -n +2 | tac > /tmp/filelist.txt
 	while read thisFile; do
 		mixedCase="${thisFile##*/}"
@@ -394,11 +394,11 @@ if ! hash ciopfs &> /dev/null; then
 		mkdir /tmp/ciopfs
 		cd /tmp/ciopfs
 		if [[ $useExternalURL ]]; then
-			wget -q -O ciopfs-0.4.tar.gz http://www.brain-dump.org/projects/ciopfs/ciopfs-0.4.tar.gz
+			wget -q -O ciopfs-0.4.tar.gz "http://www.brain-dump.org/projects/ciopfs/ciopfs-0.4.tar.gz"
 			tar zxf ciopfs-0.4.tar.gz &> /dev/null
 		fi
 		if [ ! -f ciopfs*/ciopfs.c ]; then # single brackets required for glob
-			wget -q -O ciopfs-0.4.tar.gz ${binaryURL}external/source/ciopfs-0.4.tar.gz
+			wget -q -O ciopfs-0.4.tar.gz "${binaryURL}external/source/ciopfs-0.4.tar.gz"
 			tar zxf ciopfs-0.4.tar.gz &> /dev/null
 		fi
 		cd ciopfs*
@@ -505,7 +505,7 @@ if [[ -f "/lib/modules/$kernelRelease/kernel/drivers/net/appletalk/ipddp.ko" ]];
 
 	if [[ ${arch%_*} == "debian" ]]; then
 		echo "A2SERVER: Fetching AppleTalk kernel module for Debian..."
-		wget -qO /tmp/appletalk.tgz ${binaryURL}precompiled/appletalk-$kernelRelease-${arch}.tgz
+		wget -qO /tmp/appletalk.tgz "${binaryURL}precompiled/appletalk-$kernelRelease-${arch}.tgz"
 		if [[ $? -eq 0 ]]; then
 			# if we found a prebuilt one on a2server site, install it and load it
 			sudo tar Pxf /tmp/appletalk.tgz &> /dev/null
@@ -617,7 +617,7 @@ if [[ ( ! $(pgrep atalkd) ) && $isRpi ]]; then
 	# if no AppleTalk module, try to download it from a2server site
 	if [[ ! -f /lib/modules/$kernelRelease/kernel/net/appletalk/appletalk.ko ]]; then # check for rpi kernel module
 		echo "A2SERVER: Installing AppleTalk kernel module for Raspbian..."
-		wget -qO /tmp/appletalk.ko.gz ${binaryURL}appletalk-$kernelRelease-rpi.ko.gz
+		wget -qO /tmp/appletalk.ko.gz "${binaryURL}appletalk-$kernelRelease-rpi.ko.gz"
 		if [[ $? -eq 0 ]]; then
 			# if we found a prebuilt one on a2server site, install it and load it
 			gunzip -f /tmp/appletalk.ko.gz &> /dev/null
