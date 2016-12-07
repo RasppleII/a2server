@@ -7,6 +7,9 @@
 # program (for Apple IIe users, and IIgs users in ProDOS network mode).
 # It also can download and install GS/OS for a network boot configuration.
 
+a2sScriptURL="https://raw.githubusercontent.com/RasppleII/a2server/master"
+a2sBinaryURL="http://blocksfree.com/downloads"
+
 a2sDevel="$( dirname "${BASH_SOURCE[0]}" )/.."
 if [[ -f "$a2sDevel/.a2server_source" ]]; then
 	pushd $a2sDevel >/dev/null
