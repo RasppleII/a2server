@@ -18,18 +18,6 @@ else
 	a2sDevel=
 fi
 
-# Ensure URL we'll use ends in a /
-case "$A2SERVER_SCRIPT_URL" in
-	*/) scriptURL="$A2SERVER_SCRIPT_URL" ;;
-	*) scriptURL="${A2SERVER_SCRIPT_URL:-https://raw.githubusercontent.com/RasppleII/a2server/release}/" ;;
-esac
-case "$A2SERVER_BINARY_URL" in
-	*/) binaryURL="$A2SERVER_BINARY_URL" ;;
-	*) binaryURL="${A2SERVER_BINARY_URL:-http://ivanx.com/a2server/files}/" ;;
-esac
-useExternalURL=1
-[[ $A2SERVER_NO_EXTERNAL ]] && useExternalURL=
-
 isRpi=
 [[ -f /usr/bin/raspi-config ]] && isRpi=1
 
@@ -110,11 +98,6 @@ function a2sCmpInstalled() {
 
 	return 1
 }
-
-echo
-[[ $scriptURL != *"ivanx.com"* && $scriptURL != *"raw.githubusercontent.com/RasppleII/a2server"* ]] && echo "Using script URL: $scriptURL"
-[[ $binaryURL != *"ivanx.com"* ]] && echo "Using binary URL: $binaryURL"
-[[ ! $useExternalURL ]] && echo -e "Not using external URLs. Downloads must be available from:\n  ${binaryURL}external/appleii/\n  ${binaryURL}external/source/\n  (See the A2SERVER developer page for more information.)"
 
 skipRepoUpdate=
 autoAnswerYes=
@@ -325,7 +308,7 @@ if (( $doSetup )); then
 			a2sScriptDir="/tmp/a2server-install/scripts"
 			mkdir -p "$a2sScriptDir"
 			for _script in $a2sSubScripts; do
-				wget -q -O "$a2sScriptDir/$_script" "${scriptURL}scripts/$_script"
+				wget -q -O "$a2sScriptDir/$_script" "${a2sScriptURL}/scripts/$_script"
 				chmod ugo+x "$a2sScriptDir/$_script"
 			done
 
