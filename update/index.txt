@@ -12,14 +12,8 @@ else
 	a2sDevel=
 fi
 
-# Ensure URL we'll use ends in a /
-case "$A2SERVER_SCRIPT_URL" in
-	*/) scriptURL="$A2SERVER_SCRIPT_URL" ;;
-	*) scriptURL="${A2SERVER_SCRIPT_URL:-https://raw.githubusercontent.com/RasppleII/a2server/current}/" ;;
-esac
-
 if [[ -z "$a2sDevel" ]]; then
-	currentVersion=$(wget -qO- "${scriptURL}setup/index.txt" | grep '^a2serverVersion' | cut -d '"' -f 2)
+	currentVersion=$(wget -qO- "${a2sScriptURL}/setup/index.txt" | grep '^a2serverVersion' | cut -d '"' -f 2)
 else
 	currentVersion=$(grep '^a2serverVersion' "$a2sDevel/setup/index.txt" | cut -d '"' -f 2)
 fi
@@ -45,7 +39,7 @@ done
 echo
 echo "Update history:"
 if [[ -z "$a2sDevel" ]]; then
-	wget -qO- "${scriptURL}update/versionhistory.txt"
+	wget -qO- "${a2sScriptURL}/update/versionhistory.txt"
 else
 	cat "$a2sDevel/update/versionhistory.txt"
 fi
@@ -61,7 +55,7 @@ else
 fi
 if [[ ${REPLY:0:1} == "y" || ${REPLY:0:1} == "Y" ]]; then
 	if [[ -z "$a2sDevel" ]]; then
-		wget -q -O /tmp/setup "${scriptURL}setup/index.txt"; source /tmp/setup -i "$@"
+		wget -q -O /tmp/setup "${a2sScriptURL}/setup/index.txt"; source /tmp/setup -i "$@"
 	else
 		"$a2sDevel/setup/index.txt"
 	fi
