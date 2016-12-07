@@ -16,15 +16,6 @@ else
 	a2sDevel=
 fi
 
-# Ensure URL we'll use ends in a /
-case "$A2SERVER_SCRIPT_URL" in
-	*/) scriptURL="$A2SERVER_SCRIPT_URL" ;;
-	*) scriptURL="${A2SERVER_SCRIPT_URL:-https://raw.githubusercontent.com/RasppleII/a2server/current}/" ;;
-esac
-case "$A2SERVER_BINARY_URL" in
-	*/) binaryURL="$A2SERVER_BINARY_URL" ;;
-	*) binaryURL="${A2SERVER_BINARY_URL:-http://ivanx.com/a2server/files}/" ;;
-esac
 useExternalURL=1
 [[ $A2SERVER_NO_EXTERNAL ]] && useExternalURL=
 
@@ -65,7 +56,7 @@ if ! hash nulib2 &> /dev/null; then
 
 	cd /tmp
 	if [[ $arch && ! -f /tmp/a2server-compileAlways ]]; then
-		{ wget -qO- "${binaryURL}precompiled/nulib2-3.1.0a2-${arch}.tgz" | sudo tar Pzx; } &> /dev/null
+		{ wget -qO- "${a2sBinaryURL}/picopkg/nulib2-3.1.0a2-${arch}.tgz" | sudo tar Pzx; } &> /dev/null
 	fi
 
 	if ! hash nulib2 &> /dev/null; then
@@ -85,12 +76,15 @@ if ! hash nulib2 &> /dev/null; then
 		mkdir /tmp/nulib2
 		cd /tmp/nulib2
 		if [[ $useExternalURL ]]; then
-			wget -q -O nulib2-3.1.0a2.zip "https://github.com/fadden/nulib2/archive/20fe7efb4d37fedf807416c16d74d51d893ea48a.zip"
+			# nulib2 does not have this tagged so we use github's auto-zipball feature
+			# note: topdir is nulib2-<full hash>
+			# note2: .tar.gz also works
+			wget -q -O nulib2-3.1.0a2.zip "https://github.com/fadden/nulib2/archive/20fe7ef.zip"
 			unzip nulib2-3.1.0a2.zip 2> /dev/null
 			rm nulib2-3.1.0a2.zip &> /dev/null
 		fi
 		if [ ! -d nulib2* ]; then
-			wget -q -O nulib2-3.1.0a2.zip "${binaryURL}external/source/nulib2-3.1.0a2.zip"
+			wget -q -O nulib2-3.1.0a2.zip "${a2sBinaryURL}/source/nulib2-3.1.0a2.zip"
 			unzip nulib2-3.1.0a2.zip 2> /dev/null
 			rm nulib2-3.1.0a2.zip &> /dev/null
 		fi
@@ -135,7 +129,7 @@ if ! hash unar &> /dev/null; then
 			# Dependencies: for unar
 			sudo apt-get -y install libgnustep-base1.22
 			sudo apt-get clean
-			{ wget -qO- "${binaryURL}precompiled/unar-${arch}_${debianName}.tgz" | sudo tar Pzx; } &> /dev/null
+			{ wget -qO- "${a2sBinaryURL}/picopkg/unar-${arch}_${debianName}.tgz" | sudo tar Pzx; } &> /dev/null
 		fi
 
 		# If all else fails, compile from source.
@@ -153,7 +147,7 @@ if ! hash unar &> /dev/null; then
 				unzip -o unar-1.8.1.zip &> /dev/null
 			fi
 			if [ ! -d *Unarchiver*/XADMaster ]; then # need single bracket for glob
-				wget -O unar-1.8.1.zip "${binaryURL}external/source/unar-1.8.1.zip"
+				wget -O unar-1.8.1.zip "${a2sBinaryURL}/source/unar-1.8.1.zip"
 				unzip -o unar-1.8.1.zip &> /dev/null
 			fi
 			cd *Unarchiver*/XADMaster
@@ -192,7 +186,7 @@ if [[ -z "$a2sDevel" ]]; then
 	a2sToolDir="/tmp/a2server-install/tools"
 	mkdir -p "$a2sToolDir"
 	for _tool in $a2sTools $a2sHelp $a2sConfScripts; do
-		sudo wget -q -O "$a2sToolDir/$_tool" "${scriptURL}scripts/tools/$_tool"
+		sudo wget -q -O "$a2sToolDir/$_tool" "${a2sScriptURL}scripts/tools/$_tool"
 	done
 else
 	a2sToolDir="$a2sDevel/scripts/tools"

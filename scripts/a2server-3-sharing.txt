@@ -14,10 +14,6 @@
 
 a2sBinaryURL="http://blocksfree.com/downloads"
 
-case "$A2SERVER_BINARY_URL" in
-	*/) binaryURL="$A2SERVER_BINARY_URL" ;;
-	*) binaryURL="${A2SERVER_BINARY_URL:-http://ivanx.com/a2server/files}/" ;;
-esac
 useExternalURL=1
 [[ $A2SERVER_NO_EXTERNAL ]] && useExternalURL=
 
@@ -90,7 +86,7 @@ if [[ "$a2sVersion" != *.*.* && "$a2sVersion" -lt 101 ]]; then
 
 		# install Netatalk
 		if [[ $arch && ! -f /tmp/a2server-compileAlways ]]; then
-			{ wget -qO- "${binaryURL}precompiled/netatalk224-${arch}_${debianName}.tgz" | sudo tar Pzx; } &> /dev/null
+			{ wget -qO- "${a2sBinaryURL}/picopkg/netatalk224-${arch}_${debianName}.tgz" | sudo tar Pzx; } &> /dev/null
 		fi
 		sudo mandb &> /dev/null
 
@@ -133,7 +129,7 @@ if [[ "$a2sVersion" != *.*.* && "$a2sVersion" -lt 101 ]]; then
 			tar zxf netatalk-2.2.4.tar.gz &> /dev/null
 		fi
 		if [[ ! -d netatalk-2.2.4 ]]; then
-			wget -O netatalk-2.2.4.tar.gz "${binaryURL}external/source/netatalk-2.2.4.tar.gz"
+			wget -O netatalk-2.2.4.tar.gz "${a2sBinaryURL}/source/netatalk-2.2.4.tar.gz"
 			tar zxf netatalk-2.2.4.tar.gz &> /dev/null
 		fi
 		cd netatalk-2.2.4
@@ -172,7 +168,7 @@ if ! hash macipgw &>/dev/null; then
 	echo "A2SERVER: Installing TCP over AppleTalk (MacIP)..."
 
 	if [[ $arch && ! -f /tmp/a2server-compileAlways ]]; then
-		{ wget -qO- "${binaryURL}precompiled/macipgw-${arch}.tgz" | sudo tar Pzx; } 2> /dev/null
+		{ wget -qO- "${a2sBinaryURL}/picopkg/macipgw-${arch}.tgz" | sudo tar Pzx; } 2> /dev/null
 	fi
 
 	if ! hash macipgw &> /dev/null; then
@@ -181,13 +177,16 @@ if ! hash macipgw &>/dev/null; then
 		rm -rf /tmp/macipgw &> /dev/null
 		mkdir /tmp/macipgw
 		cd /tmp/macipgw
+		# macipgw has no releases, so use the hash of HEAD to auto-generate a zipball
+		# note: topdir will be macipgw-<full hash>, EEK!
+		# note: .tar.gz also works
 		if [[ $useExternalURL ]]; then
-			wget -qO macipgw.zip "https://github.com/zero2sixd/macipgw/archive/2a5f6a7521a627e46b18468d44f4306fb0a7b7ab.zip"
+			wget -qO macipgw.zip "https://github.com/zero2sixd/macipgw/archive/cc544d8.zip"
 			unzip macipgw.zip 2> /dev/null
 			rm macipgw.zip &> /dev/null
 		fi
 		if [[ ! -d macipgw-master ]]; then
-			wget -qO macipgw.zip "${binaryURL}external/source/macipgw.zip"
+			wget -qO macipgw.zip "${a2sBinaryURL}/source/macipgw-cc544d8.zip"
 			unzip macipgw.zip 2> /dev/null
 			rm macipgw.zip &> /dev/null
 		fi
@@ -208,7 +207,7 @@ echo "A2SERVER: Configuring Netatalk..."
 # if missing Netatalk startup file, download a fresh one
 if [ ! -f /etc/init.d/netatalk ]; then
 	echo "A2SERVER: Downloading new Netatalk startup script..."
-	sudo wget -qO /etc/init.d/netatalk "${binaryURL}netatalk-init.d-clean.txt"
+	sudo wget -qO /etc/init.d/netatalk "${a2sBinaryURL}/a2server/netatalk-init.d-clean.txt"
 fi
 
 # make the Netatalk startup script work correctly
@@ -317,7 +316,7 @@ if [[ -d /srv/A2SERVER/A2FILES && ! -d /srv/A2SERVER/.a2files ]]; then
 	fi
 	rm /srv/A2SERVER/A2FILES/.APPLEDESKTOP 2> /dev/null
 	mkdir -p /tmp/netboot
-	wget -qO /tmp/A2FILES-list.txt "${binaryURL}A2FILES-list.txt"
+	wget -qO /tmp/A2FILES-list.txt "${a2sBinaryURL}/a2server/A2FILES-list.txt"
 	find /srv/A2SERVER/A2FILES -name '*' | tail -n +2 | tac > /tmp/filelist.txt
 	while read thisFile; do
 		mixedCase="${thisFile##*/}"
@@ -370,7 +369,7 @@ if ! hash ciopfs &> /dev/null; then
 	# Dependency: For ciopfs
 	sudo apt-get -y install fuse libglib2.0-0 libattr1 libfuse2
 	if [[ $arch && ! -f /tmp/a2server-compileAlways ]]; then
-		{ wget -qO- "${binaryURL}precompiled/ciopfs-${arch}.tgz" | sudo tar Pzx; } &> /dev/null
+		{ wget -qO- "${a2sBinaryURL}/pickpkg/ciopfs-${arch}.tgz" | sudo tar Pzx; } &> /dev/null
 	fi
 	if [[ -f /etc/fuse.conf ]] && sudo grep -q user_allow_other /etc/fuse.conf; then
 		sudo sed -i 's/#user_allow_other/user_allow_other/' /etc/fuse.conf
@@ -398,7 +397,7 @@ if ! hash ciopfs &> /dev/null; then
 			tar zxf ciopfs-0.4.tar.gz &> /dev/null
 		fi
 		if [ ! -f ciopfs*/ciopfs.c ]; then # single brackets required for glob
-			wget -q -O ciopfs-0.4.tar.gz "${binaryURL}external/source/ciopfs-0.4.tar.gz"
+			wget -q -O ciopfs-0.4.tar.gz "${a2sBinaryURL}/source/ciopfs-0.4.tar.gz"
 			tar zxf ciopfs-0.4.tar.gz &> /dev/null
 		fi
 		cd ciopfs*
@@ -505,7 +504,7 @@ if [[ -f "/lib/modules/$kernelRelease/kernel/drivers/net/appletalk/ipddp.ko" ]];
 
 	if [[ ${arch%_*} == "debian" ]]; then
 		echo "A2SERVER: Fetching AppleTalk kernel module for Debian..."
-		wget -qO /tmp/appletalk.tgz "${binaryURL}precompiled/appletalk-$kernelRelease-${arch}.tgz"
+		wget -qO /tmp/appletalk.tgz "${a2sBinaryURL}/picopkg/appletalk-${kernelRelease}-${arch}.tgz"
 		if [[ $? -eq 0 ]]; then
 			# if we found a prebuilt one on a2server site, install it and load it
 			sudo tar Pxf /tmp/appletalk.tgz &> /dev/null
@@ -617,7 +616,7 @@ if [[ ( ! $(pgrep atalkd) ) && $isRpi ]]; then
 	# if no AppleTalk module, try to download it from a2server site
 	if [[ ! -f /lib/modules/$kernelRelease/kernel/net/appletalk/appletalk.ko ]]; then # check for rpi kernel module
 		echo "A2SERVER: Installing AppleTalk kernel module for Raspbian..."
-		wget -qO /tmp/appletalk.ko.gz "${binaryURL}appletalk-$kernelRelease-rpi.ko.gz"
+		wget -qO /tmp/appletalk.ko.gz "${a2sBinaryURL}/picopkg/appletalk-${kernelRelease}-rpi.ko.gz"
 		if [[ $? -eq 0 ]]; then
 			# if we found a prebuilt one on a2server site, install it and load it
 			gunzip -f /tmp/appletalk.ko.gz &> /dev/null
