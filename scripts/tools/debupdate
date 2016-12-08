@@ -1,0 +1,174 @@
+#!/bin/bash
+# vim: set tabstop=4 shiftwidth=4 noexpandtab filetype=sh:
+
+# debupdate - Upgrades packages on a Debian-based system
+# Written in 2016 by T. Joseph Carter <tjcarter@spiritsubstance.com>
+# Based on raspbian-update by Ivan Drucker <ivan@ivanx.com>
+#
+# To the extent possible under law, the author(s) have dedicated all copyright
+# and related and neighboring rights to this software to the public domain
+# worldwide. This software is distributed without any warranty.
+#
+# You should have received a copy of the CC0 Public Domain Dedication along
+# with this software. If not, you may find a copy here:
+#  <http://creativecommons.org/publicdomain/zero/1.0/>
+
+PROGNAME="$0"
+PROGRAM="debupdate"
+VERSION="0.9.0"
+
+useAptGet=
+useAutoClean=
+autoYes=
+
+aptitudeUpgradeArgs="--allow-new-upgrades --allow-new-installs safe-upgrade"
+aptGetUpgradeArgs="--with-new-pkgs --auto-remove upgrade"
+
+ShowLicense() {
+	echo "$PROGRAM version $VERSION
+Upgrades packages on a Debian-based system
+
+Written in 2016 by T. Joseph Carter <tjcarter@spiritsubstance.com>
+Based on raspbian-update by Ivan Drucker <ivan@ivanx.com>
+
+To the extent possible under law, the author(s) have dedicated all copyright
+and related and neighboring rights to this software to the public domain
+worldwide. This software is distributed without any warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication along
+with this software. If not, you may find a copy here:
+ <http://creativecommons.org/publicdomain/zero/1.0/>
+"
+	exit 0
+}
+
+Echo() {
+	printf "%b\n" "$1"
+}
+
+Run() {
+	local cmd=( )
+	for i in "${@}"; do
+		# Replace argument's spaces with ''; if different, quote the string
+		if [ "$i" != "${i/ /}" ]; then
+			cmd=( ${cmd[@]} "'${i}'" )
+		else
+			cmd=( ${cmd[@]} $i )
+		fi
+	done
+	echo ">>> ${cmd[@]}"
+	${@}
+}
+
+
+ShowHelp() {
+	Echo "\nHelp"
+
+	[[ $1 ]] && echo "Exiting with error code $1" # FIXME
+	exit ${1:-0}
+}
+
+CheckArgs() {
+	local badArgument=
+	while getopts ":hvyacy" opt; do
+		case "$opt" in
+			h)	ShowHelp ;;
+			v)	ShowLicense ;;
+			y)	autoYes=1 ;;
+			a)	useAptGet=1 ;;
+			c)	useAutoClean=1 ;;
+			\?)
+				Echo "Invalid argument: -$OPTARG"
+				badArgument=1
+				;;
+		esac
+	done
+	if [[ "$badArgument" ]]; then
+		ShowHelp 1
+	fi
+}
+
+CheckArgs "$@"
+
+#CheckAuthorized
+if [[ "$UID" != "0" ]]; then
+	if hash sudo 2>/dev/null; then
+		Run sudo $0 "$@"
+		exit 0
+	else
+		Echo "$PROGRAM requires \"root\" administrator access to upgrade your system."
+		exit 1
+	fi
+fi
+
+if [[ -z "$useAptGet" ]]; then
+	if ! hash aptitude 2>/dev/null; then
+		useAptGet=1
+	fi
+fi
+
+#Clean
+Echo "\nCleaning apt package cache..."
+if [[ $useAptGet ]]; then
+	echo "Using apt-get."
+	Run apt-get ${useAutoClean:+auto}clean
+else
+	echo "Using aptitude."
+	Run aptitude ${useAutoClean:+auto}clean
+fi
+
+#Update
+Echo "\nUpdating list of available packages..."
+if [[ $useAptGet ]]; then
+	if ! Run apt-get update; then
+		Echo "Package list update failed."
+		exit 1
+	fi
+else
+	if ! Run aptitude update; then
+		Echo "Package list update failed."
+		exit 1
+	fi
+fi
+
+#NeedUpgrade
+if [[ $useAptGet ]]; then
+	apt-get --trivial-only $aptGetUpgradeArgs &>/dev/null
+else
+	echo "n" | aptitude $aptitudeUpgradeArgs &>/dev/null
+fi
+if [[ $? -eq 0 ]]; then
+	Echo "Your packages are already up to date."
+	exit 0
+fi
+
+#Upgrade
+if [[ $useAptGet ]]; then
+	Run apt-get ${autoYes:+-y} $aptGetUpgradeArgs
+else
+	Run aptitude ${autoYes:+-y} $aptitudeUpgradeArgs
+fi
+if [[ $? -ne 0 ]]; then
+	Echo "System upgrade failed.  Something about a log should be here."
+	exit 1
+fi
+
+# apt-get needs explicit autoremove (aptitude doesn't)
+if [[ $useAptGet ]]; then
+	Run apt-get autoremove
+	if [[ $? -ne 0 ]]; then
+		Echo "Failure attempting to auto-remove unneeded packages."
+		exit 1
+	fi
+fi
+
+#Clean
+Echo "Cleaning apt package cache..."
+if [[ $useAptGet ]]; then
+	Run apt-get autoclean
+else
+	Run aptitude autoclean
+fi
+
+Echo "\nIt is generally recommended that you reboot your system after upgrades.  You
+can do this with the \"reboot\" command.  This command must be run as root.\n"
