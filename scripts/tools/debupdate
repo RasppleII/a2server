@@ -25,7 +25,7 @@ aptitudeUpgradeArgs="--allow-new-upgrades --allow-new-installs safe-upgrade"
 aptGetUpgradeArgs="--with-new-pkgs --auto-remove upgrade"
 
 ShowLicense() {
-	echo "$PROGRAM version $VERSION
+	printf "%s version %s
 Upgrades packages on a Debian-based system
 
 Written in 2016 by T. Joseph Carter <tjcarter@spiritsubstance.com>
@@ -38,12 +38,8 @@ worldwide. This software is distributed without any warranty.
 You should have received a copy of the CC0 Public Domain Dedication along
 with this software. If not, you may find a copy here:
  <http://creativecommons.org/publicdomain/zero/1.0/>
-"
+" $PROGRAM $VERSION
 	exit 0
-}
-
-Echo() {
-	printf "%b\n" "$1"
 }
 
 Run() {
@@ -56,15 +52,14 @@ Run() {
 			cmd=( ${cmd[@]} $i )
 		fi
 	done
-	echo ">>> ${cmd[@]}"
+	printf ">>> %s\n" "${cmd[@]}"
 	${@}
 }
 
 
 ShowHelp() {
-	Echo "\nHelp"
+	printf "\nHelp\n"
 
-	[[ $1 ]] && echo "Exiting with error code $1" # FIXME
 	exit ${1:-0}
 }
 
@@ -78,7 +73,7 @@ CheckArgs() {
 			a)	useAptGet=1 ;;
 			c)	useAutoClean=1 ;;
 			\?)
-				Echo "Invalid argument: -$OPTARG"
+				printf "Invalid argument: -%s\n" "$OPTARG"
 				badArgument=1
 				;;
 		esac
@@ -96,7 +91,7 @@ if [[ "$UID" != "0" ]]; then
 		Run sudo $0 "$@"
 		exit 0
 	else
-		Echo "$PROGRAM requires \"root\" administrator access to upgrade your system."
+		printf "%s requires \"root\" administrator access to upgrade your system.\n" "$PROGRAM"
 		exit 1
 	fi
 fi
@@ -108,25 +103,23 @@ if [[ -z "$useAptGet" ]]; then
 fi
 
 #Clean
-Echo "\nCleaning apt package cache..."
+printf "%b" "\nCleaning apt package cache...\n"
 if [[ $useAptGet ]]; then
-	echo "Using apt-get."
 	Run apt-get ${useAutoClean:+auto}clean
 else
-	echo "Using aptitude."
 	Run aptitude ${useAutoClean:+auto}clean
 fi
 
 #Update
-Echo "\nUpdating list of available packages..."
+printf "\nUpdating list of available packages...\n"
 if [[ $useAptGet ]]; then
 	if ! Run apt-get update; then
-		Echo "Package list update failed."
+		printf "Package list update failed.\n"
 		exit 1
 	fi
 else
 	if ! Run aptitude update; then
-		Echo "Package list update failed."
+		printf "Package list update failed.\n"
 		exit 1
 	fi
 fi
@@ -135,10 +128,10 @@ fi
 if [[ $useAptGet ]]; then
 	apt-get --trivial-only $aptGetUpgradeArgs &>/dev/null
 else
-	echo "n" | aptitude $aptitudeUpgradeArgs &>/dev/null
+	aptitude $aptitudeUpgradeArgs <<<"n" &>/dev/null
 fi
 if [[ $? -eq 0 ]]; then
-	Echo "Your packages are already up to date."
+	printf "Your packages are already up to date.\n"
 	exit 0
 fi
 
@@ -149,7 +142,8 @@ else
 	Run aptitude ${autoYes:+-y} $aptitudeUpgradeArgs
 fi
 if [[ $? -ne 0 ]]; then
-	Echo "System upgrade failed.  Something about a log should be here."
+	# FIXME
+	printf "System upgrade failed.  Something about a log should be here.\n"
 	exit 1
 fi
 
@@ -157,18 +151,18 @@ fi
 if [[ $useAptGet ]]; then
 	Run apt-get autoremove
 	if [[ $? -ne 0 ]]; then
-		Echo "Failure attempting to auto-remove unneeded packages."
+		printf "Failure attempting to auto-remove unneeded packages.\n"
 		exit 1
 	fi
 fi
 
 #Clean
-Echo "Cleaning apt package cache..."
+printf "Cleaning apt package cache...\n"
 if [[ $useAptGet ]]; then
 	Run apt-get autoclean
 else
 	Run aptitude autoclean
 fi
 
-Echo "\nIt is generally recommended that you reboot your system after upgrades.  You
-can do this with the \"reboot\" command.  This command must be run as root.\n"
+printf "\nIt is generally recommended that you reboot your system after upgrades.  You
+can do this with the \"reboot\" command, which must be run as root.\n\n"
