@@ -58,34 +58,32 @@ Run() {
 
 
 ShowHelp() {
+	# FIXME
 	printf "\nHelp\n"
 
 	exit ${1:-0}
 }
 
-CheckArgs() {
-	local badArgument=
-	while getopts ":hvyacy" opt; do
-		case "$opt" in
-			h)	ShowHelp ;;
-			v)	ShowLicense ;;
-			y)	autoYes=1 ;;
-			a)	useAptGet=1 ;;
-			c)	useAutoClean=1 ;;
-			\?)
-				printf "Invalid argument: -%s\n" "$OPTARG"
-				badArgument=1
-				;;
-		esac
-	done
-	if [[ "$badArgument" ]]; then
-		ShowHelp 1
-	fi
-}
 
-CheckArgs "$@"
+# Process command line arguments
+while getopts ":hvyacy" opt; do
+	case "$opt" in
+		h)	ShowHelp ;;
+		v)	ShowLicense ;;
+		y)	autoYes=1 ;;
+		a)	useAptGet=1 ;;
+		c)	useAutoClean=1 ;;
+		\?)
+			printf "Invalid argument: -%s\n" "$OPTARG"
+			badArgument=1
+			;;
+	esac
+done
+if [[ "$badArgument" ]]; then
+	ShowHelp 1
+fi
 
-#CheckAuthorized
+# Check for root access
 if [[ "$UID" != "0" ]]; then
 	if hash sudo 2>/dev/null; then
 		Run sudo $0 "$@"
@@ -96,35 +94,34 @@ if [[ "$UID" != "0" ]]; then
 	fi
 fi
 
+# Determine if aptitude is installed (unless we're not using it)
 if [[ -z "$useAptGet" ]]; then
 	if ! hash aptitude 2>/dev/null; then
 		useAptGet=1
 	fi
 fi
 
-#Clean
-printf "%b" "\nCleaning apt package cache...\n"
+# Clean apt package cache
+printf "\nCleaning apt package cache...\n"
 if [[ $useAptGet ]]; then
 	Run apt-get ${useAutoClean:+auto}clean
 else
 	Run aptitude ${useAutoClean:+auto}clean
 fi
 
-#Update
+# Update package lists
 printf "\nUpdating list of available packages...\n"
 if [[ $useAptGet ]]; then
-	if ! Run apt-get update; then
-		printf "Package list update failed.\n"
-		exit 1
-	fi
+	Run apt-get update
 else
-	if ! Run aptitude update; then
-		printf "Package list update failed.\n"
-		exit 1
-	fi
+	Run aptitude update
+fi
+if [[ $? -ne 0 ]];
+	printf "Package list update failed.\n"
+	exit 1
 fi
 
-#NeedUpgrade
+# Check to see if we even need to upgrade
 if [[ $useAptGet ]]; then
 	apt-get --trivial-only $aptGetUpgradeArgs &>/dev/null
 else
@@ -135,7 +132,7 @@ if [[ $? -eq 0 ]]; then
 	exit 0
 fi
 
-#Upgrade
+# Do the upgrade itself
 if [[ $useAptGet ]]; then
 	Run apt-get ${autoYes:+-y} $aptGetUpgradeArgs
 else
@@ -156,7 +153,7 @@ if [[ $useAptGet ]]; then
 	fi
 fi
 
-#Clean
+# Clean apt package cache (again)
 printf "Cleaning apt package cache...\n"
 if [[ $useAptGet ]]; then
 	Run apt-get autoclean
