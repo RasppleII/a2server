@@ -105,7 +105,6 @@ installAll=
 setupNetBoot=
 setupWindowsSharing=
 compileAlways=
-updateRasppleII=
 rm -rf /tmp/a2server-install
 rm /tmp/a2server-* 2> /dev/null
 while [[ $1 ]]; do
@@ -132,9 +131,6 @@ while [[ $1 ]]; do
 		shift
 		compileAlways="-c"
 		touch /tmp/a2server-compileAlways
-	elif [[ $1 == "-os" || $1 == "os" ]]; then
-		shift
-		updateRasppleII=1
 	elif [[ $1 == "-v" ]]; then
 		shift
 		# Version was already printed
@@ -162,19 +158,6 @@ while [[ $1 ]]; do
 		fi
 	fi
 done
-
-if [[ $updateRasppleII ]]; then
-	echo "A2SERVER: Updating Raspple II (takes up to an hour)..."
-	wget -qO /tmp/raspbian-update "${A2SERVER_SCRIPT_URL}scripts/tools/raspbian-update"
-	chmod +x /tmp/raspbian-update
-	/tmp/raspbian-update a2cloud a2server $autoAnswerYes $skipRepoUpdate
-	rm -f /tmp/raspbian-update
-	if [[ $0 == "-bash" ]]; then
-		return 0
-	else
-		exit 0
-	fi
-fi
 
 if a2sCmpInstalled lt 1.1.0; then
 	echo

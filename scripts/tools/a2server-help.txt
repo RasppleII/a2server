@@ -12,8 +12,7 @@ system-restart: shut down and restart the server
 
  Raspberry Pi commands, if you're using one:
 raspi-config: utilize all space on RPi SD card & other options
-raspbian-update : update Raspbian operating system
-rasppleii-update : update Raspbian OS, A2CLOUD, A2SERVER, Apple II Pi
+debupdate: update the Raspple II operating system
 
 welcome-message-edit: change the welcome message
 

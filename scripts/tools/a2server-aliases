@@ -13,7 +13,6 @@ alias system-restart='sudo shutdown -r now'
 
 alias raspi-config='[[ -f /usr/bin/raspi-config ]] && sudo /usr/bin/raspi-config || echo "raspi-config not found. Are you using a Raspberry Pi with Raspbian?"'
 
-alias rasppleii-update='raspbian-update a2cloud a2server'
 
 alias welcome-message-edit='sudo nano /etc/motd'
 
