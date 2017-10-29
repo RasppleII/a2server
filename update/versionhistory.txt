@@ -68,7 +68,8 @@
                  source code at GitHub (thanks Joseph)
 
 1.5.1: Jan 2016: fixed GitHub URLs to prevent https errors during installation
-                 (thanks to http://blogs.yahoo.co.jp/ushi_cow/57459736.html)
+                 (thanks to http://blogs.yahoo.co.jp/ushi_cow/57459736.html);
+                 bug fixes and minor text changes
 
 Big thanks to: Anthony Martino, Henry Courbis, Joseph Carter, Jason King,
 Andy McFadden, Steven Hirsch, Geoff Body, Peter Wong, Tony Diaz, David Schmidt,

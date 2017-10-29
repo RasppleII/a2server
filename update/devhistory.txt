@@ -98,4 +98,11 @@
 [unannounced]
 
 1.5.1: May 2016: changed URLs from rawgit.com to raw.githubusercontent.com
-                 to resolve https problems during install
+                 to resolve https problems during install; OS X temp dir
+                 path corrected; added getexternal.sh to repo;
+                 cppo changes; minor text changes (JTC); better Debian
+                 version checking (JTC)
+[unannounced]
+
+1.5.1r2: Oct 2017: set internal version to 1.5.1; expanded version history
+[unannounced]
