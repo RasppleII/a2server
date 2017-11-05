@@ -23,15 +23,14 @@ wget -O files/external/appleii/PPPX.1.3d4.SHK http://www.apple2.org/marinetti/PP
 wget -O files/external/appleii/dsk2file.shk http://www.dwheeler.com/6502/oneelkruns/dsk2file.zip
 wget -O files/external/appleii/gshk11.sea http://www.nulib.com/library/gshk11.sea
 wget -O files/external/appleii/shrinkit.sdk http://www.nulib.com/library/shrinkit.sdk
-wget -O files/external/appleii/spectrum_gold_2mg.zip http://www.speccie.co.uk/speccie/software/spectrum_gold_2mg.zip
-wget -O files/external/appleii/uthernet2ll.bxy http://www.speccie.co.uk/speccie/software/uthernet2ll.bxy
-wget -O files/external/appleii/uthernetll.bxy http://www.speccie.co.uk/speccie/software/uthernetll.bxy
+wget -O files/external/appleii/spectrum_gold_2mg.zip http://speccie.uk/speccie/downloads/spectrum_gold_2mg.zip
+wget -O files/external/appleii/uthernet2ll.bxy http://speccie.uk/speccie/downloads/uthernet2ll.bxy
+wget -O files/external/appleii/uthernetll.bxy http://speccie.uk/speccie/downloads/uthernetll.bxy
 
-unset safeUrl samUrl snapUrl safeVer samVer snapVer
-html=$(wget -qO- http://speccie.co.uk/speccie/Site/Download_Centre_files/widget1_markup.html)
-safeUrl=$(echo "$html" | grep -i 'safe2.*bxy' | tr '<>' '\n' | grep href | cut -d '=' -f 2 | tr -d '"')
-samUrl=$(echo "$html" | grep -i 'sam2.*bxy' | tr '<>' '\n' | grep href | cut -d '=' -f 2 | tr -d '"')
-snapUrl=$(echo "$html" | grep -i 'snap.*bxy' | tr '<>' '\n' | grep href | cut -d '=' -f 2 | tr -d '"')
+unset safeUrl samUrl snapUrl
+safeUrl=$(wget -qO- http://speccie.uk/software/safe2/ | grep -i 'safe2.*bxy' | tr '<>' '\n' | grep href | cut -d '=' -f 2 | tr -d '"')
+samUrl=$(wget -qO- http://speccie.uk/software/sam2/ | grep -i 'sam2.*bxy' | tr '<>' '\n' | grep href | cut -d '=' -f 2 | tr -d '"')
+snapUrl=$(wget -qO- http://speccie.uk/software/snap/ | grep -i 'snap.*bxy' | tr '<>' '\n' | grep href | cut -d '=' -f 2 | tr -d '"')
 wget -O files/external/appleii/safe2.bxy "$safeUrl"
 wget -O files/external/appleii/sam2.bxy "$samUrl"
 wget -O files/external/appleii/snap.bxy "$snapUrl"

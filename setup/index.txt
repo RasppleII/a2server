@@ -9,7 +9,7 @@
 # to download and execute, type:
 # wget ivanx.com/a2server/setup; source setup
 
-a2serverVersion="151"
+a2serverVersion="152"
 
 # Ensure URL we'll use ends in a /
 case "$A2SERVER_SCRIPT_URL" in
@@ -29,6 +29,7 @@ isRpi=
 isDebian=
 lsb_release -a 2> /dev/null | grep -q 'Distributor ID:.Debian' && [[ ( -f /etc/debian_version ) && ( $(cut -d . -f 1 < /etc/debian_version) -ge "7" ) ]] && isDebian=1
 
+installedVersion=
 if [ -f /usr/local/etc/A2SERVER-version ]; then
     installedVersion="$(cat /usr/local/etc/A2SERVER-version)"
 fi
@@ -46,7 +47,6 @@ installAll=
 setupNetBoot=
 setupWindowsSharing=
 compileAlways=
-updateRasppleII=
 rm /tmp/a2server-* 2> /dev/null
 while [[ $1 ]]; do
     if [[ $1 == "-r" ]]; then
@@ -72,10 +72,6 @@ while [[ $1 ]]; do
         shift
         compileAlways="-c"
         touch /tmp/a2server-compileAlways
-    elif [[ $1 == "-os" || $1 == "os" ]]; then
-        # elif [[ ${1,,} == "rasppleii" || ${1,,} == "raspple" || ${1,,} == "rasappleii" || ${1,,} == "rasapple" || ${1,,} == "raspple2" || ${1,,} == "rasapple2" ]]; then
-        shift
-        updateRasppleII=1
     elif [[ $1 == "-v" ]]; then
         shift
         # Version was already printed
@@ -89,19 +85,9 @@ while [[ $1 ]]; do
         echo "-b: auto-setup network boot (use with -y)"
         echo "-w: auto-setup Windows file sharing (use with -y)"
         echo "-c: compile non-package items, rather than downloading binaries"
-        if [[ $isRpi ]]; then
-            echo "-os: update Raspbian OS, A2CLOUD, A2SERVER, and Apple II Pi"
-        fi
         [[ $0 == "-bash" ]] && return 1 || exit 1
     fi
 done
-
-if [[ $updateRasppleII ]]; then
-    echo "A2SERVER: Updating Raspple II (takes up to an hour)..."
-    wget -qO /tmp/raspbian-update "${A2SERVER_SCRIPT_URL}scripts/raspbian-update.txt"
-    source /tmp/raspbian-update a2cloud a2server $autoAnswerYes $skipRepoUpdate
-    [[ $0 == "-bash" ]] && return 0 || exit 0
-fi
 
 if { [[ -f /usr/local/etc/A2SERVER-version ]] && (( $(head -c 3 /usr/local/etc/A2SERVER-version) < 110 )); }; then
     echo
@@ -114,7 +100,7 @@ fi
 a2server_update=0
 doSetup=1
 
-if { [[ -f /usr/local/etc/A2SERVER-version ]] && (( $(head -c 3 /usr/local/etc/A2SERVER-version) < 151 )); }; then
+if { [[ -f /usr/local/etc/A2SERVER-version ]] && (( $(head -c 3 /usr/local/etc/A2SERVER-version) < 152 )); }; then
     a2server_update=1
 fi
 
@@ -124,23 +110,25 @@ if [[ $isRpi ]]; then #supported Raspbian? (16-Feb-15, 20-Jun-14, 09-Jan-14, etc
     fwsupported="-8aca5762- -462f3e3f476f7b6- -c32bc633039cd9- -9d34d0475f9-
             -d4f5315cfac4e- -6f4a90c8cb8817f- -5dd9b4962e- -17c8799375-
             -960832a6c2590635216c296b6ee0bebf67b21d50-
-            -2a329e0c7d8ea19c085bac5633aa4fccee0f21be-"
+            -2a329e0c7d8ea19c085bac5633aa4fccee0f21be-
+            -b2420fc150ae4616f5d9ec24bdaedc630586a529-"
     [[ "$fwsupported" == *-$fwhash-* ]] && unsupportedOS=
     # [[ ($fwhash == "8aca5762") || ($fwhash == "462f3e3f476f7b6") || ($fwhash == "c32bc633039cd9") || ($fwhash == "9d34d0475f9") || ($fwhash == "d4f5315cfac4e") || ($fwhash == "6f4a90c8cb8817f") || ($fwhash == "5dd9b4962e") || ($fwhash == "17c8799375") ]] && unsupportedOS=
 elif [[ $isDebian ]]; then # supported Debian?
      debianVersion=$(cat /etc/debian_version)
-     debianSupported="-8.2- -7.9- -7.8- -7.6- -7.3-"
+     debianSupported="-9.2- -8.2- -7.9- -7.8- -7.6- -7.3-"
      [[ $debianSupported == *-$debianVersion-* ]] && unsupportedOS=
 fi
 
 if [[ $unsupportedOS && $isRpi ]]; then
     echo
-    echo "A2SERVER and its installer scripts have been tested on Raspbian Wheezy and"
-    echo "Jessie, though not this specific firmware version ($fwhash). Just FYI."
+    echo "A2SERVER and its installer scripts have been tested on Raspbian Stretch,"
+    echo "Jessie, and Wheezy, though not this specific firmware version"
+    echo "(${fwhash:0:7}). Just FYI."
     unsupportedOS=
 elif [[ $unsupportedOS && $isDebian ]]; then
     echo
-    echo "A2SERVER and its installer scripts have been tested on Debian 7 and 8,"
+    echo "A2SERVER and its installer scripts have been tested on Debian 7/8/9,"
     echo "though not this specific point release ($debianVersion). Just FYI."
     unsupportedOS=
 fi
@@ -180,34 +168,38 @@ if (( $doSetup )); then
 
     if (( $doSetup )); then
 
-        userPw=$(sudo grep "^$USER" /etc/shadow | cut -f 2 -d ':')
-        [[ $userPw == "$(echo 'apple2' | perl -e '$_ = <STDIN>; chomp; print crypt($_, $ARGV[0])' "${userPw%"${userPw#\$*\$*\$}"}")" ]] && isApple2Pw=1 || isApple2Pw=
-        [[ $userPw == "$(echo 'raspberry' | perl -e '$_ = <STDIN>; chomp; print crypt($_, $ARGV[0])' "${userPw%"${userPw#\$*\$*\$}"}")" ]] && isRaspberryPw=1 || isRaspberryPw=
-
-        password="your password"
-        [[ $isApple2Pw ]] && password="'apple2'"
-        [[ $isRaspberryPw ]] && password="'raspberry'"
-
-
-        [[ $isRpi ]] && a2server="your Raspberry Pi" || a2server="A2SERVER"
-        if [[ ! $isApple2Pw && ! -f /usr/local/etc/A2SERVER-version ]]; then
-            if [[ ! $autoAnswerYes ]]; then
-                echo
-                echo "To ensure that all client computers are able to connect to"
-                echo "${a2server} using the same password, you probably want"
-                echo "to change your user password to 'apple2'."
-                echo
-                echo -n "Do you want to change the password for user '$USER' to 'apple2' now? "
-                read
+        checkPw=1
+        while [[ $checkPw ]] ; do
+            userPw=$(sudo grep "^$USER" /etc/shadow | cut -f 2 -d ':')
+            [[ $userPw == "$(echo 'apple2' | perl -e '$_ = <STDIN>; chomp; print crypt($_, $ARGV[0])' "${userPw%"${userPw#\$*\$*\$}"}")" ]] && isApple2Pw=1 || isApple2Pw=
+            [[ $userPw == "$(echo 'raspberry' | perl -e '$_ = <STDIN>; chomp; print crypt($_, $ARGV[0])' "${userPw%"${userPw#\$*\$*\$}"}")" ]] && isRaspberryPw=1 || isRaspberryPw=
+    
+            password="your password"
+            [[ $isApple2Pw ]] && password="apple2"
+            [[ $isRaspberryPw ]] && password="raspberry"
+            checkPw=
+    
+            [[ $isRpi ]] && a2server="your Raspberry Pi" || a2server="A2SERVER"
+            if [[ ! $isApple2Pw && ! -f /usr/local/etc/A2SERVER-version ]]; then
+                if [[ ! $autoAnswerYes ]]; then
+                    echo
+                    echo "To ensure that all client computers are able to connect to"
+                    echo "${a2server} using the same password, you probably want"
+                    echo "to change your user password to 'apple2'."
+                    echo
+                    echo -n "Do you want to change the password for user '$USER' to 'apple2' now? "
+                    read
+                fi
+                if [[ $autoAnswerYes || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
+                    echo "A2SERVER: changing password for user '$USER' to 'apple2'..."
+                    echo "$USER:apple2" | sudo chpasswd
+                    checkPw=1
+                fi
             fi
-            if [[ $autoAnswerYes || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
-                echo "A2SERVER: changing password for user '$USER' to 'apple2'..."
-                echo "$USER:apple2" | sudo chpasswd
-            fi
-        fi
+        done
 
         echo
-        echo "During this installation, enter ${password} if prompted for passwords."
+        echo "During this installation, enter '${password}' if prompted for passwords."
         echo
 
         sudo true

@@ -158,7 +158,7 @@ readchars () {
         && ( $3 -ge 0 ) ]] || return 23; }
     # args are valid
     dd if="$1" bs=1 skip=$(($2)) $([[ $3 ]] && echo -n "count=$3") \
-        2> /dev/null
+        2> /dev/null | tr -d ' \0'
 }
 
 readcharDec () {
@@ -175,7 +175,7 @@ readcharDec () {
         && ( $2 -ge 0 ) ]] || return 22; }
     # args are valid
     charX="$(dd if="$1" bs=1 skip=$(($2)) \
-        count=1 2> /dev/null; echo -n X)"
+        count=1 2> /dev/null | tr -d '\0'; echo -n X)"
     [[ ${#charX} -gt 1 ]] || { echo -n 0; return 0; }
     echo -n "${charX:0:1}" | od -t u1 | \
         head -1 | sed 's/[0\ ]*//' | tr -d ' \n'
@@ -195,7 +195,7 @@ readcharHex () {
         && ( $2 -ge 0 ) ]] || return 22; }
     # args are valid
     charX="$(dd if="$1" bs=1 skip=$(($2)) \
-        count=1 2> /dev/null; echo -n X)"
+        count=1 2> /dev/null | tr -d '\0'; echo -n X)"
     [[ ${#charX} -gt 1 ]] || { echo -n "00"; return 0; }
     printf %02X $(echo -n "${charX:0:1}" | od -t u1 | \
         head -1 | sed 's/[0\ ]*//' | tr -d ' \n')
