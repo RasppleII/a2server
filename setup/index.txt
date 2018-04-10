@@ -6,7 +6,7 @@
 # netatalk configured for Apple II use on Debian or Raspbian.
 # more info is at http://ivanx.com/a2server
 
-a2serverVersion="1.5.2"
+a2serverVersion="1.9.0"
 a2sScriptURL="https://raw.githubusercontent.com/RasppleII/a2server/master"
 
 a2sDevel="$( dirname "${BASH_SOURCE[0]}" )/.."
