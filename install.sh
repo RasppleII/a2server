@@ -13,5 +13,5 @@ a2sScriptURL="https://raw.githubusercontent.com/RasppleII/a2server/master"
 
 # Run the legacy setup script for anything not yet ported
 if [ -e setup/index.txt ]; then
-	source setup/index.txt
+	source setup/index.txt "$@"
 fi
