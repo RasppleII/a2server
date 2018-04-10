@@ -70,6 +70,16 @@
 1.5.0r2: Jan 16: fixed GitHub URLs to prevent https errors during installation
                  (thanks to http://blogs.yahoo.co.jp/ushi_cow/57459736.html)
 
+1.5.1: Jan 2016: fixed GitHub URLs to prevent https errors during installation
+                 (thanks to http://blogs.yahoo.co.jp/ushi_cow/57459736.html);
+                 bug fixes and minor text changes
+
+1.5.1r2: Oct 2017: corrected version number
+
+1.5.2: Nov 2017: support for Debian/Raspbian Stretch; fixes minor bugs  during
+                 install; enable SSH server if disabled on Raspberry Pi; fixes
+                 changed download links for GS/OS communication software
+
 Big thanks to: Anthony Martino, Henry Courbis, Joseph Carter, Jason King,
 Andy McFadden, Steven Hirsch, Geoff Body, Peter Wong, Tony Diaz, David Schmidt,
 David Schmenk, Ewen Wannop, Andrew Roughan, Antoine Vignau, Martin Haye,

@@ -33,6 +33,7 @@ diskToolsP8Dir=$p8Dir/Disk.Tools.P8
 commDir="/srv/A2SERVER/A2FILES/Comm"
 
 gsosURL="http://download.info.apple.com/Apple_Support_Area/Apple_Software_Updates/English-North_American/Apple_II/Apple_IIGS_System_6.0.1/"
+# alernate: http://web.archive.org/web/20080907081050/http://download.info.apple.com/Apple_Support_Area/Apple_Software_Updates/English-North_American/Apple_II/Apple_IIGS_System_6.0.1/
 gsosBackupURL="http://archive.org/download/download.info.apple.com.2012.11/download.info.apple.com.2012.11.zip/download.info.apple.com%2FApple_Support_Area%2FApple_Software_Updates%2FEnglish-North_American%2FApple_II%2FApple_IIGS_System_6.0.1%2F"
 
 # --- bashByter library routines
@@ -138,11 +139,11 @@ updateP8YearTables () {
 		patched=0 # 0 is true in this case since it's the return value
 		while (( $i < ${#files[@]} )); do
 			[[ ! -f "${files[$i]}" ]] && { (( i++ )); continue; }
-			if [[ ! $patch1 || $patch1 != $(sudo dd if="${files[$i]}" skip=${offset1[$i]} bs=1 count=7 2> /dev/null) ]]; then
+			if [[ ! $patch1 || $patch1 != $(sudo dd if="${files[$i]}" skip=${offset1[$i]} bs=1 count=7 2> /dev/null | tr -d '\0') ]]; then
 				patched=1 # 1 is false
 				break
 			fi
-			if [[ ! $patch2 || $patch2 != $(sudo dd if="${files[$i]}" skip=${offset2[$i]} bs=1 count=9 2> /dev/null) ]]; then
+			if [[ ! $patch2 || $patch2 != $(sudo dd if="${files[$i]}" skip=${offset2[$i]} bs=1 count=9 2> /dev/null | tr -d '\0') ]]; then
 				patched=1 # 1 is false
 				break
 			fi
@@ -404,8 +405,8 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 				fi
 
 				# delete previously downloaded installer
-				rm "$imagesDir/* $imagesDir/.AppleDouble"/* 2> /dev/null
-				rm "$netInstallDir/* $netInstallDir/.AppleDouble"/* 2> /dev/null
+				rm -f "$imagesDir/* $imagesDir/.AppleDouble"/*
+				rm -f "$netInstallDir/* $netInstallDir/.AppleDouble"/*
 				afpsync -v $gsosDir > /dev/null
 
 				for diskname in ${diskNames[@]}; do
@@ -490,10 +491,8 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 						elif [[ $action == 3 || $action == 4 ]]; then
 							if [[ -f "$targetPath" ]]; then
 								echo "deleting $targetPath"
-								rm "$targetPath"
-								if [[ -f $targetParent/.AppleDouble/$targetFile ]]; then
-									rm "$targetParent/.AppleDouble/$targetFile"
-								fi
+								rm -f "$targetPath"
+								rm -f "$targetParent/.AppleDouble/$targetFile"
 							fi
 						fi
 						(( entryIndex++ ))
@@ -592,6 +591,9 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 					cd /tmp/netboot
 					if [[ $useExternalURL ]]; then
 						wget -qO Asimov.shk "http://www.ninjaforce.com/downloads/Asimov.shk"
+						if (( $? != 0 )); then
+							wget -qO Asimov.shk "http://web.archive.org/web/20160330184627/http://www.ninjaforce.com/downloads/Asimov.shk"
+						fi
 						nulib2 -x -s Asimov.shk &> /dev/null
 					fi
 					if [[ ! -d Asimov ]]; then
@@ -696,6 +698,9 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 				if [[ $useExternalURL ]]; then
 					# This should not be .zip *sigh*
 					wget -q -O dsk2file.shk "http://www.dwheeler.com/6502/oneelkruns/dsk2file.zip"
+					if (( $? != 0 )); then
+						wget -q -O dsk2file.shk http://web.archive.org/web/20120726132356/http://www.dwheeler.com/6502/oneelkruns/dsk2file.zip
+					fi
 					nulib2 -x -s dsk2file.shk &> /dev/null
 				fi
 				if [[ ! -f DSK2FILE58 ]]; then
@@ -780,17 +785,15 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 
 				unset safeUrl samUrl snapUrl safeVer samVer snapVer
 				if [[ $useExternalURL ]]; then
-					html=$(wget -qO- "http://speccie.co.uk/speccie/Site/Download_Centre_files/widget1_markup.html")
-					safeUrl=$(echo "$html" | grep -i 'safe2.*bxy' | tr '<>' '\n' | grep href | cut -d '=' -f 2 | tr -d '"')
-					samUrl=$(echo "$html" | grep -i 'sam2.*bxy' | tr '<>' '\n' | grep href | cut -d '=' -f 2 | tr -d '"')
-					snapUrl=$(echo "$html" | grep -i 'snap.*bxy' | tr '<>' '\n' | grep href | cut -d '=' -f 2 | tr -d '"')
+					safeUrl=$(wget -qO- http://speccie.uk/software/safe2/ | grep -i 'safe2.*bxy' | tr '<>' '\n' | grep href | cut -d '=' -f 2 | tr -d '"')
+					samUrl=$(wget -qO- http://speccie.uk/software/sam2/ | grep -i 'sam2.*bxy' | tr '<>' '\n' | grep href | cut -d '=' -f 2 | tr -d '"')
+					snapUrl=$(wget -qO- http://speccie.uk/software/snap/ | grep -i 'snap.*bxy' | tr '<>' '\n' | grep href | cut -d '=' -f 2 | tr -d '"')
 					safeVer=$(echo $safeUrl | rev | cut -d '/' -f 1 | cut -d '.' -f 2 | rev | cut -c 5- | sed 's/./.&/g' | cut -c 2-)
 					samVer=$(echo $samUrl | rev | cut -d '/' -f 1 | cut -d '.' -f 2 | rev | cut -c 4- | sed 's/./.&/g' | cut -c 2-)
 					snapVer=$(echo $snapUrl | rev | cut -d '/' -f 1 | cut -d '.' -f 2 | rev | cut -c 5- | sed 's/./.&/g' | cut -c 2-)
-					spectrumVer=$(echo "$html" | grep 'Spectrum.*Gold.2mg' | tr '<>' '\n' | grep '^Spectrum.*2mg$' | cut -d ' ' -f 2)
 				fi
 
-				echo -n "Spectrum $spectrumVer"
+				echo -n "Spectrum"
 				# get Spectrum
 				if [[ -f $commDir/Spectrum/Spectrum ]]; then
 					echo " is already installed."
@@ -847,6 +850,9 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 
 					# Marinetti 3.0b1 -- had to repackage because installer is GS/OS self-contained app
 					wget -qO MarinettiB1.SHK "${a2sBinaryURL}/appleii/MarinettiB1.SHK"
+					if (( $? != 0 )); then
+						wget -qO Marinetti3.0b8.po http://web.archive.org/web/20171105043713/http://a2retrosystems.com/downloads/Marinetti3.0b8.po
+					fi
 					cppo -ad -s -n MarinettiB1.SHK $gsosDir > /dev/null
 
 					# TCP/IP update (3.0b8)
@@ -862,6 +868,9 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 					# PPP Scripted Link Layer update (1.3d4)
 					if [[ $useExternalURL ]]; then
 						wget -qO PPPX.1.3d4.SHK "http://www.apple2.org/marinetti/PPPX.1.3d4.SHK"
+						if (( $? != 0 )); then
+							wget -qO PPPX.1.3d4.SHK http://web.archive.org/web/20160331231844/http://www.apple2.org/marinetti/PPPX.1.3d4.SHK
+						fi
 					fi
 					if [[ $? != 0 || ! -f PPPX.1.3d4.SHK || $(wc -c < PPPX.1.3d4.SHK) != "22068" ]]; then
 						wget -qO PPPX.1.3d4.SHK "${a2sBinaryURL}/appleii/PPPX.1.3d4.SHK"
@@ -908,13 +917,13 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 					cd /tmp/netboot/safe2
 					if [[ $useExternalURL ]]; then
 						if [[ ! $safeUrl ]]; then
-							safeUrl="http://www.speccie.co.uk/speccie/software/safe229.bxy"
+							safeUrl="http://www.speccie.co.uk/speccie/software/safe230.bxy"
 						fi
 						wget -qO safe2.bxy "$safeUrl"
 						cppo -s -ad safe2.bxy . &> /dev/null
 					fi
 					if [[ ! -f SAFE2.Archive/Safe2 ]]; then
-						wget -qO safe2.bxy "${a2sBinaryURL}/appleii/safe229.bxy"
+						wget -qO safe2.bxy "${a2sBinaryURL}/appleii/safe230.bxy"
 						cppo -s -ad safe2.bxy . &> /dev/null
 					fi
 					cd SAFE2.Archive

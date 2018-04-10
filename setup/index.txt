@@ -6,7 +6,7 @@
 # netatalk configured for Apple II use on Debian or Raspbian.
 # more info is at http://ivanx.com/a2server
 
-a2serverVersion="1.5.1"
+a2serverVersion="1.5.2"
 a2sScriptURL="https://raw.githubusercontent.com/RasppleII/a2server/master"
 
 a2sDevel="$( dirname "${BASH_SOURCE[0]}" )/.."
@@ -148,9 +148,6 @@ while [[ $1 ]]; do
 		echo "-b: auto-setup network boot (use with -y)"
 		echo "-w: auto-setup Windows file sharing (use with -y)"
 		echo "-c: compile non-package items, rather than downloading binaries"
-		if [[ $isRpi ]]; then
-			echo "-os: update Raspbian OS, A2CLOUD, A2SERVER, and Apple II Pi"
-		fi
 		if [[ $0 == "-bash" ]]; then
 			return 1
 		else
@@ -170,9 +167,8 @@ fi
 a2server_update=0
 doSetup=1
 
-if a2sCmpInstalled lt 1.5.0; then
+if a2sCmpInstalled lt 1.5.2; then
 	a2server_update=1
-fi
 
 unsupportedOS=1
 if [[ $isRpi ]]; then #supported Raspbian? (16-Feb-15, 20-Jun-14, 09-Jan-14, etc)
@@ -180,22 +176,26 @@ if [[ $isRpi ]]; then #supported Raspbian? (16-Feb-15, 20-Jun-14, 09-Jan-14, etc
 	fwsupported="-8aca5762- -462f3e3f476f7b6- -c32bc633039cd9- -9d34d0475f9-
 			-d4f5315cfac4e- -6f4a90c8cb8817f- -5dd9b4962e- -17c8799375-
 			-960832a6c2590635216c296b6ee0bebf67b21d50-
-			-2a329e0c7d8ea19c085bac5633aa4fccee0f21be-"
-	[[ "$fwsupported" == *-$fwhash-* ]] && unsupportedOS=
+			-2a329e0c7d8ea19c085bac5633aa4fccee0f21be-
+			-b2420fc150ae4616f5d9ec24bdaedc630586a529-"
+	if [[ "$fwsupported" == *-$fwhash-* ]]; then
+		unsupportedOS=
+	fi
 elif [[ $isDebian ]]; then # supported Debian?
 	 debianVersion=$(cat /etc/debian_version)
-	 debianSupported="-8.2- -7.9- -7.8- -7.6- -7.3-"
+	 debianSupported="-9.2- -8.2- -7.9- -7.8- -7.6- -7.3-"
 	 [[ $debianSupported == *-$debianVersion-* ]] && unsupportedOS=
 fi
 
 if [[ $unsupportedOS && $isRpi ]]; then
 	echo
 	echo "A2SERVER and its installer scripts have been tested on Raspbian Wheezy and"
-	echo "Jessie, though not this specific firmware version ($fwhash). Just FYI."
+	echo "Jessie, though not this specific firmware version"
+	echo "(${fwhash:0:7}). Just FYI."
 	unsupportedOS=
 elif [[ $unsupportedOS && $isDebian ]]; then
 	echo
-	echo "A2SERVER and its installer scripts have been tested on Debian 7 and 8,"
+	echo "A2SERVER and its installer scripts have been tested on Debian 7/8/9,"
 	echo "though not this specific point release ($debianVersion). Just FYI."
 	unsupportedOS=
 fi
@@ -239,42 +239,42 @@ if (( $doSetup )); then
 		rm -rf /tmp/a2server-install &>/dev/null
 		mkdir -p /tmp/a2server-install
 
-		isApple2Pw=
-		isRaspberryPw=
-		userPw=$(sudo grep "^$USER" /etc/shadow | cut -f 2 -d ':')
-		[[ $userPw == "$(echo 'apple2' | perl -e '$_ = <STDIN>; chomp; print crypt($_, $ARGV[0])' "${userPw%"${userPw#\$*\$*\$}"}")" ]] && isApple2Pw=1
-		[[ $userPw == "$(echo 'raspberry' | perl -e '$_ = <STDIN>; chomp; print crypt($_, $ARGV[0])' "${userPw%"${userPw#\$*\$*\$}"}")" ]] && isRaspberryPw=1
+        checkPw=1
+		while [[ $checkPw ]] ; do
+			userPw=$(sudo grep "^$USER" /etc/shadow | cut -f 2 -d ':')
+			[[ $userPw == "$(echo 'apple2' | perl -e '$_ = <STDIN>; chomp; print crypt($_, $ARGV[0])' "${userPw%"${userPw#\$*\$*\$}"}")" ]] && isApple2Pw=1 || isApple2Pw=
+			[[ $userPw == "$(echo 'raspberry' | perl -e '$_ = <STDIN>; chomp; print crypt($_, $ARGV[0])' "${userPw%"${userPw#\$*\$*\$}"}")" ]] && isRaspberryPw=1 || isRaspberryPw=
 
-		password="your password"
-		[[ $isApple2Pw ]] && password="'apple2'"
-		[[ $isRaspberryPw ]] && password="'raspberry'"
+			password="your password"
+			[[ $isApple2Pw ]] && password="'apple2'"
+			[[ $isRaspberryPw ]] && password="'raspberry'"
+			checkPw=
 
 
-		[[ $isRpi ]] && a2server="your Raspberry Pi" || a2server="A2SERVER"
-		if [[ ! $isApple2Pw && ! -f /usr/local/etc/A2SERVER-version ]]; then
-			if [[ ! $autoAnswerYes ]]; then
-				echo
-				echo "To ensure that all client computers are able to connect to"
-				echo "${a2server} using the same password, you probably want"
-				echo "to change your user password to 'apple2'."
-				echo
-				echo -n "Do you want to change the password for user '$USER' to 'apple2' now? "
-				read
+			[[ $isRpi ]] && a2server="your Raspberry Pi" || a2server="A2SERVER"
+			if [[ ! $isApple2Pw && ! -f /usr/local/etc/A2SERVER-version ]]; then
+				if [[ ! $autoAnswerYes ]]; then
+					echo
+					echo "To ensure that all client computers are able to connect to"
+					echo "${a2server} using the same password, you probably want"
+					echo "to change your user password to 'apple2'."
+					echo
+					echo -n "Do you want to change the password for user '$USER' to 'apple2' now? "
+					read
+				fi
+				if [[ $autoAnswerYes || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
+					echo "A2SERVER: changing password for user '$USER' to 'apple2'..."
+					echo "$USER:apple2" | sudo chpasswd
+				fi
 			fi
-			if [[ $autoAnswerYes || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
-				echo "A2SERVER: changing password for user '$USER' to 'apple2'..."
-				echo "$USER:apple2" | sudo chpasswd
-			fi
-		fi
+		done
+
 
 		echo
 		echo "During this installation, enter ${password} if prompted for passwords."
 		echo
 
 		sudo true
-
-		echo
-		echo "A2SERVER: Downloading scripts..."
 
 		read -d '' a2sSubScripts <<-EOF
 			a2server-1-storage.txt
@@ -288,6 +288,8 @@ if (( $doSetup )); then
 		if [[ -n "$a2sDevel" ]]; then
 			a2sScriptDir="$a2sDevel/scripts"
 		else
+			echo
+			echo "A2SERVER: Downloading scripts..."
 			a2sScriptDir="/tmp/a2server-install/scripts"
 			mkdir -p "$a2sScriptDir"
 			for _script in $a2sSubScripts; do
@@ -299,7 +301,14 @@ if (( $doSetup )); then
 		fi
 
 		if [[ $installAll ]]; then
-			sudo rm -f /usr/local/etc/A2SERVER-version /usr/local/bin/nulib2 /usr/local/bin/unar /usr/local/sbin/macipgw /usr/local/bin/ciopfs /usr/local/etc/netatalk/afppasswd /usr/local/etc/netatalk/a2boot/p8 /usr/local/etc/netatalk/a2boot/ProDOS16\ Image
+			sudo rm -f /usr/local/etc/A2SERVER-version
+			sudo rm -f /usr/local/bin/nulib2
+			sudo rm -f /usr/local/bin/unar
+			sudo rm -f /usr/local/sbin/macipgw
+			sudo rm -f /usr/local/bin/ciopfs
+			sudo rm -f /usr/local/etc/netatalk/afppasswd
+			sudo rm -f /usr/local/etc/netatalk/a2boot/p8
+			sudo rm -f /usr/local/etc/netatalk/a2boot/ProDOS16\ Image
 		fi
 
 		for _script in $a2sSubScripts; do
@@ -314,10 +323,7 @@ if (( $doSetup )); then
 
 		rm -f /tmp/a2server-packageReposUpdated
 
-		if [[ ! -f /usr/local/etc/A2SERVER-version ]] \
-			|| (( $(head -c 3 /usr/local/etc/A2SERVER-version) < ${a2serverVersion:0:3} )); then
-			echo "$a2serverVersion" | sudo tee /usr/local/etc/A2SERVER-version &> /dev/null
-		fi
+		echo "$a2serverVersion" | sudo tee /usr/local/etc/A2SERVER-version &> /dev/null
 
 		source /usr/local/etc/a2serverrc
 

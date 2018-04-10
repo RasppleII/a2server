@@ -98,4 +98,22 @@
 [unannounced]
 
 1.5.1: May 2016: changed URLs from rawgit.com to raw.githubusercontent.com
-                 to resolve https problems during install
+                 to resolve https problems during install; OS X temp dir
+                 path corrected; added getexternal.sh to repo;
+                 cppo changes; minor text changes (JTC); better Debian
+                 version checking (JTC)
+[unannounced]
+
+1.5.1r2: Oct 2017: set internal version to 1.5.1; expanded version history
+[unannounced]
+
+1.5.2: Nov 2017: support for Stretch; suppress null byte read warnings in
+                 Bash 4.4; enable SSH server on Raspberry Pi if disabled;
+                 use Internet Archive backup URL's for external downloads if
+                 possible; compile AppleTalk kernel if -c flag is
+                 specified (rather than downloading);  better cleanup after
+                 AppleTalk kernel compile; notification if AppleTalk kernel
+                 module doesn't load; fixed download links for comm software;
+                 bug fixes when compiling macipgw and ciopfs;
+                 os option (Raspbian update) removed from a2server-setup
+
