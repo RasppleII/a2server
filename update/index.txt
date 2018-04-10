@@ -1,27 +1,41 @@
 #! /bin/bash
 # vim: set tabstop=4 shiftwidth=4 noexpandtab filetype=sh:
 
-a2sScriptURL="https://raw.githubusercontent.com/RasppleII/a2server/master"
+# update/index.txt - upgrade path from Ivan's a2server tree
+#
+# Ivan's a2server installed with a single copy-paste of a command line that
+# downloaded a script and ran it sight-unseen.  It also installed an alias
+# command that would perform a similar one-liner to upgrade a2server to the
+# latest version.  This script provides that interface for upgrades.
 
+a2sBranch="master"
+a2sScriptURL="https://raw.githubusercontent.com/RasppleII/a2server/${a2sBranch}"
+a2sTarball="https://github.com/RasppleII/a2server/archive/${a2sBranch}.tar.gz"
+
+origDir="$PWD"
+
+# Set a2sDevel to the location of the source tree if we're running in one
 a2sDevel="$( dirname "${BASH_SOURCE[0]}" )/.."
 if [[ -f "$a2sDevel/.a2server_source" ]]; then
 	pushd $a2sDevel >/dev/null
 	a2sDevel="$PWD"
 	popd >/dev/null
 else
+	# We aren't in a source tree, empty the variable
 	a2sDevel=
 fi
 
-if [[ -z "$a2sDevel" ]]; then
-	currentVersion=$(wget -qO- "${a2sScriptURL}/setup/index.txt" | grep '^a2serverVersion' | cut -d '"' -f 2)
+# Find the version in the install script
+if [[ ! $a2sDevel ]]; then
+	newVersion=$(wget -qO- "${a2sScriptURL}/install.sh" | grep '^a2serverVersion' | cut -d '"' -f 2)
 else
-	currentVersion=$(grep '^a2serverVersion' "$a2sDevel/setup/index.txt" | cut -d '"' -f 2)
+	newVersion=$(grep '^a2serverVersion' "$a2sDevel/install.sh" | cut -d '"' -f 2)
 fi
 
 if [[ -f /usr/local/etc/A2SERVER-version ]]; then
-	read installedVersion </usr/local/etc/A2SERVER-version
+	read installedVersion < /usr/local/etc/A2SERVER-version
+	# Convert old three-digit version if needed
     if [[ $installedVersion != *.*.* ]]; then
-		# Deal with old three-digit version
         installedVersion="${installedVersion:0:1}.${installedVersion:1:1}.${installedVersion:2}"
     fi
 else
@@ -36,30 +50,41 @@ for arg in $@; do
 	fi
 done
 
-echo
-echo "Update history:"
+# If running from local source tree, that's what you'll be upgrading to
+printf "\nProject history:\n"
 if [[ -z "$a2sDevel" ]]; then
 	wget -qO- "${a2sScriptURL}/update/versionhistory.txt"
 else
 	cat "$a2sDevel/update/versionhistory.txt"
 fi
-echo
-echo "installed version: ${installedVersion}"
-echo "current version: ${currentVersion}"
-echo
+
+cat <<EOT
+
+installed version: ${installedVersion}
+available version: ${newVersion}
+
+EOT
+
 if [[ $autoAnswerYes ]]; then
 	REPLY="y"
 else
-	echo -n "Do you want to update (or reinstall) A2SERVER? "
+	printf "Do you want to update (or reinstall) a2server? "
 	read
 fi
 if [[ ${REPLY:0:1} == "y" || ${REPLY:0:1} == "Y" ]]; then
 	if [[ -z "$a2sDevel" ]]; then
-		wget -q -O /tmp/setup "${a2sScriptURL}/setup/index.txt"; source /tmp/setup -i "$@"
+		a2sInstall=$(mktemp -d /tmp/a2server.XXXXXXXXXXXX)
+		cd "$a2sInstall"
+		wget -O "a2server-${a2sBranch}.tar.gz" "$a2sTarball"
+		tar zxf "a2server-${a2sBranch}.tar.gz"
+		installScript="a2server-${a2sBranch}/install.sh"
 	else
-		"$a2sDevel/setup/index.txt"
+		installScript="${a2sDevel}/install.sh"
 	fi
+	source "$installScript" -i "$@"
 fi
 
-unset currentVersion 2> /dev/null
-unset installedVersion 2> /dev/null
+cd "$origDir"
+if [[ $a2sInstall ]]; then
+	rm -rf "$a2sInstall"
+fi
