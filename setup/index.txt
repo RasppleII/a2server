@@ -12,31 +12,27 @@ a2sBranch="master"
 a2sScriptURL="https://raw.githubusercontent.com/RasppleII/a2server/${a2sBranch}"
 a2sTarball="https://github.com/RasppleII/a2server/archive/${a2sBranch}.tar.gz"
 
-origDir="$PWD"
-
-# Set a2sDevel to the location of the source tree if we're running in one
-a2sDevel="$( dirname "${BASH_SOURCE[0]}" )/.."
-if [[ -f "$a2sDevel/.a2server_source" ]]; then
-	pushd $a2sDevel >/dev/null
-	a2sDevel="$PWD"
+# Set a2sSource to the location of the source tree if we're running in one
+a2sSource="$( dirname "${BASH_SOURCE[0]}" )/.."
+if [[ -f "$a2sSource/.a2server_source" ]]; then
+	pushd $a2sSource >/dev/null
+	a2sSource="$PWD"
 	popd >/dev/null
 
 	cat <<-EOT
 	This script exists solely for backward-compatibility with IvanX's a2server
 	website and aliases installed by older versions.  You appear to have an
 	a2server source directory here:
-	 	$a2sDevel
+	 	$a2sSource
 
 	Please run ./install.sh in that directory.  Thanks!
 
 	EOT
 	exit 1
 fi
-a2sDevel=
 
 # Find the version in the install script
 newVersion=$(wget -qO- "${a2sScriptURL}/install.sh" | grep '^a2serverVersion' | cut -d '"' -f 2)
-
 
 # It almost never is, but this script could be run with command line arguments,
 # of which -y we can use, so we should check for it.  We'll pass them all to
@@ -48,8 +44,6 @@ for arg in $@; do
 		break
 	fi
 done
-
-
 
 cat <<EOT
 
@@ -82,19 +76,18 @@ if [[ ! $autoAnswerYes ]]; then
 	fi
 fi
 
-a2sInstall=$(mktemp -d /tmp/a2server.XXXXXXXXXXXX)
-cd "$a2sInstall"
+a2sSource=$(mktemp -d /tmp/a2server.XXXXXXXXXXXX)
 
-# We rename the tarball we download for consistency
-printf "\na2server: Downloading installer to ${a2sInstall}.\n"
-wget -O "a2server-${a2sBranch}.tar.gz" "$a2sTarball"
-tar zxf "a2server-${a2sBranch}.tar.gz"
+# Normally tarballs unpack in a subdirectory, but we want it to unpack into
+# $a2sSource directly (even though the directory has the tarball in it.)
+printf "\na2server: Downloading installer to $a2sSource.\n"
+wget -O "$a2sSource/a2server-$a2sBranch.tar.gz" "$a2sTarball"
+tar -C $a2sSource --strip-components=1 -zxf "$a2sSource/a2server-${a2sBranch}.tar.gz"
 
-# Now we actually run the installer
+# Now we actually run the installer as if we were installing it by hand
 printf "\na2server: Running the installer now.\n"
-"a2server-${a2sBranch}/install.sh" "$@"
+"${a2sSource}/install.sh" "$@"
 
 # Clean up and delete the installer we downloaded
-printf "\na2server: Finished with installer, now deleting ${a2sInstall}.\n"
-cd "$origDir"
-rm -rf "$a2sInstall"
+printf "\na2server: Finished with installer, now deleting ${a2sSource}.\n"
+rm -rf "$a2sSource"
