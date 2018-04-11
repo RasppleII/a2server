@@ -22,6 +22,6 @@ else
 fi
 
 # Run the legacy setup script for anything not yet ported
-if [[ -e "${a2sDevel}/setup/index.txt" ]]; then
-	source "${a2sDevel}/setup/index.txt" "$@"
+if [[ -e "${a2sDevel}/setup/ivan.sh" ]]; then
+	"${a2sDevel}/setup/ivan.sh" "$@"
 fi
