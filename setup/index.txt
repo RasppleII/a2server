@@ -169,6 +169,7 @@ doSetup=1
 
 if a2sCmpInstalled lt 1.5.2; then
 	a2server_update=1
+fi
 
 unsupportedOS=1
 if [[ $isRpi ]]; then #supported Raspbian? (16-Feb-15, 20-Jun-14, 09-Jan-14, etc)
@@ -189,8 +190,8 @@ fi
 
 if [[ $unsupportedOS && $isRpi ]]; then
 	echo
-	echo "A2SERVER and its installer scripts have been tested on Raspbian Wheezy and"
-	echo "Jessie, though not this specific firmware version"
+	echo "A2SERVER and its installer scripts have been tested on Raspbian Wheezy,"
+	echo "Jessie, and Stretch though not this specific firmware version"
 	echo "(${fwhash:0:7}). Just FYI."
 	unsupportedOS=
 elif [[ $unsupportedOS && $isDebian ]]; then
@@ -268,7 +269,6 @@ if (( $doSetup )); then
 				fi
 			fi
 		done
-
 
 		echo
 		echo "During this installation, enter ${password} if prompted for passwords."
