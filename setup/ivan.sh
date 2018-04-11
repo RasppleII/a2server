@@ -9,13 +9,14 @@
 a2serverVersion="1.9.0"
 a2sScriptURL="https://raw.githubusercontent.com/RasppleII/a2server/master"
 
-a2sDevel="$( dirname "${BASH_SOURCE[0]}" )/.."
-if [[ -f "$a2sDevel/.a2server_source" ]]; then
-	pushd $a2sDevel >/dev/null
-	a2sDevel="$PWD"
-	popd >/dev/null
-else
-	a2sDevel=
+# Find the path of our source directory
+a2sSource="$( dirname "${BASH_SOURCE[0]}" )/.."
+pushd $a2sSource >/dev/null
+a2sSource="$PWD"
+popd >/dev/null
+if [[ ! -f "$a2sSource/.a2server_source" ]]; then
+	printf "\na2server: cannot find a2server source directory in $a2sSource.\n\n"
+	exit 1
 fi
 
 isRpi=
@@ -285,21 +286,6 @@ if (( $doSetup )); then
 			a2server-7-console.txt
 		EOF
 
-		if [[ -n "$a2sDevel" ]]; then
-			a2sScriptDir="$a2sDevel/scripts"
-		else
-			echo
-			echo "A2SERVER: Downloading scripts..."
-			a2sScriptDir="/tmp/a2server-install/scripts"
-			mkdir -p "$a2sScriptDir"
-			for _script in $a2sSubScripts; do
-				wget -q -O "$a2sScriptDir/$_script" "${a2sScriptURL}/scripts/$_script"
-				chmod ugo+x "$a2sScriptDir/$_script"
-			done
-
-			echo "A2SERVER: Scripts have been downloaded. Installing..."
-		fi
-
 		if [[ $installAll ]]; then
 			sudo rm -f /usr/local/etc/A2SERVER-version
 			sudo rm -f /usr/local/bin/nulib2
@@ -312,14 +298,8 @@ if (( $doSetup )); then
 		fi
 
 		for _script in $a2sSubScripts; do
-			"$a2sScriptDir/$_script"
+			"$a2sSource/scripts/$_script"
 		done
-
-		if [[ -z "$a2sDevel" ]]; then
-			for _script in $a2sSubScripts; do
-				rm -f "$a2sScriptDir/$_script"
-			done
-		fi
 
 		rm -f /tmp/a2server-packageReposUpdated
 
