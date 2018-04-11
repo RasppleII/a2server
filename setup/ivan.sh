@@ -19,6 +19,8 @@ if [[ ! -f "$a2sSource/.a2server_source" ]]; then
 	exit 1
 fi
 
+compare_version="$a2sSource/scripts/compare_version"
+
 isRpi=
 [[ -f /usr/bin/raspi-config ]] && isRpi=1
 
@@ -39,66 +41,9 @@ if [[ -f /usr/local/etc/A2SERVER-version ]]; then
 fi
 echo "A2SERVER version available: $a2serverVersion"
 echo "A2SERVER version installed: ${installedVersion:=None}"
-
-function a2sCmpInstalled() {
-	local iMajor iMinor iRev
-	local cMajor cMinor cRev
-
-	[[ -z "$installedVersion" ]] && return 0 # No, not installed
-	[[ -z "$1" ]] && return 1
-	iMajor=${installedVersion%%.*}
-	iMinor=${installedVersion#*.}
-	iMinor=${iMinor%%.*}
-	iRev=${installedVersion##*.}
-	cMajor=${2%%.*}
-	cMinor=${2#*.}
-	cMinor=${cMinor%%.*}
-	cRev=${2##*.}
-
-	case "$1" in
-		lt|le)
-			if [[ "$iMajor" -lt "$cMajor" ]]; then
-				return 0
-			elif [[ "$iMajor" -eq "$cMajor" ]]; then
-				if [[ "$iMinor" -lt "$cMinor" ]]; then
-					return 0
-				elif [[ "$iMinor" -eq "$cMinor" ]]; then
-					if [[ "$iRev" -le "$cRev" ]]; then
-						if [[ "$1" == "le" || "$iRev" -lt "$cRev" ]]; then
-							return 0
-						fi
-					fi
-				fi
-			fi
-			;;
-		gt|ge)
-			if [[ "$iMajor" -gt "$cMajor" ]]; then
-				return 0
-			elif [[ "$iMajor" -eq "$cMajor" ]]; then
-				if [[ "$iMinor" -gt "$cMinor" ]]; then
-					return 0
-				elif [[ "$iMinor" -eq "$cMinor" ]]; then
-					if [[ "$iRev" -ge "$cRev" ]]; then
-						if [[ "$1" == "ge" || "$iRev" -gt "$cRev" ]]; then
-							return 0
-						fi
-					fi
-				fi
-			fi
-			;;
-		eq)
-			if [[ "$iMajor" -eq "$cMajor" ]]; then
-				if [[ "$iMinor" -eq "$cMinor" ]]; then
-					if [[ "$iRev" -eq "$cRev" ]]; then
-						return 0
-					fi
-				fi
-			fi
-			;;
-	esac
-
-	return 1
-}
+if [[ $installedVersion == "None" ]]; then
+	installedVersion=0
+fi
 
 skipRepoUpdate=
 autoAnswerYes=
@@ -157,7 +102,7 @@ while [[ $1 ]]; do
 	fi
 done
 
-if a2sCmpInstalled lt 1.1.0; then
+if "$compare_version" $installedVersion lt 1.1.0; then
 	echo
 	echo "WARNING: The current A2SERVER installer scripts haven't been tested for"
 	echo "updating the earlier version of A2SERVER that you have. A fresh install"
@@ -168,7 +113,7 @@ fi
 a2server_update=0
 doSetup=1
 
-if a2sCmpInstalled lt 1.5.2; then
+if "$compare_version" $installedVersion lt 1.5.2; then
 	a2server_update=1
 fi
 

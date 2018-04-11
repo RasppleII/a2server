@@ -1,0 +1,35 @@
+#! /usr/bin/env python3
+# vim: set tabstop=4 shiftwidth=4 noexpandtab filetype=python:
+
+import sys
+from pkg_resources import parse_version
+
+def usage():
+	print("Usage: compare_version <version> <operator> <version>")
+	print("    where operator is one of lt, le, eq, ge, gt, or ne")
+	sys.exit(2)
+
+if len(sys.argv) != 4:
+	usage()
+
+ver1 = parse_version(sys.argv[1])
+ver2 = parse_version(sys.argv[3])
+
+# I suppose you could do something clever with meta-method mapping here
+result = False
+if sys.argv[2] == 'lt':
+	result = ver1 < ver2
+elif sys.argv[2] == 'le':
+	result = ver1 <= ver2
+elif sys.argv[2] == 'eq':
+	result = ver1 == ver2
+elif sys.argv[2] == 'ge':
+	result = ver1 >= ver2
+elif sys.argv[2] == 'gt':
+	result = ver1 > ver2
+elif sys.argv[2] == 'ne':
+	result = ver1 != ver2
+else:
+	usage()
+
+sys.exit(0 if result else 1)
