@@ -12,34 +12,23 @@ a2sBranch="master"
 a2sScriptURL="https://raw.githubusercontent.com/RasppleII/a2server/${a2sBranch}"
 a2sTarball="https://github.com/RasppleII/a2server/archive/${a2sBranch}.tar.gz"
 
-origDir="$PWD"
-
-# Set a2sDevel to the location of the source tree if we're running in one
-a2sDevel="$( dirname "${BASH_SOURCE[0]}" )/.."
-if [[ -f "$a2sDevel/.a2server_source" ]]; then
-	pushd $a2sDevel >/dev/null
-	a2sDevel="$PWD"
-	popd >/dev/null
-else
-	# We aren't in a source tree, empty the variable
-	a2sDevel=
+# Set a2sSource to the location of the source tree if we're running in one
+a2sSource="$( dirname "${BASH_SOURCE[0]}" )/.."
+pushd $a2sSource >/dev/null
+a2sSource="$PWD"
+popd >/dev/null
+if [[ ! -f "$a2sSource/.a2server_source" ]]; then
+	a2sWebUpdate=1
+	a2sSource=$(mktemp -d /tmp/a2server.XXXXXXXXXXXX)
 fi
 
-# Find the version in the install script
-if [[ ! $a2sDevel ]]; then
-	newVersion=$(wget -qO- "${a2sScriptURL}/install.sh" | grep '^a2serverVersion' | cut -d '"' -f 2)
-else
-	newVersion=$(grep '^a2serverVersion' "$a2sDevel/install.sh" | cut -d '"' -f 2)
-fi
-
+installedVersion=
 if [[ -f /usr/local/etc/A2SERVER-version ]]; then
 	read installedVersion < /usr/local/etc/A2SERVER-version
 	# Convert old three-digit version if needed
     if [[ $installedVersion != *.*.* ]]; then
         installedVersion="${installedVersion:0:1}.${installedVersion:1:1}.${installedVersion:2}"
     fi
-else
-	installedVersion="1.0.0"
 fi
 
 autoAnswerYes=
@@ -50,12 +39,43 @@ for arg in $@; do
 	fi
 done
 
+printf "\na2server web update\n\n"
+
+if (( $a2sWebUpdate )); then
+	newVersion=$(wget -qO- "${a2sScriptURL}/install.sh" | grep '^a2serverVersion' | cut -d '"' -f 2)
+	cat <<-EOT
+	You've started the single command a2server update script.  This script will
+	download things behind the scenes, run them without much verification, and
+	then it will delete what it ran whether the upgrade finished successfully or
+	not.  For this reason, we are going to be phasing this script out in the
+	future.
+	EOT
+else
+	newVersion=$(grep '^a2serverVersion' "$a2sSource/install.sh" | cut -d '"' -f 2)
+	cat <<-EOT
+	You've started the single command a2server update script from inside the
+	a2server source directory for version $newVersion.  This script will only
+	upgrade to or reinstall that version.
+	EOT
+fi
+
+if [[ $installedVersion ]]; then
+	printf "\nRight now you have a2server %s installed\n" "$installedVersion"
+else
+	printf "\nRight now you don't appear to have a2server installed\n"
+fi
+
+if [[ ! $autoAnswerYes ]]; then
+	printf "\nPress Enter to continue "
+	read
+fi
+
 # If running from local source tree, that's what you'll be upgrading to
 printf "\nProject history:\n"
-if [[ -z "$a2sDevel" ]]; then
+if (( $a2sWebUpdate )); then
 	wget -qO- "${a2sScriptURL}/update/versionhistory.txt"
 else
-	cat "$a2sDevel/update/versionhistory.txt"
+	cat "$a2sSource/update/versionhistory.txt"
 fi
 
 cat <<EOT
@@ -65,26 +85,30 @@ available version: ${newVersion}
 
 EOT
 
-if [[ $autoAnswerYes ]]; then
-	REPLY="y"
-else
+if [[ ! $autoAnswerYes ]]; then
 	printf "Do you want to update (or reinstall) a2server? "
 	read
-fi
-if [[ ${REPLY:0:1} == "y" || ${REPLY:0:1} == "Y" ]]; then
-	if [[ -z "$a2sDevel" ]]; then
-		a2sInstall=$(mktemp -d /tmp/a2server.XXXXXXXXXXXX)
-		cd "$a2sInstall"
-		wget -O "a2server-${a2sBranch}.tar.gz" "$a2sTarball"
-		tar zxf "a2server-${a2sBranch}.tar.gz"
-		installScript="a2server-${a2sBranch}/install.sh"
-	else
-		installScript="${a2sDevel}/install.sh"
+	if [[ ${REPLY:0:1} != "y" && ${REPLY:0:1} != "Y" ]]; then
+		printf "\nOkay, not updating anything now!\n\n"
+		exit 1
 	fi
-	source "$installScript" -i "$@"
 fi
 
-cd "$origDir"
-if [[ $a2sInstall ]]; then
-	rm -rf "$a2sInstall"
+if (( $a2sWebUpdate )); then
+	a2sSource=$(mktemp -d /tmp/a2server.XXXXXXXXXXXX)
+
+	# Normally tarballs unpack in a subdirectory, but we want it to unpack into
+	# $a2sSource directly (even though the directory has the tarball in it.)
+	printf "\na2server: Downloading installer to $a2sSource.\n"
+	wget -O "$a2sSource/a2server-$a2sBranch.tar.gz" "$a2sTarball"
+	tar -C $a2sSource --strip-components=1 -zxf "$a2sSource/a2server-${a2sBranch}.tar.gz"
+fi
+
+# Now we actually run the installer as if we were installing it by hand
+printf "\na2server: Running the update installer now.\n"
+"${a2sSource}/install.sh" -i "$@"
+
+if (( $a2sWebUpdate )); then
+	printf "\na2server: Finished with installer, now deleting ${a2sSource}.\n"
+	rm -rf "$a2sSource"
 fi
