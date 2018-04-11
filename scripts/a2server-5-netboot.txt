@@ -10,13 +10,14 @@
 a2sScriptURL="https://raw.githubusercontent.com/RasppleII/a2server/master"
 a2sBinaryURL="http://blocksfree.com/downloads"
 
-a2sDevel="$( dirname "${BASH_SOURCE[0]}" )/.."
-if [[ -f "$a2sDevel/.a2server_source" ]]; then
-	pushd $a2sDevel >/dev/null
-	a2sDevel="$PWD"
-	popd >/dev/null
-else
-	a2sDevel=
+# Find the path of our source directory
+a2sSource="$( dirname "${BASH_SOURCE[0]}" )/.."
+pushd $a2sSource >/dev/null
+a2sSource="$PWD"
+popd >/dev/null
+if [[ ! -f "$a2sSource/.a2server_source" ]]; then
+	printf "\na2server: cannot find a2server source directory in $a2sSource.\n\n"
+	exit 1
 fi
 
 useExternalURL=1
@@ -262,17 +263,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 		|| [[ ! -f /usr/local/bin/mkvolinfo ]] \
 		|| [[ ! -f /usr/local/bin/afpsync ]] \
 		|| [[ ! -f /usr/local/bin/cppo ]]; then
-			if [[ -z "$a2sDevel" ]]; then
-				a2sScriptDir="/tmp/a2server-install/scripts"
-				mkdir -p "$a2sScriptDir"
-				rm -f "$a2sScriptDir/a2server-2-tools.txt" &>/dev/null
-				wget -q -O "$a2sScriptDir/a2server-2-tools.txt" "${a2sScriptURL}/scripts/a2server-2-tools.txt"
-				chmod ugo+x "$a2sScriptDir/a2server-2-tools.txt"
-			fi
-			"$a2sScriptDir/a2server-2-tools.txt"
-			if [[ -z "$a2sDevel" ]]; then
-				rm -f /tmp/a2server-install/a2server-2-tools.txt
-			fi
+			"$a2sSource/scripts/a2server-2-tools.txt"
 		fi
 
 		# put BASIC.SYSTEM at root for ProDOS 8 startup
@@ -531,12 +522,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 		echo "A2SERVER: Updating ProDOS 8 Thunderclock driver year table..."
 		mkdir -p /tmp/netboot
 		rm -r /tmp/netboot/* 2> /dev/null
-		if [[ -z $a2sDevel ]]; then
-			p8ClockPatch="/tmp/netboot/clock.patch.py"
-			wget -qO "$p8ClockPatch" "${a2sScriptURL}/scripts/clock.patch.py"
-		else
-			p8ClockPatch="$a2sDevel/scripts/clock.patch.py"
-		fi
+		p8ClockPatch="$a2sSource/scripts/clock.patch.py"
 		updateP8YearTables $(python $p8ClockPatch $(LANG=C date +"%a %m/%d/%y"))
 
 		gsosInstalled=""
