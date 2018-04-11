@@ -1,0 +1,100 @@
+#! /bin/bash
+# vim: set tabstop=4 shiftwidth=4 noexpandtab filetype=sh:
+
+# setup/index.txt - upgrade path from Ivan's a2server tree
+#
+# Ivan's a2server installed with a single copy-paste of a command line that
+# downloaded a script and ran it sight-unseen.  People are going to continue
+# to run that command (they shouldn't, but they will), and we can support
+# them doing it for now.
+
+a2sBranch="master"
+a2sScriptURL="https://raw.githubusercontent.com/RasppleII/a2server/${a2sBranch}"
+a2sTarball="https://github.com/RasppleII/a2server/archive/${a2sBranch}.tar.gz"
+
+origDir="$PWD"
+
+# Set a2sDevel to the location of the source tree if we're running in one
+a2sDevel="$( dirname "${BASH_SOURCE[0]}" )/.."
+if [[ -f "$a2sDevel/.a2server_source" ]]; then
+	pushd $a2sDevel >/dev/null
+	a2sDevel="$PWD"
+	popd >/dev/null
+
+	cat <<-EOT
+	This script exists solely for backward-compatibility with IvanX's a2server
+	website and aliases installed by older versions.  You appear to have an
+	a2server source directory here:
+	 	$a2sDevel
+
+	Please run ./install.sh in that directory.  Thanks!
+
+	EOT
+	exit 1
+fi
+a2sDevel=
+
+# Find the version in the install script
+newVersion=$(wget -qO- "${a2sScriptURL}/install.sh" | grep '^a2serverVersion' | cut -d '"' -f 2)
+
+
+# It almost never is, but this script could be run with command line arguments,
+# of which -y we can use, so we should check for it.  We'll pass them all to
+# the install script later
+autoAnswerYes=
+for arg in $@; do
+	if [[ $arg == "-y" ]]; then
+		autoAnswerYes=1
+		break
+	fi
+done
+
+
+
+cat <<EOT
+
+Hello, you've reached the single wget command version of the a2server install
+script.  This script is being phased out for a number of reasons.  The most
+important is that it is not repeatable.  This script will download things
+behind the scenes, run them without much verification, and then delete what it
+ran, no matter if the installation finished successfully or not.  The next
+time you run the same command, you may get a different (hopefully better)
+version.
+
+Right now, a2server ${newVersion} is available.
+
+If you are seeing this text, iKarith (Joseph Carter) hasn't bothered to write
+publicly-facing end-user documentation for downloading and installing a2server
+a more preferred way.  He's filed an issue about this, please do follow the
+instructions there:
+	https://github.com/RasppleII/a2server/issues/60
+
+For now, this script does what the old installer used to.
+
+EOT
+
+if [[ ! $autoAnswerYes ]]; then
+	printf "Do you want to install a2server with this script? "
+	read
+	if [[ ${REPLY:0:1} != "y" && ${REPLY:0:1} != "Y" ]]; then
+		printf "\nOkay, not installing anything now!\n\n"
+		exit 1
+	fi
+fi
+
+a2sInstall=$(mktemp -d /tmp/a2server.XXXXXXXXXXXX)
+cd "$a2sInstall"
+
+# We rename the tarball we download for consistency
+printf "\na2server: Downloading installer to ${a2sInstall}.\n"
+wget -O "a2server-${a2sBranch}.tar.gz" "$a2sTarball"
+tar zxf "a2server-${a2sBranch}.tar.gz"
+
+# Now we actually run the installer
+printf "\na2server: Running the installer now.\n"
+"a2server-${a2sBranch}/install.sh" "$@"
+
+# Clean up and delete the installer we downloaded
+printf "\na2server: Finished with installer, now deleting ${a2sInstall}.\n"
+cd "$origDir"
+rm -rf "$a2sInstall"
