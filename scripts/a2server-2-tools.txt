@@ -194,7 +194,7 @@ fi
 for _tool in $a2sTools; do
 	sudo install -m 755 "$a2sToolDir/$_tool" "/usr/local/bin/$_tool"
 done
-for _help in $a2sTools; do
+for _help in $a2sHelp; do
 	sudo install -m 644 "$a2sToolDir/$_help" "/usr/local/etc/$_help"
 done
 for _confscript in $a2sConfScripts; do
