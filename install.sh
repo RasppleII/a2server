@@ -12,7 +12,8 @@ a2serverVersion="1.9.0"
 a2sScriptURL="https://raw.githubusercontent.com/RasppleII/a2server/master"
 
 # Find the path of our source directory
-a2sSource="$( dirname "${BASH_SOURCE[0]}" )/.."
+a2sSource="$( dirname "${BASH_SOURCE[0]}" )"
+echo $a2source
 pushd $a2sSource >/dev/null
 a2sSource="$PWD"
 popd >/dev/null
