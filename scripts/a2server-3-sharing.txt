@@ -48,7 +48,7 @@ if [[ -f /usr/local/etc/A2SERVER-version ]]; then
 	read a2sVersion </usr/local/etc/A2SERVER-version
 fi
 # If A2SERVER 101 or greater is installed, we already did this and can skip it.
-if [[ "$a2sVersion" != *.*.* && "$a2sVersion" -lt 101 ]]; then
+if [[ "$a2sVersion" != *.*.* || "$a2sVersion" -lt 101 ]]; then
 	echo "A2SERVER: Installing Netatalk (this will take a while)..."
 	# stop Netatalk and samba if running (during upgrade)
 	if [[ $(ps --no-headers -C afpd) ]]; then
