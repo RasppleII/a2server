@@ -18,8 +18,8 @@ fi
 
 if [[ ! -d /srv/A2SERVER ]]; then
 	echo "A2SERVER: Preparing the shared files volume..."
-	sudo mkdir -p /srv/A2SERVER
-	sudo chown $USER:$USER /srv/A2SERVER
+	mygroup="$(id -ng)"
+	sudo install -d -m 755 -u "$USER" -g "$mygroup" "/srv/A2SERVER"
 else
 	echo "A2SERVER: Shared volume is already prepared for use."
 fi
