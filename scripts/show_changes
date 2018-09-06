@@ -1,0 +1,33 @@
+#! /bin/bash
+# vim: set tabstop=4 shiftwidth=4 noexpandtab filetype=sh:
+
+# show_changes - show a2server version differences
+#
+# To the extent possible under law, T. Joseph Carter and Ivan Drucker have
+# waived all copyright and related or neighboring rights to the a2server
+# scripts themselves.  Software used or installed by these scripts is subject
+# to other licenses.  This work is published from the United States.
+
+# Find the path of our source directory
+top_src="$( dirname "${BASH_SOURCE[0]}" )/.."
+pushd $top_src >/dev/null
+top_src="$PWD"
+popd >/dev/null
+if [[ ! -f "$top_src/.a2server_source" ]]; then
+	printf "\na2server: cannot find a2server source directory in $top_src.\n\n"
+	exit 1
+fi
+
+newVersion=$(grep '^a2ServerVersion' "$top_src/install.sh" | cut -d '"' -f 2)
+
+if [[ -f /usr/local/etc/A2SERVER-version ]]; then
+	read installedVersion </usr/local/etc/A2SERVER-version
+	if [[ $installedVersion != *.*.* ]]; then
+		# Deal with old three-digit version
+		installedVersion="${installedVersion:0:1}.${installedVersion:1:1}.${installedVersion:2}"
+	fi
+fi
+echo "a2server version available: $newVersion"
+echo "a2server version installed: ${installedVersion:-None}"
+
+# FIXME: Do something useful with a changelog perhaps?
