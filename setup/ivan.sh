@@ -7,19 +7,18 @@
 # more info is at http://ivanx.com/a2server
 
 a2serverVersion="1.9.0"
-a2sScriptURL="https://raw.githubusercontent.com/RasppleII/a2server/master"
 
 # Find the path of our source directory
-a2sSource="$( dirname "${BASH_SOURCE[0]}" )/.."
-pushd $a2sSource >/dev/null
-a2sSource="$PWD"
+top_src="$( dirname "${BASH_SOURCE[0]}" )/.."
+pushd $top_src >/dev/null
+top_src="$PWD"
 popd >/dev/null
-if [[ ! -f "$a2sSource/.a2server_source" ]]; then
-	printf "\na2server: cannot find a2server source directory in $a2sSource.\n\n"
+if [[ ! -f "$top_src/.a2server_source" ]]; then
+	printf "\na2server: cannot find a2server source directory in $top_src.\n\n"
 	exit 1
 fi
 
-compare_version="$a2sSource/scripts/compare_version"
+compare_version="$top_src/scripts/compare_version"
 
 isRpi=
 [[ -f /usr/bin/raspi-config ]] && isRpi=1
@@ -39,9 +38,7 @@ if [[ -f /usr/local/etc/A2SERVER-version ]]; then
         installedVersion="${installedVersion:0:1}.${installedVersion:1:1}.${installedVersion:2}"
     fi
 fi
-echo "A2SERVER version available: $a2serverVersion"
-echo "A2SERVER version installed: ${installedVersion:=None}"
-if [[ $installedVersion == "None" ]]; then
+if [[ $installedVersion != *.*.* ]]; then
 	installedVersion=0
 fi
 
@@ -113,7 +110,7 @@ fi
 a2server_update=0
 doSetup=1
 
-if "$compare_version" $installedVersion lt 1.5.2; then
+if [[ "$installedVersion" != "0" ]] && "$compare_version" $installedVersion lt 1.5.2; then
 	a2server_update=1
 fi
 
@@ -243,7 +240,7 @@ if (( $doSetup )); then
 		fi
 
 		for _script in $a2sSubScripts; do
-			"$a2sSource/scripts/$_script"
+			"$top_src/scripts/$_script"
 		done
 
 		rm -f /tmp/a2server-packageReposUpdated

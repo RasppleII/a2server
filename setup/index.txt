@@ -12,18 +12,18 @@ a2sBranch="master"
 a2sScriptURL="https://raw.githubusercontent.com/RasppleII/a2server/${a2sBranch}"
 a2sTarball="https://github.com/RasppleII/a2server/archive/${a2sBranch}.tar.gz"
 
-# Set a2sSource to the location of the source tree if we're running in one
-a2sSource="$( dirname "${BASH_SOURCE[0]}" )/.."
-if [[ -f "$a2sSource/.a2server_source" ]]; then
-	pushd $a2sSource >/dev/null
-	a2sSource="$PWD"
+# Set top_src to the location of the source tree if we're running in one
+top_src="$( dirname "${BASH_SOURCE[0]}" )/.."
+if [[ -f "$top_src/.a2server_source" ]]; then
+	pushd $top_src >/dev/null
+	top_src="$PWD"
 	popd >/dev/null
 
 	cat <<-EOT
 	This script exists solely for backward-compatibility with IvanX's a2server
 	website and aliases installed by older versions.  You appear to have an
 	a2server source directory here:
-	 	$a2sSource
+	 	$top_src
 
 	Please run ./install.sh in that directory.  Thanks!
 
@@ -76,18 +76,18 @@ if [[ ! $autoAnswerYes ]]; then
 	fi
 fi
 
-a2sSource=$(mktemp -d /tmp/a2server.XXXXXXXXXXXX)
+top_src=$(mktemp -d /tmp/a2server.XXXXXXXXXXXX)
 
 # Normally tarballs unpack in a subdirectory, but we want it to unpack into
-# $a2sSource directly (even though the directory has the tarball in it.)
-printf "\na2server: Downloading installer to $a2sSource.\n"
-wget -O "$a2sSource/a2server-$a2sBranch.tar.gz" "$a2sTarball"
-tar -C $a2sSource --strip-components=1 -zxf "$a2sSource/a2server-${a2sBranch}.tar.gz"
+# $top_src directly (even though the directory has the tarball in it.)
+printf "\na2server: Downloading installer to $top_src.\n"
+wget -O "$top_src/a2server-$a2sBranch.tar.gz" "$a2sTarball"
+tar -C $top_src --strip-components=1 -zxf "$top_src/a2server-${a2sBranch}.tar.gz"
 
 # Now we actually run the installer as if we were installing it by hand
 printf "\na2server: Running the installer now.\n"
-"${a2sSource}/install.sh" "$@"
+"${top_src}/install.sh" "$@"
 
 # Clean up and delete the installer we downloaded
-printf "\na2server: Finished with installer, now deleting ${a2sSource}.\n"
-rm -rf "$a2sSource"
+printf "\na2server: Finished with installer, now deleting ${top_src}.\n"
+rm -rf "$top_src"

@@ -1,0 +1,27 @@
+#! /bin/bash
+# vim: set tabstop=4 shiftwidth=4 noexpandtab filetype=sh:
+
+# fixup - correct any mistakes from previous versions
+#
+# To the extent possible under law, T. Joseph Carter and Ivan Drucker have
+# waived all copyright and related or neighboring rights to the a2server
+# scripts themselves.  Software used or installed by these scripts is subject
+# to other licenses.  This work is published from the United States.
+
+# The idea behind this script is to prevent other scripts from becoming a
+# minefield of ancient and deprecated code designed to compensate for other
+# even more ancient and replaced code that is no longer needed, no longer
+# useful, and honestly complicates maintenance of that code.  Everything here
+# will explain what it does, when it was put here, and it should remain clear
+# when the legacy code may be removed.
+#
+# The use of functions which get immediately called is to try and prevent the
+# long spidery conditional blocks a2cloud was originally known for.
+
+# # Added 2000-00-00
+# fix_some_stupid_mistake()
+# {
+# 	# Needed until: Upgrades from 0.0.0 no longer supported
+# 	:
+# }
+# fix_some_stupid_mistake
