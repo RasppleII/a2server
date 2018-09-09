@@ -1,0 +1,44 @@
+#! /bin/bash
+# vim: set tabstop=4 shiftwidth=4 noexpandtab filetype=sh:
+
+# system_ident - identify your system for raspple2 if needed
+#
+# To the extent possible under law, T. Joseph Carter and Ivan Drucker have
+# waived all copyright and related or neighboring rights to the a2server
+# scripts themselves.  Software used or installed by these scripts is subject
+# to other licenses.  This work is published from the United States.
+
+if [[ -z $ras2_os || -z $ras2_arch ]]; then
+	ras2_os="unknown"
+	if hash lsb_release 2>/dev/null; then
+		if [[ -f /usr/bin/raspi-config ]]; then
+			ras2_os="rpi-$(lsb_release -cs)"
+		else
+			case "$(lsb_release -is)" in
+				Debian)
+					ras2_os="debian-$(lsb_release -cs)"
+					;;
+				*)
+					printf "\nUnknown OS with lsb_release\n"
+					lsb_release -a
+					;;
+			esac
+		fi
+	else
+		uname_s="$(uname -s)"
+		case "$uname_s" in
+			Darwin)
+				ras2_os="$uname_s"
+				;;
+			*)
+				printf "\nUnknown OS with uname -s\n$uname_s\n"
+				;;
+		esac
+	fi
+	ras2_arch="$(uname -m)"
+	export ras2_os ras2_arch
+fi
+
+if [[ $1 != -q ]]; then
+	printf "ras2_os=\"%s\"\nras2_arch=\"%s\"\n" "$ras2_os" "$ras2_arch"
+fi

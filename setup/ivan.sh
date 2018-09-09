@@ -16,21 +16,13 @@ if [[ ! -f "$top_src/.a2server_source" ]]; then
 	exit 1
 fi
 
+# Make sure ras2_{os,arch} get set
+. "$top_src/scripts/system_ident" -q
+
 # This is now in install.sh, get it from there
 a2serverVersion=$(grep '^a2serverVersion' "$top_src/install.sh" | cut -d '"' -f 2)
 
 compare_version="$top_src/scripts/compare_version"
-
-isRpi=
-[[ -f /usr/bin/raspi-config ]] && isRpi=1
-
-isDebian=
-if [[ "$(lsb_release -ds)" = Debian* ]]; then
-	debianVersion="$(lsb_release -rs)"
-	if [[ "$debianVersion" -ge 7 || $debianVersion == [a-z]* ]]; then
-		isDebian=1
-	fi
-fi
 
 if [[ -f /usr/local/etc/A2SERVER-version ]]; then
 	read installedVersion </usr/local/etc/A2SERVER-version
@@ -116,41 +108,27 @@ if [[ "$installedVersion" != "0" ]] && "$compare_version" $installedVersion lt 1
 fi
 
 unsupportedOS=1
-if [[ $isRpi ]]; then #supported Raspbian? (16-Feb-15, 20-Jun-14, 09-Jan-14, etc)
-	fwhash=$(zcat /usr/share/doc/raspberrypi-bootloader/changelog.Debian.gz | grep -m 1 'as of' | awk '{print $NF}')
-	fwsupported="-8aca5762- -462f3e3f476f7b6- -c32bc633039cd9- -9d34d0475f9-
-			-d4f5315cfac4e- -6f4a90c8cb8817f- -5dd9b4962e- -17c8799375-
-			-960832a6c2590635216c296b6ee0bebf67b21d50-
-			-2a329e0c7d8ea19c085bac5633aa4fccee0f21be-
-			-b2420fc150ae4616f5d9ec24bdaedc630586a529-"
-	if [[ "$fwsupported" == *-$fwhash-* ]]; then
-		unsupportedOS=
+if [[ $ras2_os == debian-* || $ras2_os == rpi-* ]]; then
+	read debianVersion < /etc/debian_version
+	if [[ $debianVersion == *.* ]]; then
+		if (( ${debianVersion%.*} >= 8 && ${debianVersion%.*} < 10 )); then
+			unsupportedOS=
+		fi
 	fi
-elif [[ $isDebian ]]; then # supported Debian?
-	 debianVersion=$(cat /etc/debian_version)
-	 debianSupported="-9.2- -8.2- -7.9- -7.8- -7.6- -7.3-"
-	 [[ $debianSupported == *-$debianVersion-* ]] && unsupportedOS=
-fi
-
-if [[ $unsupportedOS && $isRpi ]]; then
-	echo
-	echo "A2SERVER and its installer scripts have been tested on Raspbian Wheezy,"
-	echo "Jessie, and Stretch though not this specific firmware version"
-	echo "(${fwhash:0:7}). Just FYI."
-	unsupportedOS=
-elif [[ $unsupportedOS && $isDebian ]]; then
-	echo
-	echo "A2SERVER and its installer scripts have been tested on Debian 7/8/9,"
-	echo "though not this specific point release ($debianVersion). Just FYI."
-	unsupportedOS=
 fi
 
 if [[ $unsupportedOS ]]; then
-	echo
-	echo "WARNING: A2SERVER and its installer scripts have only been tested on"
-	echo "Debian and Raspbian. Continuing is probably fine, but might not be."
-	echo "Theoretical worst case would be your operating system no longer works"
-	echo "properly or data is lost, so consider backing up first."
+	cat <<-EOF
+
+	WARNING: A2SERVER and its installer scripts have only been tested on
+	Debian and Raspbian wheezy, jessie, and stretch. It may work with later
+	versions, but it might not.  The theoretical worst case would be an OS
+	image that no longer works correctly or lost data, so you might want to
+	press ctrl-c here.  Otherwise press Return.
+
+	Detected system: $ras2_os ($ras2_arch)
+	EOF
+	read
 fi
 
 doSetup=1
