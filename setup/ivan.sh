@@ -6,8 +6,6 @@
 # netatalk configured for Apple II use on Debian or Raspbian.
 # more info is at http://ivanx.com/a2server
 
-a2serverVersion="1.9.0"
-
 # Find the path of our source directory
 top_src="$( dirname "${BASH_SOURCE[0]}" )/.."
 pushd $top_src >/dev/null
@@ -17,6 +15,9 @@ if [[ ! -f "$top_src/.a2server_source" ]]; then
 	printf "\na2server: cannot find a2server source directory in $top_src.\n\n"
 	exit 1
 fi
+
+# This is now in install.sh, get it from there
+a2serverVersion=$(grep '^a2serverVersion' "$top_src/install.sh" | cut -d '"' -f 2)
 
 compare_version="$top_src/scripts/compare_version"
 
