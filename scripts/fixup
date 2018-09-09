@@ -25,3 +25,45 @@
 # 	:
 # }
 # fix_some_stupid_mistake
+
+
+# Added 2018-09-07
+move_media_a2shared()
+{
+# 	# Needed until: Upgrades from versions < 1.3.0 are not supported
+	local netatalk_restart
+	if [[ -d /media/A2SHARED ]]; then
+		cat <<-EOF
+			a2server: As of version 1.3.0, the standard location for
+			          netatalk to store Apple II files is /srv/A2SERVER.
+			          We will move /media/A2SHARED to the new location.
+			          If you need to do that yourself (you'll know if
+			          you do), press ctrl-c now.  Otherwise press Return.
+		EOF
+		read
+
+		# netatalk doesn't much like its sharepoint just disappearing
+		if service netatalk status >/dev/null; then
+			netatalk_restart=1
+			sudo service netatalk stop
+		fi
+
+		# Debated: Create /media/A2SHARED symlink? Nah, bad idea.
+		sudo mv /media/A2SHARED /srv/A2SERVER
+		sudo sed -i 's|/media/A2SHARED|/srv/A2SERVER|g' /usr/local/etc/netatalk/AppleVolumes.default
+		if [[ $netatalk_restart ]]; then
+			sudo service netatalk start
+		fi
+
+		# Samba can just be reloaded after modifying the config
+		if [[ -f /etc/samba/smbd.conf ]]; then
+			sudo sed -i 's|/media/A2SHARED|/srv/A2SERVER|g' /etc/samba/smbd.conf
+			if service smbd status >/dev/null; then
+				sudo service smbd reload
+			elif service samba status >/dev/null; then
+				sudo service samba reload
+			fi
+		fi
+	fi
+}
+move_media_a2shared
