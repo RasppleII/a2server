@@ -184,42 +184,6 @@ if (( $doSetup )); then
 		rm -rf /tmp/a2server-install &>/dev/null
 		mkdir -p /tmp/a2server-install
 
-        checkPw=1
-		while [[ $checkPw ]] ; do
-			userPw=$(sudo grep "^$USER" /etc/shadow | cut -f 2 -d ':')
-			[[ $userPw == "$(echo 'apple2' | perl -e '$_ = <STDIN>; chomp; print crypt($_, $ARGV[0])' "${userPw%"${userPw#\$*\$*\$}"}")" ]] && isApple2Pw=1 || isApple2Pw=
-			[[ $userPw == "$(echo 'raspberry' | perl -e '$_ = <STDIN>; chomp; print crypt($_, $ARGV[0])' "${userPw%"${userPw#\$*\$*\$}"}")" ]] && isRaspberryPw=1 || isRaspberryPw=
-
-			password="your password"
-			[[ $isApple2Pw ]] && password="'apple2'"
-			[[ $isRaspberryPw ]] && password="'raspberry'"
-			checkPw=
-
-
-			[[ $isRpi ]] && a2server="your Raspberry Pi" || a2server="A2SERVER"
-			if [[ ! $isApple2Pw && ! -f /usr/local/etc/A2SERVER-version ]]; then
-				if [[ ! $autoAnswerYes ]]; then
-					echo
-					echo "To ensure that all client computers are able to connect to"
-					echo "${a2server} using the same password, you probably want"
-					echo "to change your user password to 'apple2'."
-					echo
-					echo -n "Do you want to change the password for user '$USER' to 'apple2' now? "
-					read
-				fi
-				if [[ $autoAnswerYes || ${REPLY:0:1} == "Y" || ${REPLY:0:1} == "y" ]]; then
-					echo "A2SERVER: changing password for user '$USER' to 'apple2'..."
-					echo "$USER:apple2" | sudo chpasswd
-				fi
-			fi
-		done
-
-		echo
-		echo "During this installation, enter ${password} if prompted for passwords."
-		echo
-
-		sudo true
-
 		read -d '' a2sSubScripts <<-EOF
 			a2server-1-storage.txt
 			a2server-2-tools.txt
