@@ -11,12 +11,12 @@ a2sScriptURL="https://raw.githubusercontent.com/RasppleII/a2server/master"
 a2sBinaryURL="http://blocksfree.com/downloads"
 
 # Find the path of our source directory
-a2sSource="$( dirname "${BASH_SOURCE[0]}" )/.."
-pushd $a2sSource >/dev/null
-a2sSource="$PWD"
+top_src="$( dirname "${BASH_SOURCE[0]}" )/.."
+pushd $top_src >/dev/null
+top_src="$PWD"
 popd >/dev/null
-if [[ ! -f "$a2sSource/.a2server_source" ]]; then
-	printf "\na2server: cannot find a2server source directory in $a2sSource.\n\n"
+if [[ ! -f "$top_src/.a2server_source" ]]; then
+	printf "\na2server: cannot find a2server source directory in $top_src.\n\n"
 	exit 1
 fi
 
@@ -263,7 +263,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 		|| [[ ! -f /usr/local/bin/mkvolinfo ]] \
 		|| [[ ! -f /usr/local/bin/afpsync ]] \
 		|| [[ ! -f /usr/local/bin/cppo ]]; then
-			"$a2sSource/scripts/a2server-2-tools.txt"
+			"$top_src/scripts/a2server-2-tools.txt"
 		fi
 
 		# put BASIC.SYSTEM at root for ProDOS 8 startup
@@ -522,7 +522,7 @@ if [[ ! $autoAnswerYes || -f /tmp/a2server-setupNetBoot ]]; then
 		echo "A2SERVER: Updating ProDOS 8 Thunderclock driver year table..."
 		mkdir -p /tmp/netboot
 		rm -r /tmp/netboot/* 2> /dev/null
-		p8ClockPatch="$a2sSource/scripts/clock.patch.py"
+		p8ClockPatch="$top_src/scripts/clock.patch.py"
 		updateP8YearTables $(python $p8ClockPatch $(LANG=C date +"%a %m/%d/%y"))
 
 		gsosInstalled=""

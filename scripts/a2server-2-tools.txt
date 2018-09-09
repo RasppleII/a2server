@@ -8,12 +8,12 @@ a2sScriptURL="https://raw.githubusercontent.com/RasppleII/a2server/master"
 a2sBinaryURL="http://blocksfree.com/downloads"
 
 # Find the path of our source directory
-a2sSource="$( dirname "${BASH_SOURCE[0]}" )/.."
-pushd $a2sSource >/dev/null
-a2sSource="$PWD"
+top_src="$( dirname "${BASH_SOURCE[0]}" )/.."
+pushd $top_src >/dev/null
+top_src="$PWD"
 popd >/dev/null
-if [[ ! -f "$a2sSource/.a2server_source" ]]; then
-	printf "\na2server: cannot find a2server source directory in $a2sSource.\n\n"
+if [[ ! -f "$top_src/.a2server_source" ]]; then
+	printf "\na2server: cannot find a2server source directory in $top_src.\n\n"
 	exit 1
 fi
 
@@ -184,13 +184,13 @@ a2sTools="afpsync afptype mkatinit mkvolinfo cppo debupdate"
 a2sHelp="a2server-help.txt"
 a2sConfScripts="a2server-aliases a2serverrc"
 for _tool in $a2sTools; do
-	sudo install -m 755 "$a2sSource/scripts/tools/$_tool" "/usr/local/bin/$_tool"
+	sudo install -m 755 "$top_src/scripts/tools/$_tool" "/usr/local/bin/$_tool"
 done
 for _help in $a2sHelp; do
-	sudo install -m 644 "$a2sSource/scripts/tools/$_help" "/usr/local/etc/$_help"
+	sudo install -m 644 "$top_src/scripts/tools/$_help" "/usr/local/etc/$_help"
 done
 for _confscript in $a2sConfScripts; do
-	sudo install -m 755 "$a2sSource/scripts/tools/$_confscript" "/usr/local/etc/$_tool"
+	sudo install -m 755 "$top_src/scripts/tools/$_confscript" "/usr/local/etc/$_tool"
 done
 
 # 1.3.0: a2serverrc is now called from /etc/bash.bashrc,
