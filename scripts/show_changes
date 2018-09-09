@@ -18,7 +18,7 @@ if [[ ! -f "$top_src/.a2server_source" ]]; then
 	exit 1
 fi
 
-newVersion=$(grep '^a2ServerVersion' "$top_src/install.sh" | cut -d '"' -f 2)
+newVersion=$(grep '^a2serverVersion' "$top_src/install.sh" | cut -d '"' -f 2)
 
 if [[ -f /usr/local/etc/A2SERVER-version ]]; then
 	read installedVersion </usr/local/etc/A2SERVER-version
