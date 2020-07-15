@@ -76,6 +76,8 @@
 1.5.2: Nov 2017: support for Debian/Raspbian Stretch; fixes minor bugs  during
                  install; enable SSH server if disabled on Raspberry Pi; fixes
                  changed download links for GS/OS communication software
+                 
+1.5.3a2: July 2020: initial support for Debian/Raspbian Buster
 
 Big thanks to: Anthony Martino, Henry Courbis, Joseph Carter, Jason King,
 Andy McFadden, Steven Hirsch, Geoff Body, Peter Wong, Tony Diaz, David Schmidt,

@@ -1,5 +1,6 @@
 # A2SERVER
-AppleTalk server for Apple // computers developed by Ivan Drucker
+AppleTalk server for Apple // computers developed by Ivan Drucker, with
+substantial rework and by T. Joseph Carter
 
 Documentation here is sparse for the moment; see [Ivan's site]() for
 information about A2SERVER and how it all works.  There's a lot there and it's
@@ -13,7 +14,14 @@ relatively modern piece of it.  As such they should be preserved as they are.
 
 ## Developer note
 
-To use the scripts on your own server, including your local machine:
+To use the scripts with a specific GitHub tag:
+~~~ bash
+export A2SERVER_SCRIPT_URL=https://raw.githubusercontent.com/RasppleII/a2server/TAG_GOES_HERE/
+export A2SERVER_BINARY_URL=${A2SERVER_SCRIPT_URL}files
+wget -O setup ${A2SERVER_SCRIPT_URL}setup/index.txt; source setup
+~~~
+
+Or, to use the scripts on your own server, including your local machine:
 
 ~~~ bash
 export A2SERVER_SCRIPT_URL=http://yoururl.com/
