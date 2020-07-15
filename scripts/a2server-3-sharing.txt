@@ -44,7 +44,9 @@ fi
 debianName=
 if [[ $debianVersion ]]; then
     debianMajor=$(cut -d . -f 1 <<< $debianVersion)
-    if [[ $debianMajor == "9" ]]; then
+    if [[ $debianMajor == "10" ]]; then
+        debianName="buster"
+    elif [[ $debianMajor == "9" ]]; then
         debianName="stretch"
     elif [[ $debianMajor == "8" ]]; then
         debianName="jessie"
@@ -122,6 +124,13 @@ else
         elif [[ $(apt-cache search '^libssl1.0.2$') ]]; then # Stretch
             # Dependencies: netatalk 2.2.4
             sudo apt-get -y install libssl1.0.2
+        elif [[ $(apt-cache search '^libssl1.1$') ]]; then # Buster
+            # Dependencies: netatalk 2.2.4
+            echo "deb http://deb.debian.org/debian/ oldstable main" | sudo tee -a /etc/apt/sources.list > /dev/null
+            sudo apt-get -y update
+            sudo apt-get -y install libssl1.0.2
+            sudo sed -i '$d' /etc/apt/sources.list
+            sudo apt-get -y update
         else
             break
         fi
@@ -129,7 +138,7 @@ else
         if [[ $(apt-cache search '^libgcrypt11$') ]]; then # Wheezy
             # Dependencies: netatalk 2.2.4
             sudo apt-get -y install libgcrypt11
-        elif [[ $(apt-cache search '^libgcrypt20$') ]]; then # Jessie or Stretch
+        elif [[ $(apt-cache search '^libgcrypt20$') ]]; then # Jessie, Stretch, Buster
             # Dependencies: netatalk 2.2.4
             sudo apt-get -y install libgcrypt20
         else
@@ -138,7 +147,7 @@ else
         
         # install Netatalk
         if [[ $arch && ! -f /tmp/a2server-compileAlways ]]; then
-            { wget -qO- "${binaryURL}precompiled/netatalk224-${arch}_${debianName}.tgz" | sudo tar Pzx; } &> /dev/null
+            { wget -qO- "${binaryURL}precompiled/netatalk226-${arch}_${debianName}.tgz" | sudo tar Pzx; } &> /dev/null
         fi
         sudo mandb &> /dev/null
         
@@ -161,15 +170,23 @@ else
         if [[ $(apt-cache search '^libssl1.0-dev$') ]]; then # Stretch
             # Dependencies: build-deps for netatalk 2.2.4
             sudo apt-get -y install libssl1.0-dev
-        else # probably Jessie or Wheezy
+        else # Jessie or Wheezy (libssl-dev 1.0.x) or Buster (absent)
+            if [[ $(apt-cache madison libssl-dev | grep '^libssl' | head -1 | cut -d '|' -f 2 | tr -d ' ' | cut -c 1-3) == "1.1" ]]; then # Buster, so pull from Stretch
+                echo "deb http://deb.debian.org/debian/ oldstable main" | sudo tee -a /etc/apt/sources.list > /dev/null
+                sudo apt-get -y update
+                sudo apt-get -y install libssl1.0.dev
+                sudo sed -i '$d' /etc/apt/sources.list
+                sudo apt-get -y update
+            else # Jessie or Wheezy
             # Dependencies: build-deps for netatalk 2.2.4
-            sudo apt-get -y install libssl-dev
+                sudo apt-get -y install libssl-dev
+            fi
         fi
         
         if [[ $(apt-cache search '^libdb5.1-dev$') ]]; then # Wheezy
             # Dependencies: build-deps for netatalk 2.2.4
             sudo apt-get -y install libdb5.1-dev
-        elif [[ $(apt-cache search '^libdb5.3-dev$') ]]; then # Jessie
+        elif [[ $(apt-cache search '^libdb5.3-dev$') ]]; then # Jessie, Stretch, Buster
             # Dependencies: build-deps for netatalk 2.2.4
             sudo apt-get -y install libdb5.3-dev
         else
@@ -181,6 +198,13 @@ else
         if [[ $(apt-cache search '^libgcrypt11-dev$') ]]; then # Stretch, Jessie or Wheezy
             # Dependencies: build-deps for netatalk 2.2.4
             sudo apt-get -y install libgcrypt11-dev
+        elif [[ $(apt-cache search '^libgcrypt20-dev$') ]]; then # Buster
+            # Dependencies: build-deps for netatalk 2.2.4
+            echo "deb http://deb.debian.org/debian/ oldstable main" | sudo tee -a /etc/apt/sources.list > /dev/null
+            sudo apt-get -y update
+            sudo apt-get -y install libgcrypt11-dev            
+            sudo sed -i '$d' /etc/apt/sources.list
+            sudo apt-get -y update
         else
             echo "A2SERVER: WARNING: unknown version of libgcrypt-dev is being installed."
             # Dependencies: build-deps for netatalk 2.2.4
@@ -582,6 +606,8 @@ if [[ -f "/lib/modules/$kernelRelease/kernel/drivers/net/appletalk/ipddp.ko" ]];
                 # if we didn't load it successfully, remove it
                 sudo rm /lib/modules/$kernelRelease/kernel/net/appletalk/appletalk.ko 2> /dev/null
             fi
+        else # download failed, so premade kernel not found, remove empty file
+            rm /tmp/appletalk.tgz 2>/dev/null
         fi
     fi
 
@@ -599,6 +625,7 @@ if [[ -f "/lib/modules/$kernelRelease/kernel/drivers/net/appletalk/ipddp.ko" ]];
             [[ -f /boot/config-$kernelRelease ]] || break
             sudo apt-get -y install linux-headers-$kernelRelease linux-source-$kernelMajorMinor || break
             sudo apt-get -y install build-essential
+            sudo apt-get -y install libelf-dev # required as of kernel 4.14.12, apparently
             cd /usr/src
             kernelSrc=$(find linux-source-${kernelMajorMinor}*)
             if [[ ${kernelSrc##*.} == "xz" ]]; then

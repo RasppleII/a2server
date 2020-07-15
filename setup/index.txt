@@ -1,7 +1,7 @@
 #! /bin/bash
 # vim: set tabstop=4 shiftwidth=4 expandtab filetype=sh:
 
-# A2SERVER master setup script, last update 17-Nov-15
+# A2SERVER master setup script, last update 15-Jul-20
 # it downloads and executes several scripts related to the setup of
 # netatalk configured for Apple II use on Debian or Raspbian.
 # more info is at http://ivanx.com/a2server
@@ -9,7 +9,7 @@
 # to download and execute, type:
 # wget ivanx.com/a2server/setup; source setup
 
-a2serverVersion="152"
+a2serverVersion="153"
 
 # Ensure URL we'll use ends in a /
 case "$A2SERVER_SCRIPT_URL" in
@@ -116,19 +116,19 @@ if [[ $isRpi ]]; then #supported Raspbian? (16-Feb-15, 20-Jun-14, 09-Jan-14, etc
     # [[ ($fwhash == "8aca5762") || ($fwhash == "462f3e3f476f7b6") || ($fwhash == "c32bc633039cd9") || ($fwhash == "9d34d0475f9") || ($fwhash == "d4f5315cfac4e") || ($fwhash == "6f4a90c8cb8817f") || ($fwhash == "5dd9b4962e") || ($fwhash == "17c8799375") ]] && unsupportedOS=
 elif [[ $isDebian ]]; then # supported Debian?
      debianVersion=$(cat /etc/debian_version)
-     debianSupported="-9.2- -8.2- -7.9- -7.8- -7.6- -7.3-"
+     debianSupported="-10.4- -9.2- -8.2- -7.9- -7.8- -7.6- -7.3-"
      [[ $debianSupported == *-$debianVersion-* ]] && unsupportedOS=
 fi
 
 if [[ $unsupportedOS && $isRpi ]]; then
     echo
-    echo "A2SERVER and its installer scripts have been tested on Raspbian Stretch,"
-    echo "Jessie, and Wheezy, though not this specific firmware version"
+    echo "A2SERVER and its installer scripts have been tested on Raspbian Buster,"
+    echo "Stretch, Jessie, and Wheezy, though not this specific firmware version"
     echo "(${fwhash:0:7}). Just FYI."
     unsupportedOS=
 elif [[ $unsupportedOS && $isDebian ]]; then
     echo
-    echo "A2SERVER and its installer scripts have been tested on Debian 7/8/9,"
+    echo "A2SERVER and its installer scripts have been tested on Debian 7/8/9/10,"
     echo "though not this specific point release ($debianVersion). Just FYI."
     unsupportedOS=
 fi
